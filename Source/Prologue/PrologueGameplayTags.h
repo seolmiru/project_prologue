@@ -1,0 +1,15 @@
+﻿#pragma once
+
+#include "NativeGameplayTags.h"
+
+namespace PrologueGameplayTags
+{
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Move);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Look);
+	
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_EquipHammer);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_UnequippedHammer);
+
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_EquipBow);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_UnequippedBow);
+}

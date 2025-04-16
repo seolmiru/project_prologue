@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PrologueGameMode.h"
-#include "PrologueCharacter.h"
+#include "Prologue/Character/PrologueCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 APrologueGameMode::APrologueGameMode()
