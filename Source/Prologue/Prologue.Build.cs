@@ -14,11 +14,7 @@ public class Prologue : ModuleRules
 			"GameFeatures",
 			"GameplayAbilities",
 			"GameplayTasks",
-			"GameplayTags",
-			"MotionWarping",
-			"AIModule",
-			"Niagara",
-			"AnimGraphRuntime"
+			"GameplayTags"
 		});
 	}
 }

@@ -16,14 +16,5 @@ class APrologueCharacter : public ACharacter
 
 public:
 	APrologueCharacter();
-
-	virtual void PostInitializeComponents() override;
-
-	virtual void BeginPlay() override;
-
-	virtual void PossessedBy(AController* NewController) override;
-
-	virtual void Tick(float DeltaSeconds) override;
-	
 };
 
