@@ -14,7 +14,8 @@ public class Prologue : ModuleRules
 			"GameFeatures",
 			"GameplayAbilities",
 			"GameplayTasks",
-			"GameplayTags"
+			"GameplayTags",
+			"EnhancedInput"
 		});
 	}
 }

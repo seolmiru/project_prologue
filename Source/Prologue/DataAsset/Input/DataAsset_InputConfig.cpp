@@ -3,7 +3,7 @@
 
 #include "DataAsset_InputConfig.h"
 
-UInputAction* UDataAsset_InputConfig::FindNativeInputActionByTag(const FGameplayTag InInputTag)
+UInputAction* UDataAsset_InputConfig::FindNativeInputActionByTag(const FGameplayTag InInputTag) const
 {
 	for (const FPrologueInputActionConfig& InputActionConfig : NativeInputActions)
 	{
