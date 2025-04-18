@@ -9,7 +9,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Prologue/PrologueGameplayTags.h"
+#include "Prologue/AbilitySystem/PrologueAbilitySystemComponent.h"
 #include "Prologue/Component/PrologueInputComponent.h"
+#include "Prologue/DataAsset/DataAsset_StartUpDataBase.h"
 #include "Prologue/DataAsset/Input/DataAsset_InputConfig.h"
 
 
@@ -29,6 +31,7 @@ AComma::AComma()
 	CameraBoom->SetRelativeRotation(FRotator(-50.f, -45.f, 0.f));
 	CameraBoom->bUsePawnControlRotation = true;
 	CameraBoom->bEnableCameraLag = true;
+	CameraBoom->bDoCollisionTest = false;
 	
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
@@ -38,6 +41,19 @@ AComma::AComma()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
+}
+
+void AComma::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (!CharacterStartUpData.IsNull())
+	{
+		if (UDataAsset_StartUpDataBase* LoadedData = CharacterStartUpData.LoadSynchronous())
+		{
+			LoadedData->GiveToAbilitySystemComponent(PrologueAbilitySystemComponent);
+		}
+	}
 }
 
 void AComma::BeginPlay()
