@@ -4,7 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "DataAsset_StartUpDataBase.h"
+#include "GameplayTagContainer.h"
 #include "DataAsset_CommaStartUpData.generated.h"
+
+class UPrologueGameplayAbility;
+
+USTRUCT(BlueprintType)
+struct FPrologueCommaAbilitySet
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (Categories = "InputTag"))
+	FGameplayTag InputTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UPrologueGameplayAbility> AbilityToGrant;
+
+	bool IsValid() const;
+};
 
 /**
  * 
@@ -13,4 +30,11 @@ UCLASS()
 class PROLOGUE_API UDataAsset_CommaStartUpData : public UDataAsset_StartUpDataBase
 {
 	GENERATED_BODY()
+
+public:
+	virtual void GiveToAbilitySystemComponent(UPrologueAbilitySystemComponent* InASCToGive, int32 ApplyLevel = 1) override;
+
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "StartUpData", meta = (TitleProperty = "InputTag"))
+	TArray<FPrologueCommaAbilitySet> CommaStartUpAbilitySets;
 };

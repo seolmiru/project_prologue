@@ -4,8 +4,11 @@
 #include "PrologueGameplayAbility.h"
 
 #include "AbilitySystemComponent.h"
+#include "Prologue/AbilitySystem/PrologueAbilitySystemComponent.h"
+#include "Prologue/Component/Combat/PawnCombatComponent.h"
 
-void UPrologueGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+void UPrologueGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo,
+                                             const FGameplayAbilitySpec& Spec)
 {
 	Super::OnGiveAbility(ActorInfo, Spec);
 
@@ -31,4 +34,14 @@ void UPrologueGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handl
 			ActorInfo->AbilitySystemComponent->ClearAbility(Handle);
 		}
 	}
+}
+
+UPawnCombatComponent* UPrologueGameplayAbility::GetPawnCombatComponentFromActorInfo() const
+{
+	return GetAvatarActorFromActorInfo()->FindComponentByClass<UPawnCombatComponent>();
+}
+
+UPrologueAbilitySystemComponent* UPrologueGameplayAbility::GetPrologueAbilitySystemComponentFromActorInfo() const
+{
+	return Cast<UPrologueAbilitySystemComponent>(CurrentActorInfo->AbilitySystemComponent);
 }

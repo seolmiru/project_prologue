@@ -11,4 +11,9 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_EquipBow, "InputTag.EquipBow");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_UnequippedBow, "InputTag.UnequippedBow");
+
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Hammer, "InputTag.Attack.Hammer");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Bow, "InputTag.Attack.Bow");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Hammer, "Comma.Weapon.Hammer");
 }

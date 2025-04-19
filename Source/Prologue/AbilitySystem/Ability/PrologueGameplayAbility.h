@@ -6,6 +6,9 @@
 #include "Abilities/GameplayAbility.h"
 #include "PrologueGameplayAbility.generated.h"
 
+class UPrologueAbilitySystemComponent;
+class UPawnCombatComponent;
+
 UENUM(BlueprintType)
 enum class EPrologueAbilityActivationPolicy : uint8
 {
@@ -25,6 +28,12 @@ protected:
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "GAS")
+	UPROPERTY(EditDefaultsOnly, Category = "Ability")
 	EPrologueAbilityActivationPolicy AbilityActivationPolicy = EPrologueAbilityActivationPolicy::OnTriggered;
-};
+
+	UFUNCTION(BlueprintPure, Category = "Prologue|Ability")
+	UPawnCombatComponent* GetPawnCombatComponentFromActorInfo() const;
+
+	UFUNCTION(BlueprintPure, Category = "Prologue|Ability")
+	UPrologueAbilitySystemComponent* GetPrologueAbilitySystemComponentFromActorInfo() const;
+};  

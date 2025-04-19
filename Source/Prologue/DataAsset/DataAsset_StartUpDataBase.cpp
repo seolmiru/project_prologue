@@ -4,7 +4,6 @@
 #include "DataAsset_StartUpDataBase.h"
 
 #include "Prologue/AbilitySystem/PrologueAbilitySystemComponent.h"
-#include "Prologue/AbilitySystem/Ability/PrologueGameplayAbility.h"
 
 void UDataAsset_StartUpDataBase::GiveToAbilitySystemComponent(UPrologueAbilitySystemComponent* InASCToGive,
                                                               int32 ApplyLevel)
@@ -15,7 +14,7 @@ void UDataAsset_StartUpDataBase::GiveToAbilitySystemComponent(UPrologueAbilitySy
 	GrantAbilities(ReactiveAbilities, InASCToGive, ApplyLevel);
 }
 
-void UDataAsset_StartUpDataBase::GrantAbilities(const TArray<TSubclassOf<UPrologueGameplayAbility>>& InAbilitiesToGive,
+void UDataAsset_StartUpDataBase::GrantAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilitiesToGive,
 	UPrologueAbilitySystemComponent* InASCToGive, int32 ApplyLevel)
 {
 	if (InAbilitiesToGive.IsEmpty())
@@ -23,7 +22,7 @@ void UDataAsset_StartUpDataBase::GrantAbilities(const TArray<TSubclassOf<UProlog
 		return;
 	}
 
-	for (const TSubclassOf<UPrologueGameplayAbility>& Ability : InAbilitiesToGive)
+	for (const TSubclassOf<UGameplayAbility>& Ability : InAbilitiesToGive)
 	{
 		if (!Ability) continue;
 

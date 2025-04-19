@@ -30,6 +30,11 @@ UAbilitySystemComponent* APrologueCharacter::GetAbilitySystemComponent() const
 	return GetPrologueAbilitySystemComponent();
 }
 
+UPawnCombatComponent* APrologueCharacter::GetPawnCombatComponent() const
+{
+	return nullptr;
+}
+
 void APrologueCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
