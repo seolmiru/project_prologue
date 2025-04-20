@@ -24,4 +24,6 @@ namespace PrologueGameplayTags
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Equip_Hammer);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Unequipped_Hammer);
+	
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Attack_Hammer);
 }

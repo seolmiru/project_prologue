@@ -16,14 +16,14 @@ AComma* UCommaGameplayAbility::GetCommaFromActorInfo()
 	return CachedCommaCharacter.IsValid() ? CachedCommaCharacter.Get() : nullptr;
 }
 
-ACommaController* UCommaGameplayAbility::GetControllerFromActorInfo()
-{
-	if (!CachedCommaCharacter.IsValid())
+ACommaController* UCommaGameplayAbility::GetCommaControllerFromActorInfo()
+{	
+	if (!CachedCommaController.IsValid())
 	{
 		CachedCommaController = Cast<ACommaController>(CurrentActorInfo->PlayerController);
 	}
 
-	return CachedCommaCharacter.IsValid() ? CachedCommaController.Get() : nullptr;
+	return CachedCommaController.IsValid()? CachedCommaController.Get() : nullptr;
 }
 
 UCommaCombatComponent* UCommaGameplayAbility::GetCombatComponentFromActorInfo()

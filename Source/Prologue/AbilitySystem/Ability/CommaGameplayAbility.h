@@ -22,7 +22,7 @@ public:
 	AComma* GetCommaFromActorInfo();
 
 	UFUNCTION(BlueprintPure, Category = "Prologue|Ability")
-	ACommaController* GetControllerFromActorInfo();
+	ACommaController* GetCommaControllerFromActorInfo();
 
 	UFUNCTION(BlueprintPure, Category = "Prologue|Ability")
 	UCommaCombatComponent* GetCombatComponentFromActorInfo();

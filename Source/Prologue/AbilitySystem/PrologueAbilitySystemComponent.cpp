@@ -24,7 +24,7 @@ void UPrologueAbilitySystemComponent::OnAbilityInputReleased(const FGameplayTag&
 }
 
 void UPrologueAbilitySystemComponent::GrantCommaWeaponAbilities(
-	const TArray<FPrologueCommaAbilitySet>& InDefaultWeaponAbilities, int32 ApplyLevel)
+	const TArray<FPrologueCommaAbilitySet>& InDefaultWeaponAbilities, int32 ApplyLevel, TArray<FGameplayAbilitySpecHandle>& OutGrantedAbilitySpecHandles)
 {
 	if (InDefaultWeaponAbilities.IsEmpty())
 	{
@@ -40,7 +40,7 @@ void UPrologueAbilitySystemComponent::GrantCommaWeaponAbilities(
 		AbilitySpec.Level = ApplyLevel;
 		AbilitySpec.DynamicAbilityTags.AddTag(AbilitySet.InputTag);
 		
-		GiveAbility(AbilitySpec);
+		OutGrantedAbilitySpecHandles.AddUnique(GiveAbility(AbilitySpec));
 	}
 }
 

@@ -20,5 +20,5 @@ public:
 	void OnAbilityInputReleased(const FGameplayTag& InInputTag);
 
 	UFUNCTION(BlueprintCallable, Category = "Prologue|Ability", meta = (ApplyLevel = "1"))
-	void GrantCommaWeaponAbilities(const TArray<FPrologueCommaAbilitySet>& InDefaultWeaponAbilities, int32 ApplyLevel);
+	void GrantCommaWeaponAbilities(const TArray<FPrologueCommaAbilitySet>& InDefaultWeaponAbilities, int32 ApplyLevel, TArray<FGameplayAbilitySpecHandle>& OutGrantedAbilitySpecHandles);
 };
