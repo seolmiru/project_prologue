@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Prologue/Types/PrologueStructTypes.h"
 #include "PrologueWeaponBase.generated.h"
 
 class UBoxComponent;

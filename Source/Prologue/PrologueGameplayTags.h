@@ -17,4 +17,7 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Attack_Bow);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Weapon_Hammer);
+
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_Equip_Hammer);
+
 }

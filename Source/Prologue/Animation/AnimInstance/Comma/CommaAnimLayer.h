@@ -6,6 +6,7 @@
 #include "Prologue/Animation/AnimInstance/PrologueBaseAnimInstance.h"
 #include "CommaAnimLayer.generated.h"
 
+class UCommaAnimInstance;
 /**
  * 
  */
@@ -13,4 +14,8 @@ UCLASS()
 class PROLOGUE_API UCommaAnimLayer : public UPrologueBaseAnimInstance
 {
 	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintPure, meta = (NotBlueprintThreadSafe))
+	UCommaAnimInstance* GetCommaAnimInstance() const;
 };

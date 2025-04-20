@@ -2,3 +2,10 @@
 
 
 #include "CommaAnimLayer.h"
+
+#include "CommaAnimInstance.h"
+
+UCommaAnimInstance* UCommaAnimLayer::GetCommaAnimInstance() const
+{
+	return Cast<UCommaAnimInstance>(GetOwningComponent()->GetAnimInstance());
+}
