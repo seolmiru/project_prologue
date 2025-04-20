@@ -5,23 +5,10 @@
 #include "CoreMinimal.h"
 #include "DataAsset_StartUpDataBase.h"
 #include "GameplayTagContainer.h"
+#include "Prologue/Types/PrologueStructTypes.h"
 #include "DataAsset_CommaStartUpData.generated.h"
 
 class UPrologueGameplayAbility;
-
-USTRUCT(BlueprintType)
-struct FPrologueCommaAbilitySet
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (Categories = "InputTag"))
-	FGameplayTag InputTag;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TSubclassOf<UPrologueGameplayAbility> AbilityToGrant;
-
-	bool IsValid() const;
-};
 
 /**
  * 

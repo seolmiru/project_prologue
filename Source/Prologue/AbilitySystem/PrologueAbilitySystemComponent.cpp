@@ -2,6 +2,7 @@
 
 
 #include "../AbilitySystem/PrologueAbilitySystemComponent.h"
+#include "../AbilitySystem/Ability/PrologueGameplayAbility.h"
 
 void UPrologueAbilitySystemComponent::OnAbilityInputPressed(const FGameplayTag& InInputTag)
 {
@@ -21,3 +22,25 @@ void UPrologueAbilitySystemComponent::OnAbilityInputPressed(const FGameplayTag& 
 void UPrologueAbilitySystemComponent::OnAbilityInputReleased(const FGameplayTag& InInputTag)
 {
 }
+
+void UPrologueAbilitySystemComponent::GrantCommaWeaponAbilities(
+	const TArray<FPrologueCommaAbilitySet>& InDefaultWeaponAbilities, int32 ApplyLevel)
+{
+	if (InDefaultWeaponAbilities.IsEmpty())
+	{
+		return;
+	}
+
+	for (const FPrologueCommaAbilitySet& AbilitySet : InDefaultWeaponAbilities)
+	{
+		if (!AbilitySet.IsValid()) continue;
+
+		FGameplayAbilitySpec AbilitySpec(AbilitySet.AbilityToGrant);
+		AbilitySpec.SourceObject = GetAvatarActor();
+		AbilitySpec.Level = ApplyLevel;
+		AbilitySpec.DynamicAbilityTags.AddTag(AbilitySet.InputTag);
+		
+		GiveAbility(AbilitySpec);
+	}
+}
+

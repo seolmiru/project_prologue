@@ -4,6 +4,7 @@
 
 namespace PrologueGameplayTags
 {
+	//Input Tags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Move);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Look);
 	
@@ -16,8 +17,11 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Attack_Hammer);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Attack_Bow);
 
+	//Comma Tags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Weapon_Hammer);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_Equip_Hammer);
 
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Equip_Hammer);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Unequipped_Hammer);
 }

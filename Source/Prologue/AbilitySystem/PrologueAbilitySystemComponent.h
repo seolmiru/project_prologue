@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "Prologue/Types/PrologueStructTypes.h"
 #include "PrologueAbilitySystemComponent.generated.h"
 
 /**
@@ -17,4 +18,7 @@ class PROLOGUE_API UPrologueAbilitySystemComponent : public UAbilitySystemCompon
 public:
 	void OnAbilityInputPressed(const FGameplayTag& InInputTag);
 	void OnAbilityInputReleased(const FGameplayTag& InInputTag);
+
+	UFUNCTION(BlueprintCallable, Category = "Prologue|Ability", meta = (ApplyLevel = "1"))
+	void GrantCommaWeaponAbilities(const TArray<FPrologueCommaAbilitySet>& InDefaultWeaponAbilities, int32 ApplyLevel);
 };

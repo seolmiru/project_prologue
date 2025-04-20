@@ -5,11 +5,6 @@
 #include "../AbilitySystem/Ability/PrologueGameplayAbility.h"
 #include "../AbilitySystem/PrologueAbilitySystemComponent.h"
 
-bool FPrologueCommaAbilitySet::IsValid() const
-{
-	return InputTag.IsValid() && AbilityToGrant;
-}
-
 void UDataAsset_CommaStartUpData::GiveToAbilitySystemComponent(UPrologueAbilitySystemComponent* InASCToGive,
 	int32 ApplyLevel)
 {

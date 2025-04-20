@@ -7,6 +7,11 @@
 #include "Prologue/AbilitySystem/PrologueAbilitySystemComponent.h"
 #include "Prologue/Component/Combat/PawnCombatComponent.h"
 
+UPrologueGameplayAbility::UPrologueGameplayAbility()
+{
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+}
+
 void UPrologueGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo,
                                              const FGameplayAbilitySpec& Spec)
 {

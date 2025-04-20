@@ -3,3 +3,10 @@
 
 #include "PrologueStructTypes.h"
 
+#include "Prologue/AbilitySystem/Ability/PrologueGameplayAbility.h"
+
+
+bool FPrologueCommaAbilitySet::IsValid() const
+{
+	return InputTag.IsValid() && AbilityToGrant;
+}
