@@ -23,6 +23,16 @@ AComma::AComma()
 	
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 
+	CommaMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CommaMesh"));
+	CommaMesh->SetupAttachment(GetMesh());
+	
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SKM_COMMA(TEXT("/Game/ani/main/Basebody_bow_body.Basebody_bow_body"));
+	if (SKM_COMMA.Succeeded())
+	{
+		CommaMesh->SetSkeletalMesh(SKM_COMMA.Object);
+	}
+	GetMesh()->bOwnerNoSee = true;
+	
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
@@ -43,6 +53,9 @@ AComma::AComma()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
+
+	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
+	WeaponMesh->SetupAttachment(CommaMesh,TEXT("HammerSocket"));
 	
 	CommaCombatComponent = CreateDefaultSubobject<UCommaCombatComponent>(TEXT("CommaCombatComponent"));
 }
