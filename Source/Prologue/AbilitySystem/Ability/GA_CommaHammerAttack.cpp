@@ -36,4 +36,6 @@ void UGA_CommaHammerAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	LOG_SCREEN("%s", *LOG_CALLINFO);
 }

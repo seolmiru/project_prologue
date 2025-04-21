@@ -23,16 +23,6 @@ AComma::AComma()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
-
-	CommaMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CommaMesh"));
-	CommaMesh->SetupAttachment(GetMesh());
-	
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SKM_COMMA(TEXT("/Game/ani/main/Basebody_bow_body.Basebody_bow_body"));
-	if (SKM_COMMA.Succeeded())
-	{
-		CommaMesh->SetSkeletalMesh(SKM_COMMA.Object);
-	}
-	GetMesh()->bOwnerNoSee = true;
 	
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -41,7 +31,7 @@ AComma::AComma()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>("CameraBoom");
 	CameraBoom->SetupAttachment(GetRootComponent());
 	CameraBoom->TargetArmLength = 1000.f;
-	CameraBoom->SetRelativeRotation(FRotator(-50.f, -45.f, 0.f));
+	CameraBoom->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
 	CameraBoom->bUsePawnControlRotation = true;
 	CameraBoom->bEnableCameraLag = true;
 	CameraBoom->bDoCollisionTest = false;
@@ -56,7 +46,7 @@ AComma::AComma()
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
 	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
-	WeaponMesh->SetupAttachment(CommaMesh,TEXT("HammerSocket"));
+	WeaponMesh->SetupAttachment(GetMesh(),TEXT("HammerSocket"));
 	
 	CommaCombatComponent = CreateDefaultSubobject<UCommaCombatComponent>(TEXT("CommaCombatComponent"));
 }
@@ -136,6 +126,8 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 			for (auto InputAction : InputConfigDataAsset->InputActions)
 			{
 				EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputGAS, InputAction.Tag);
+
+				LOG_SCREEN("%s", *InputAction.Tag.ToString());
 			}
 		}
 	}

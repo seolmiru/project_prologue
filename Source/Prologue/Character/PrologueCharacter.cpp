@@ -40,6 +40,9 @@ void APrologueCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void APrologueCharacter::InputGAS(const FGameplayTag Tag)
 {
 	FGameplayTagContainer GameplayTags;
+
+	LOG_SCREEN("%s", *Tag.ToString());
+	
 	GameplayTags.AddTag(Tag);
 	if (ASC)
 	{

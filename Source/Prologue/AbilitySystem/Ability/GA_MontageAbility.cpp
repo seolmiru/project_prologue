@@ -3,6 +3,7 @@
 
 #include "GA_MontageAbility.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Prologue/Prologue.h"
 
 UGA_MontageAbility::UGA_MontageAbility()
 {
@@ -19,6 +20,8 @@ void UGA_MontageAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_MontageAbility::OnComplete);
 	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_MontageAbility::OnInterrupted);
 	PlayAttackTask->ReadyForActivation();
+
+	LOG_SCREEN("%s", *LOG_CALLINFO);
 }
 
 void UGA_MontageAbility::InputPressed(const FGameplayAbilitySpecHandle Handle,
