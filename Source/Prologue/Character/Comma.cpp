@@ -92,6 +92,14 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AComma::Input_Move(const FInputActionValue& InputActionValue)
 {
+	if (PrologueAbilitySystemComponent)
+	{
+		if (PrologueAbilitySystemComponent->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_IsAttacking))
+		{
+			return;
+		}
+	}
+	
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 
 	if (MovementVector.Y != 0.f)

@@ -26,4 +26,9 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Unequipped_Hammer);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Attack_Hammer);
+
+	//State Tags
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_IsDead);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_IsAttacking);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_IsMoving);
 }
