@@ -3,6 +3,7 @@
 #include "PrologueGameMode.h"
 #include "Prologue/Character/PrologueCharacter.h"
 #include "Prologue/Controller/CommaController.h"
+#include "Prologue/Player/ProloguePlayerState.h"
 #include "UObject/ConstructorHelpers.h"
 
 APrologueGameMode::APrologueGameMode()
@@ -14,5 +15,6 @@ APrologueGameMode::APrologueGameMode()
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 
+	PlayerStateClass = AProloguePlayerState::StaticClass();
 	PlayerControllerClass = ACommaController::StaticClass();
 }

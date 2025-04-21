@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
 #include "Prologue/Interface/PawnCombatInterface.h"
 #include "PrologueCharacter.generated.h"
 
@@ -24,25 +25,21 @@ class APrologueCharacter : public ACharacter, public IAbilitySystemInterface, pu
 public:
 	APrologueCharacter();
 
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-
 	virtual UPawnCombatComponent* GetPawnCombatComponent() const override;
 
 protected:
 	virtual void PossessedBy(AController* NewController) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
-	TObjectPtr<UPrologueAbilitySystemComponent> PrologueAbilitySystemComponent;
+	TObjectPtr<UAbilitySystemComponent> ASC;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
-	UPrologueAttributeSet* PrologueAttributeSet;
+protected:
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData")
-	TSoftObjectPtr<UDataAsset_StartUpDataBase> CharacterStartUpData;
-
+	UFUNCTION(BlueprintCallable, Category = "GAS")
+	void InputGAS(const FGameplayTag Tag);
+	
 public:
-	FORCEINLINE UPrologueAbilitySystemComponent* GetPrologueAbilitySystemComponent() const { return PrologueAbilitySystemComponent; }
-
-	FORCEINLINE UPrologueAttributeSet* GetPrologueAttribute() const { return PrologueAttributeSet; }
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 };
 

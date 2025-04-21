@@ -5,7 +5,8 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
-#include "Prologue/AbilitySystem/PrologueAbilitySystemComponent.h"
+#include "Prologue/PrologueGameplayTags.h"
+#include "AbilitySystemComponent.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -19,15 +20,6 @@ APrologueCharacter::APrologueCharacter()
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	GetMesh()->bReceivesDecals = false;
-
-	PrologueAbilitySystemComponent = CreateDefaultSubobject<UPrologueAbilitySystemComponent>(TEXT("PrologueAbilitySystemComponent"));
-
-	PrologueAttributeSet = CreateDefaultSubobject<UPrologueAttributeSet>(TEXT("PrologueAttributeSet"));
-}
-
-UAbilitySystemComponent* APrologueCharacter::GetAbilitySystemComponent() const
-{
-	return GetPrologueAbilitySystemComponent();
 }
 
 UPawnCombatComponent* APrologueCharacter::GetPawnCombatComponent() const
@@ -38,11 +30,54 @@ UPawnCombatComponent* APrologueCharacter::GetPawnCombatComponent() const
 void APrologueCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+}
 
-	if (PrologueAbilitySystemComponent)
+void APrologueCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void APrologueCharacter::InputGAS(const FGameplayTag Tag)
+{
+	FGameplayTagContainer GameplayTags;
+	GameplayTags.AddTag(Tag);
+	if (ASC)
 	{
-		PrologueAbilitySystemComponent->InitAbilityActorInfo(this, this);
-
-		ensureMsgf(!CharacterStartUpData.IsNull(), TEXT("Forgot to assign start up data to %s"), *GetName());
+		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_CanCancel))
+		{
+			FGameplayEventData PlayData;
+			ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CanCancel);
+			InputGAS(PrologueGameplayTags::Comma_State_Cancel);
+		}
+		
+		TArray<FGameplayAbilitySpec*> AbilitiesToActivatePtrs;
+		ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(GameplayTags, AbilitiesToActivatePtrs);
+		if (AbilitiesToActivatePtrs.Num() < 1)
+		{
+			LOG_SCREEN("No Ability Specifications Found");
+			return;
+		}
+		
+		TArray<FGameplayAbilitySpec> AbilitiesToActivate;
+		AbilitiesToActivate.Reserve(AbilitiesToActivatePtrs.Num());
+		Algo::Transform(AbilitiesToActivatePtrs, AbilitiesToActivate, [](FGameplayAbilitySpec* SpecPtr) { return *SpecPtr; });
+		
+		for (FGameplayAbilitySpec& GameplayAbilitySpec : AbilitiesToActivate)
+		{
+			ensure(IsValid(GameplayAbilitySpec.Ability));
+			if (GameplayAbilitySpec.IsActive())
+			{
+				ASC->AbilitySpecInputPressed(GameplayAbilitySpec);
+			}
+			else
+			{
+				ASC->TryActivateAbility(GameplayAbilitySpec.Handle);
+			}
+		}
 	}
+}
+
+UAbilitySystemComponent* APrologueCharacter::GetAbilitySystemComponent() const
+{
+	return ASC;
 }

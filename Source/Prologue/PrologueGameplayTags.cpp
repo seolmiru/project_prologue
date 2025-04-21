@@ -31,4 +31,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_IsAttacking, "Comma.State.IsAttacking");
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_IsMoving, "Comma.State.IsMoving");
 
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_Cancel, "Comma.State.Cancel");
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_CanCancel, "Comma.State.CanCancel");
+
 }

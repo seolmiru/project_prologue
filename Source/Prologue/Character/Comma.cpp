@@ -9,11 +9,12 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Prologue/PrologueGameplayTags.h"
-#include "Prologue/AbilitySystem/PrologueAbilitySystemComponent.h"
-#include "Prologue/Component/PrologueInputComponent.h"
 #include "Prologue/Component/Combat/CommaCombatComponent.h"
-#include "Prologue/DataAsset/DataAsset_StartUpDataBase.h"
+#include "Prologue/Controller/CommaController.h"
 #include "Prologue/DataAsset/Input/DataAsset_InputConfig.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "AbilitySystemComponent.h"
 
 
 AComma::AComma()
@@ -51,17 +52,41 @@ UPawnCombatComponent* AComma::GetPawnCombatComponent() const
 	return CommaCombatComponent;
 }
 
+void AComma::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	FVector Velocity = GetCharacterMovement()->Velocity.GetSafeNormal();
+	FVector Forward = GetActorForwardVector();
+	FVector Right = GetActorRightVector();
+
+	float ForwardDot = FVector::DotProduct(Velocity, Forward);
+	float RightDot = FVector::DotProduct(Velocity, Right);
+
+	Direction = FVector2D(ForwardDot, RightDot);
+}
+
+void AComma::NotifyControllerChanged()
+{
+	Super::NotifyControllerChanged();
+
+	if (ACommaController* CommaController = Cast<ACommaController>(Controller))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(CommaController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+	}
+}
+
+void AComma::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+}
+
 void AComma::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-
-	if (!CharacterStartUpData.IsNull())
-	{
-		if (UDataAsset_StartUpDataBase* LoadedData = CharacterStartUpData.LoadSynchronous())
-		{
-			LoadedData->GiveToAbilitySystemComponent(PrologueAbilitySystemComponent);
-		}
-	}
 }
 
 void AComma::BeginPlay()
@@ -73,28 +98,25 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	checkf(InputConfigDataAsset, TEXT("Forgot to assign a valid data asset as input config"));
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AComma::Input_Move);
 
-	ULocalPlayer* LocalPlayer = GetController<APlayerController>()->GetLocalPlayer();
-
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
-
-	check(Subsystem);
-
-	Subsystem->AddMappingContext(InputConfigDataAsset->DefaultMappingContext, 0);
-
-	UPrologueInputComponent* PrologueInputComponent = CastChecked<UPrologueInputComponent>(PlayerInputComponent);
-
-	PrologueInputComponent->BindNativeInputAction(InputConfigDataAsset, PrologueGameplayTags::InputTag_Move, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
-
-	PrologueInputComponent->BindAbilityInputAction(InputConfigDataAsset, this, &ThisClass::Input_AbilityInputPressed, &ThisClass::Input_AbilityInputReleased);
+		if (InputConfigDataAsset)
+		{
+			for (auto InputAction : InputConfigDataAsset->InputActions)
+			{
+				EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputGAS, InputAction.InputTag);
+			}
+		}
+	}
 }
 
 void AComma::Input_Move(const FInputActionValue& InputActionValue)
 {
-	if (PrologueAbilitySystemComponent)
+	if (ASC)
 	{
-		if (PrologueAbilitySystemComponent->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_IsAttacking))
+		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_IsAttacking))
 		{
 			return;
 		}
@@ -102,23 +124,20 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 	
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 
-	if (MovementVector.Y != 0.f)
+	if (Controller != nullptr)
 	{
-		AddMovementInput(FVector::ForwardVector, MovementVector.Y);
+		// find out which way is forward
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		// get forward vector
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	
+		// get right vector 
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		// add movement 
+		AddMovementInput(ForwardDirection, MovementVector.Y);
+		AddMovementInput(RightDirection, MovementVector.X);
 	}
-
-	if (MovementVector.X != 0.f)
-	{
-		AddMovementInput(FVector::RightVector, MovementVector.X);
-	}
-}
-
-void AComma::Input_AbilityInputPressed(FGameplayTag InInputTag)
-{
-	PrologueAbilitySystemComponent->OnAbilityInputPressed(InInputTag);
-}
-
-void AComma::Input_AbilityInputReleased(FGameplayTag InInputTag)
-{
-	PrologueAbilitySystemComponent->OnAbilityInputReleased(InInputTag);
 }
