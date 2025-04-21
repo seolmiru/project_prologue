@@ -15,6 +15,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "AbilitySystemComponent.h"
+#include "Prologue/Player/ProloguePlayerState.h"
 
 
 AComma::AComma()
@@ -100,6 +101,21 @@ void AComma::PostInitializeComponents()
 void AComma::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	if (AProloguePlayerState* GASPS = GetPlayerState<AProloguePlayerState>())
+	{
+		ASC = GASPS->GetAbilitySystemComponent();
+		ASC->InitAbilityActorInfo(GASPS, this);
+	}
+
+	if (ASC)
+	{
+		for (auto& Ability : StartAbilities)
+		{
+			FGameplayAbilitySpec GameplayAbilitySpec(Ability);
+			ASC->GiveAbility(GameplayAbilitySpec);
+		}
+	}
 }
 
 void AComma::BeginPlay()
@@ -119,7 +135,7 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		{
 			for (auto InputAction : InputConfigDataAsset->InputActions)
 			{
-				EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputGAS, InputAction.InputTag);
+				EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputGAS, InputAction.Tag);
 			}
 		}
 	}

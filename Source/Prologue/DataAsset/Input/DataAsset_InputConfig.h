@@ -9,7 +9,6 @@
 
 
 class UInputAction;
-class UInputMappingContext;
 
 /**
  * 
@@ -21,16 +20,11 @@ struct FPrologueInputActionConfig
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Categories = "InputTag"))
-	FGameplayTag InputTag;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FGameplayTag Tag;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* InputAction;
-
-	bool IsValid() const
-	{
-		return InputTag.IsValid() && InputAction;
-	}
 };
 
 

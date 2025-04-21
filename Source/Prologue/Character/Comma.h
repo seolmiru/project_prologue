@@ -57,7 +57,7 @@ private:
 	UInputMappingContext* DefaultMappingContext;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
-	UDataAsset_InputConfig* InputConfigDataAsset;
+	TObjectPtr<UDataAsset_InputConfig> InputConfigDataAsset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
