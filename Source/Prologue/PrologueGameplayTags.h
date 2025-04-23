@@ -13,6 +13,7 @@ namespace PrologueGameplayTags
 
 	//Comma Tags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Weapon_Bow);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Weapon_Hammer);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Attack_Hammer);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Attack_Bow);

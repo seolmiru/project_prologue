@@ -33,4 +33,6 @@ void UGA_CommaBowAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	ActorInfo->AbilitySystemComponent->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_Weapon_Hammer);
 }

@@ -12,6 +12,7 @@ namespace PrologueGameplayTags
 
 	//Comma Tags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Bow, "Comma.Weapon.Bow");
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Hammer, "Comma.Weapon.Hammer");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Attack_Hammer, "Comma.Ability.Attack.Hammer");
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Attack_Bow, "Comma.Ability.Attack.Bow");
