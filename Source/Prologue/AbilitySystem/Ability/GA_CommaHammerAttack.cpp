@@ -3,6 +3,8 @@
 
 #include "GA_CommaHammerAttack.h"
 
+#include "AbilitySystemComponent.h"
+#include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Comma.h"
 
 void UGA_CommaHammerAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -12,9 +14,6 @@ void UGA_CommaHammerAttack::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
-
-	Comma->GetBowWeaponMesh()->SetVisibility(false);
-	Comma->GetHammerWeaponMesh()->SetVisibility(true);
 }
 
 void UGA_CommaHammerAttack::InputPressed(const FGameplayAbilitySpecHandle Handle,

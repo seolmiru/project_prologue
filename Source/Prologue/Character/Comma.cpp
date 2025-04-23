@@ -114,8 +114,6 @@ void AComma::PossessedBy(AController* NewController)
 void AComma::BeginPlay()
 {
 	Super::BeginPlay();
-
-	BowWeaponMesh->SetVisibility(false);
 }
 
 void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

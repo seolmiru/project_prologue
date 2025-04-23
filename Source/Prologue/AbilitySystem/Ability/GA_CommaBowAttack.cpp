@@ -14,11 +14,6 @@ void UGA_CommaBowAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
-
-	Comma->GetHammerWeaponMesh()->SetVisibility(false);
-	Comma->GetBowWeaponMesh()->SetVisibility(true);
-
-	ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(PrologueGameplayTags::Comma_Weapon_Bow);
 }
 
 void UGA_CommaBowAttack::InputPressed(const FGameplayAbilitySpecHandle Handle,

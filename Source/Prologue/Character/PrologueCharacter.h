@@ -40,6 +40,7 @@ protected:
 	void InputGAS(const FGameplayTag Tag);
 	
 public:
+	UFUNCTION(BlueprintCallable, Category = "GAS")
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 };
 
