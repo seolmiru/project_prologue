@@ -45,8 +45,11 @@ AComma::AComma()
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
-	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
-	WeaponMesh->SetupAttachment(GetMesh(),TEXT("HammerSocket"));
+	HammerWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HammerWeaponMesh"));
+	HammerWeaponMesh->SetupAttachment(GetMesh(),TEXT("HammerSocket"));
+
+	BowWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BowWeaponMesh"));
+	BowWeaponMesh->SetupAttachment(GetMesh(),TEXT("BowSocket"));
 	
 	CommaCombatComponent = CreateDefaultSubobject<UCommaCombatComponent>(TEXT("CommaCombatComponent"));
 }
@@ -111,6 +114,8 @@ void AComma::PossessedBy(AController* NewController)
 void AComma::BeginPlay()
 {
 	Super::BeginPlay();
+
+	BowWeaponMesh->SetVisibility(false);
 }
 
 void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

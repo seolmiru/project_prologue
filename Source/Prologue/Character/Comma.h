@@ -67,10 +67,15 @@ private:
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> WeaponMesh;
+	TObjectPtr<UStaticMeshComponent> HammerWeaponMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> BowWeaponMesh;
 
 	void Input_Move(const FInputActionValue& InputActionValue);
 
 public:
 	FORCEINLINE UCommaCombatComponent* GetCommaCombatComponent() const { return CommaCombatComponent; }
+	FORCEINLINE UStaticMeshComponent* GetHammerWeaponMesh() const { return HammerWeaponMesh; }
+	FORCEINLINE UStaticMeshComponent* GetBowWeaponMesh() const { return BowWeaponMesh; }
 };

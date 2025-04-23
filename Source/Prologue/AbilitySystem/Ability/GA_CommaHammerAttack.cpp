@@ -5,10 +5,6 @@
 
 #include "Prologue/Character/Comma.h"
 
-UGA_CommaHammerAttack::UGA_CommaHammerAttack()
-{
-}
-
 void UGA_CommaHammerAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
@@ -16,6 +12,9 @@ void UGA_CommaHammerAttack::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
+
+	Comma->GetBowWeaponMesh()->SetVisibility(false);
+	Comma->GetHammerWeaponMesh()->SetVisibility(true);
 }
 
 void UGA_CommaHammerAttack::InputPressed(const FGameplayAbilitySpecHandle Handle,
@@ -35,7 +34,5 @@ void UGA_CommaHammerAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool bReplicateEndAbility, bool bWasCancelled)
 {
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
-	LOG_SCREEN("%s", *LOG_CALLINFO);
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled); 
 }
