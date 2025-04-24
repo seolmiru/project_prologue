@@ -39,7 +39,7 @@ FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
 	FHitResult HitResult;
 	const FVector Forward = Character->GetActorForwardVector();
 	const FVector Start = Character->GetActorLocation() + Forward * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
-	const FVector End = Start + Forward * 100.0f;
+	const FVector End = Start + Forward * 130.0f;
 
 	bool bResult = UKismetSystemLibrary::SphereTraceSingle(
 		GetWorld(),

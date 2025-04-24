@@ -14,6 +14,12 @@ void UGA_CommaHammerAttack::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
+
+	if (Comma)
+	{
+		Comma->GetHammerWeaponMesh()->SetVisibility(true);
+		Comma->GetBowWeaponMesh()->SetVisibility(false);	
+	}
 }
 
 void UGA_CommaHammerAttack::InputPressed(const FGameplayAbilitySpecHandle Handle,

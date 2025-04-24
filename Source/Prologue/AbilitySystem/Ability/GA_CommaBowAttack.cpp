@@ -14,6 +14,12 @@ void UGA_CommaBowAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
+	if (Comma)
+	{
+		Comma->RotateToMouse();
+		Comma->GetHammerWeaponMesh()->SetVisibility(false);
+		Comma->GetBowWeaponMesh()->SetVisibility(true);
+	}
 }
 
 void UGA_CommaBowAttack::InputPressed(const FGameplayAbilitySpecHandle Handle,
@@ -33,6 +39,4 @@ void UGA_CommaBowAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
-	ActorInfo->AbilitySystemComponent->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_Weapon_Hammer);
 }

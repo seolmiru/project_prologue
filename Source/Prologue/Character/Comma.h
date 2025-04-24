@@ -74,8 +74,12 @@ private:
 
 	void Input_Move(const FInputActionValue& InputActionValue);
 
+	bool HasTag_FocusedAttack() const;
+
 public:
 	FORCEINLINE UCommaCombatComponent* GetCommaCombatComponent() const { return CommaCombatComponent; }
 	FORCEINLINE UStaticMeshComponent* GetHammerWeaponMesh() const { return HammerWeaponMesh; }
 	FORCEINLINE UStaticMeshComponent* GetBowWeaponMesh() const { return BowWeaponMesh; }
+
+	void RotateToMouse();
 };

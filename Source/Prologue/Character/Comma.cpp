@@ -71,6 +71,11 @@ void AComma::Tick(float DeltaSeconds)
 	float RightDot = FVector::DotProduct(Velocity, Right);
 
 	Direction = FVector2D(ForwardDot, RightDot);
+
+	if (HasTag_FocusedAttack())
+	{
+		RotateToMouse();
+	}
 }
 
 void AComma::NotifyControllerChanged()
@@ -114,6 +119,17 @@ void AComma::PossessedBy(AController* NewController)
 void AComma::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (ACommaController* CommaController = Cast<ACommaController>(GetController()))
+	{
+		CommaController->bShowMouseCursor = true;
+
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		InputMode.SetHideCursorDuringCapture(false);
+
+		CommaController->SetInputMode(InputMode);
+	}
 }
 
 void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -163,5 +179,37 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
+	}
+}
+
+bool AComma::HasTag_FocusedAttack() const
+{
+	FGameplayTag AttackTag = FGameplayTag::RequestGameplayTag(TEXT("Comma.State.IsAttacking"));
+	return ASC->HasMatchingGameplayTag(AttackTag);
+}
+
+void AComma::RotateToMouse()
+{
+	ACommaController* CommaController = Cast<ACommaController>(GetController());
+	if (!CommaController) return;
+
+	float MouseX, MouseY;
+	CommaController->GetMousePosition(MouseX, MouseY);
+
+	FVector WorldLocation, WorldDirection;
+	CommaController->DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection);
+
+	FVector MyLocation = GetActorLocation();
+	float Z = MyLocation.Z;
+	float Distance = (Z - WorldLocation.Z) / WorldDirection.Z;
+
+	FVector Target = WorldLocation + WorldDirection * Distance;
+	FVector DirectionToMouse = Target - MyLocation;
+	DirectionToMouse.Z = 0;
+
+	if (!DirectionToMouse.IsNearlyZero())
+	{
+		FRotator NewRotation = DirectionToMouse.Rotation();
+		SetActorRotation(NewRotation);
 	}
 }

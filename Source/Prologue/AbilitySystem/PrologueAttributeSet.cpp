@@ -2,3 +2,12 @@
 
 
 #include "PrologueAttributeSet.h"
+
+UPrologueAttributeSet::UPrologueAttributeSet()
+{
+}
+
+void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)
+{
+	Super::PostGameplayEffectExecute(Data);
+}
