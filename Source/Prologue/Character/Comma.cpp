@@ -52,6 +52,8 @@ AComma::AComma()
 	BowWeaponMesh->SetupAttachment(GetMesh(),TEXT("BowSocket"));
 	
 	CommaCombatComponent = CreateDefaultSubobject<UCommaCombatComponent>(TEXT("CommaCombatComponent"));
+	
+	HammerWeaponMesh->SetVisibility(false);
 }
 
 UPawnCombatComponent* AComma::GetPawnCombatComponent() const
@@ -108,6 +110,8 @@ void AComma::PossessedBy(AController* NewController)
 
 	if (ASC)
 	{
+		//ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Comma.Weapon.Hammer")));
+		
 		for (auto& Ability : StartAbilities)
 		{
 			FGameplayAbilitySpec GameplayAbilitySpec(Ability);
@@ -186,6 +190,16 @@ bool AComma::HasTag_FocusedAttack() const
 {
 	FGameplayTag AttackTag = FGameplayTag::RequestGameplayTag(TEXT("Comma.State.IsAttacking"));
 	return ASC->HasMatchingGameplayTag(AttackTag);
+}
+
+UStaticMeshComponent* AComma::GetHammerWeaponMesh() const
+{
+	return HammerWeaponMesh;
+}
+
+UStaticMeshComponent* AComma::GetBowWeaponMesh() const
+{
+	return BowWeaponMesh;
 }
 
 void AComma::RotateToMouse()

@@ -78,8 +78,13 @@ private:
 
 public:
 	FORCEINLINE UCommaCombatComponent* GetCommaCombatComponent() const { return CommaCombatComponent; }
-	FORCEINLINE UStaticMeshComponent* GetHammerWeaponMesh() const { return HammerWeaponMesh; }
-	FORCEINLINE UStaticMeshComponent* GetBowWeaponMesh() const { return BowWeaponMesh; }
 
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	UStaticMeshComponent* GetHammerWeaponMesh() const;
+
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	UStaticMeshComponent* GetBowWeaponMesh() const;
+
+	UFUNCTION(BlueprintCallable)
 	void RotateToMouse();
 };
