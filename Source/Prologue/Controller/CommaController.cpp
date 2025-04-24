@@ -2,3 +2,11 @@
 
 
 #include "CommaController.h"
+
+void ACommaController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FInputModeGameOnly GameOnlyInputMode;
+	SetInputMode(GameOnlyInputMode);
+}

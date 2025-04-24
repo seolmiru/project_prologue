@@ -9,7 +9,6 @@
 
 
 class UInputAction;
-class UInputMappingContext;
 
 /**
  * 
@@ -21,33 +20,20 @@ struct FPrologueInputActionConfig
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (Categories = "InputTag"))
-	FGameplayTag InputTag;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FGameplayTag Tag;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* InputAction;
-
-	bool IsValid() const
-	{
-		return InputTag.IsValid() && InputAction;
-	}
 };
 
 
 UCLASS()
-class PROLOGUE_API UDataAsset_InputConfig : public UDataAsset
+class PROLOGUE_API UDataAsset_InputConfig : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UInputMappingContext* DefaultMappingContext;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (TitleProperty = "InputTag"))
-	TArray<FPrologueInputActionConfig> NativeInputActions;
-
-	UInputAction* FindNativeInputActionByTag(const FGameplayTag InInputTag) const;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (TitleProperty = "InputTag"))
-	TArray<FPrologueInputActionConfig> AbilityInputActions;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FPrologueInputActionConfig> InputActions;
 };
