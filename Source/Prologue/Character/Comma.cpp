@@ -73,11 +73,6 @@ void AComma::Tick(float DeltaSeconds)
 	float RightDot = FVector::DotProduct(Velocity, Right);
 
 	Direction = FVector2D(ForwardDot, RightDot);
-
-	if (HasTag_FocusedAttack())
-	{
-		RotateToMouse();
-	}
 }
 
 void AComma::NotifyControllerChanged()

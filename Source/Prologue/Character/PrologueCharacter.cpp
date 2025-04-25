@@ -20,6 +20,10 @@ APrologueCharacter::APrologueCharacter()
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	GetMesh()->bReceivesDecals = false;
+
+	GetCharacterMovement()->bCanWalkOffLedges = false;
+	GetCharacterMovement()->PerchRadiusThreshold = 50.f;
+	GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
 }
 
 UPawnCombatComponent* APrologueCharacter::GetPawnCombatComponent() const
