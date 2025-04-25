@@ -4,6 +4,7 @@
 #include "GA_CommaBowAttack.h"
 
 #include "AbilitySystemComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Comma.h"
 
