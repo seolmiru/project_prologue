@@ -14,14 +14,27 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
+
+	UCharacterMovementComponent* MovementComponent = Comma->GetCharacterMovement();
+	
 	UAT_TickCurve* TickCurve = UAT_TickCurve::CreateTask(this, Curve);
 	TickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
 	TickCurve->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 
 	FVector StartPos = GetAvatarActorFromActorInfo()->GetActorLocation();
-	FVector EndPos = StartPos + GetAvatarActorFromActorInfo()->GetActorForwardVector() * (-MoveLength);
+
+	FVector InputDirection = MovementComponent->GetLastInputVector();
+	InputDirection.Normalize();
+
+	if (InputDirection.IsNearlyZero())
+	{
+		InputDirection = Comma->GetActorForwardVector();
+	}
+	
+	FVector EndPos = StartPos + InputDirection * MoveLength;
 	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(GetAvatarActorFromActorInfo());
+	IgnoreActors.Add(Comma);
 	FHitResult HIt;
 
 	bool bResult = UKismetSystemLibrary::LineTraceSingle(
@@ -36,7 +49,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		true
 	);
 
-	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
+	BasePos = StartPos;
 	TargetPos = bResult ? HIt.ImpactPoint : EndPos;
 
 	TickCurve->ReadyForActivation();
@@ -67,7 +80,5 @@ void UGA_CommaDash::OnCurveTick(float Alpha)
 
 void UGA_CommaDash::OnComplete()
 {
-	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(this);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

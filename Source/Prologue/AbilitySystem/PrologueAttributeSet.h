@@ -29,4 +29,16 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Health")
 	FGameplayAttributeData CurrentHealth;
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentHealth);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	FGameplayAttributeData MaxHealth;
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxHealth);
+
+	UPROPERTY(BlueprintReadOnly, Category = "OverClock")
+	FGameplayAttributeData CurrentGauge;
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentGauge);
+
+	UPROPERTY(BlueprintReadOnly, Category = "OverClock")
+	FGameplayAttributeData MaxGauge;
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxGauge);
 };
