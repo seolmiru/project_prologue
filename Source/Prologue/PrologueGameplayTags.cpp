@@ -7,14 +7,14 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Move, "InputTag.Move");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Look, "InputTag.Look");
 
-	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Hammer, "InputTag.Attack.Hammer");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Sword, "InputTag.Attack.Sword");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Bow, "InputTag.Attack.Bow");
 
 	//Comma Tags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Bow, "Comma.Weapon.Bow");
-	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Hammer, "Comma.Weapon.Hammer");
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Sword, "Comma.Weapon.Sword");
 
-	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Attack_Hammer, "Comma.Ability.Attack.Hammer");
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Attack_Sword, "Comma.Ability.Attack.Sword");
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Attack_Bow, "Comma.Ability.Attack.Bow");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Dash, "Comma.Ability.Dash");
@@ -34,7 +34,7 @@ namespace PrologueGameplayTags
 
 	//Event Tags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AttackHitCheck, "Event.Character.AttackHitCheck");
-	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AddHammer, "Event.Character.AddHammer");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AddSword, "Event.Character.AddSword");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AddBow, "Event.Character.AddBow");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SpawnProjectile, "Event.Character.SpawnProjectile");
 }
