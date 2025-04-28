@@ -30,13 +30,7 @@ protected:
 	float MoveLength = 500.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
-	TSubclassOf<class UCurveFloat> Curve;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<UGameplayEffect> AttackDamageEffect;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-	TSubclassOf<UGameplayEffect> EffectClass;
+	TObjectPtr<class UCurveFloat> Curve;
 
 	FVector TargetPos;
 	FVector BasePos;

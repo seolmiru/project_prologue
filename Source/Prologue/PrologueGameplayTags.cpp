@@ -16,6 +16,8 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Attack_Hammer, "Comma.Ability.Attack.Hammer");
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Attack_Bow, "Comma.Ability.Attack.Bow");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Dash, "Comma.Ability.Dash");
 	
 	//State Tags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_IsDead, "Comma.State.IsDead");

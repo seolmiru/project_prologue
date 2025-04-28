@@ -3,10 +3,43 @@
 
 #include "GA_CommaDash.h"
 
+#include "AbilitySystemComponent.h"
+#include "AT/AT_TickCurve.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Prologue/Character/Comma.h"
+
 void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+                                    const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	UAT_TickCurve* TickCurve = UAT_TickCurve::CreateTask(this, Curve);
+	TickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
+	TickCurve->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
+
+	FVector StartPos = GetAvatarActorFromActorInfo()->GetActorLocation();
+	FVector EndPos = StartPos + GetAvatarActorFromActorInfo()->GetActorForwardVector() * (-MoveLength);
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(GetAvatarActorFromActorInfo());
+	FHitResult HIt;
+
+	bool bResult = UKismetSystemLibrary::LineTraceSingle(
+		GetWorld(),
+		StartPos,
+		EndPos,
+		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4),
+		false,
+		IgnoreActors,
+		EDrawDebugTrace::None,
+		HIt,
+		true
+	);
+
+	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
+	TargetPos = bResult ? HIt.ImpactPoint : EndPos;
+
+	TickCurve->ReadyForActivation();
 }
 
 void UGA_CommaDash::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -29,9 +62,12 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 
 void UGA_CommaDash::OnCurveTick(float Alpha)
 {
+	GetAvatarActorFromActorInfo()->SetActorLocation(FMath::Lerp(BasePos, TargetPos, Alpha));
 }
 
 void UGA_CommaDash::OnComplete()
 {
-	Super::OnComplete();
+	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(this);
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
