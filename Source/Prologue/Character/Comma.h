@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Comma.generated.h"
 
+class UComboAttackData;
 class UInputAction;
 class UInputMappingContext;
 class UCommaCombatComponent;
@@ -52,13 +53,17 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCommaCombatComponent* CommaCombatComponent;
 
+	//Data
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UDataAsset_InputConfig> InputConfigDataAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChracterData", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UComboAttackData> ComboAttackData;
+
 	//Inputs
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UDataAsset_InputConfig> InputConfigDataAsset;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
 
@@ -78,6 +83,9 @@ private:
 
 public:
 	FORCEINLINE UCommaCombatComponent* GetCommaCombatComponent() const { return CommaCombatComponent; }
+	FORCEINLINE FVector2D GetDirection() const { return Direction; }
+	FORCEINLINE UComboAttackData* GetComboAttackData() const { return ComboAttackData; }
+	FORCEINLINE UAnimMontage* GetComboAttackMontage() const { return ComboAttackMontage; }
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	UStaticMeshComponent* GetHammerWeaponMesh() const;
@@ -87,4 +95,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void RotateToMouse();
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TObjectPtr<class UAnimMontage> ComboAttackMontage;
 };
