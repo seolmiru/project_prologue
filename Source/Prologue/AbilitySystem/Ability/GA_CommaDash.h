@@ -37,9 +37,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
 	float TargetZOffset = 2.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
+	int32 PathCheckSteps = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	float MinDashDistance = 10.f;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	TObjectPtr<class UCurveFloat> Curve;

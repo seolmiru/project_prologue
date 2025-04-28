@@ -23,75 +23,93 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	TickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
 	TickCurve->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 
-	FVector StartPos = GetAvatarActorFromActorInfo()->GetActorLocation();
+	FVector ActorStartPos = Comma->GetActorLocation();
+    float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+    FVector FootStartPos = ActorStartPos - FVector(0.f, 0.f, CapsuleHalfHeight);
 
-	FVector InputDirection = MovementComponent->GetLastInputVector();
-	InputDirection.Normalize();
+    FVector InputDirection = MovementComponent->GetLastInputVector();
+    InputDirection.Normalize();
 
-	if (InputDirection.IsNearlyZero())
-	{
-		InputDirection = Comma->GetActorForwardVector();
-	}
+    if (InputDirection.IsNearlyZero())
+    {
+       InputDirection = Comma->GetActorForwardVector();
+    }
+
+    FVector TentativeEndFootPos = FootStartPos + InputDirection * MoveLength;
+    TArray<AActor*> IgnoreActors;
+    IgnoreActors.Add(Comma);
+    FHitResult ObstacleHit;
+
+    bool bHitObstacle = UKismetSystemLibrary::LineTraceSingle(
+       GetWorld(),
+       FootStartPos,
+       TentativeEndFootPos,
+       UEngineTypes::ConvertToTraceType(ECC_Visibility),
+       false,
+       IgnoreActors,
+       EDrawDebugTrace::ForDuration,
+       ObstacleHit,
+       true
+    );
+
+    FVector CheckedEndFootPos = bHitObstacle ? ObstacleHit.ImpactPoint : TentativeEndFootPos;
+    FVector CheckedEndPos = CheckedEndFootPos + FVector(0.f, 0.f, CapsuleHalfHeight);
+
+    BasePos = ActorStartPos;
+    FVector LastValidTargetPos = ActorStartPos;
+    bool bFoundAnyGroundSpot = false;
+    FVector CurrentPathPos;
+    FHitResult GroundHit;
 	
-	FVector TentativeEndPos = StartPos + InputDirection * MoveLength;
-	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(Comma);
-	FHitResult HIt;
+    int32 EffectiveSteps = FMath::Max(1, PathCheckSteps);
+    for (int32 i = 1; i <= EffectiveSteps; ++i)
+    {
+        float Alpha = static_cast<float>(i) / static_cast<float>(EffectiveSteps);
+        CurrentPathPos = FMath::Lerp(ActorStartPos, CheckedEndPos, Alpha);
 
-	bool bResult = UKismetSystemLibrary::LineTraceSingle(
-		GetWorld(),
-		StartPos,
-		TentativeEndPos,
-		UEngineTypes::ConvertToTraceType(ECC_Visibility),
-		false,
-		IgnoreActors,
-		EDrawDebugTrace::ForDuration,
-		HIt,
-		true
-	);
+        FVector GroundTraceStart = CurrentPathPos + FVector(0.f, 0.f, GroundTraceUpOffset);
+        FVector GroundTraceEnd = CurrentPathPos - FVector(0.f, 0.f, GroundTraceDistance);
 
-	FVector CheckedEndPos = bResult ? HIt.ImpactPoint : TentativeEndPos;
+        bool bHitGroundThisStep = UKismetSystemLibrary::LineTraceSingle(
+           GetWorld(),
+           GroundTraceStart,
+           GroundTraceEnd,
+           UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
+           false,
+           IgnoreActors,
+           EDrawDebugTrace::ForDuration,
+           GroundHit,
+           true,
+           FLinearColor::Green,
+           FLinearColor::Red,
+           1.0f
+        );
 
-	FHitResult GroundHit;
-	FVector GroundTraceStart = CheckedEndPos + FVector(0.f, 0.f, GroundTraceUpOffset);
-	FVector GroundTraceEnd = CheckedEndPos - FVector(0.f, 0.f, GroundTraceDistance);
+        if (bHitGroundThisStep)
+        {
+            LastValidTargetPos = CurrentPathPos;
+            LastValidTargetPos.Z = GroundHit.ImpactPoint.Z + CapsuleHalfHeight + TargetZOffset;
+            bFoundAnyGroundSpot = true;
+        }
+    }
 
-	bool bHitGround = UKismetSystemLibrary::LineTraceSingle(
-		GetWorld(),
-		GroundTraceStart,
-		GroundTraceEnd,
-		UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-		false,
-		IgnoreActors,
-		EDrawDebugTrace::ForDuration,
-		GroundHit,
-		true,
-		FLinearColor::Green,
-		FLinearColor::Red,
-		5.0f
-	);
+    if (bFoundAnyGroundSpot)
+    {
+        TargetPos = LastValidTargetPos;
 
-	BasePos = StartPos;
-	if (bHitGround)
-	{
-		float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-		TargetPos = CheckedEndPos;
-		TargetPos.Z = GroundHit.ImpactPoint.Z + CapsuleHalfHeight + TargetZOffset;
-	}
-	else
-	{
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-		return;
-	}
-
-	if (FVector::DistSquared(BasePos, TargetPos) < MinDashDistance * MinDashDistance)
-	{
-		LOG_SCREEN("Dash distance too short.");
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-		return;
-	}
-		
-	TickCurve->ReadyForActivation();
+        if (FVector::DistSquared(BasePos, TargetPos) < MinDashDistance * MinDashDistance)
+        {
+            EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+            return;
+        }
+    	
+        TickCurve->ReadyForActivation();
+    }
+    else
+    {
+        EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+        return;
+    }
 }
 
 void UGA_CommaDash::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
