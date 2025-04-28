@@ -6,7 +6,7 @@
 #include "Prologue/Prologue.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "AT/AT_Trace.h"
+#include "AT/AT_WaitForTrace.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Comma.h"
 
@@ -23,7 +23,7 @@ void UGA_AttackHitCheck::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 
 	LOG_SCREEN("%s", *LOG_CALLINFO);
 
-	UAT_Trace* AttackTraceTask = UAT_Trace::CreateTask(this, TargetActorClass);
+	UAT_WaitForTrace* AttackTraceTask = UAT_WaitForTrace::CreateTask(this, TargetActorClass);
 	AttackTraceTask->OnComplete.AddDynamic(this, &UGA_AttackHitCheck::OnTraceResultCallback);
 	AttackTraceTask->ReadyForActivation();
 }

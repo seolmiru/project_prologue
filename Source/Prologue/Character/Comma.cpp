@@ -45,15 +45,15 @@ AComma::AComma()
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
-	HammerWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HammerWeaponMesh"));
-	HammerWeaponMesh->SetupAttachment(GetMesh(),TEXT("HammerSocket"));
+	SwordWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HammerWeaponMesh"));
+	SwordWeaponMesh->SetupAttachment(GetMesh(),TEXT("HammerSocket"));
 
 	BowWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BowWeaponMesh"));
 	BowWeaponMesh->SetupAttachment(GetMesh(),TEXT("BowSocket"));
 	
 	CommaCombatComponent = CreateDefaultSubobject<UCommaCombatComponent>(TEXT("CommaCombatComponent"));
 	
-	HammerWeaponMesh->SetVisibility(false);
+	SwordWeaponMesh->SetVisibility(false);
 }
 
 UPawnCombatComponent* AComma::GetPawnCombatComponent() const
@@ -187,9 +187,9 @@ bool AComma::HasTag_FocusedAttack() const
 	return ASC->HasMatchingGameplayTag(AttackTag);
 }
 
-UStaticMeshComponent* AComma::GetHammerWeaponMesh() const
+UStaticMeshComponent* AComma::GetSwordWeaponMesh() const
 {
-	return HammerWeaponMesh;
+	return SwordWeaponMesh;
 }
 
 UStaticMeshComponent* AComma::GetBowWeaponMesh() const
