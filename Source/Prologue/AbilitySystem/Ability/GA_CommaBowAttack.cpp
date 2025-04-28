@@ -8,7 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Comma.h"
-#include "Prologue/DataAsset/ComboAttackData.h"
+#include "Prologue/DataAsset/ComboBowData.h"
 
 UGA_CommaBowAttack::UGA_CommaBowAttack()
 {
@@ -23,13 +23,13 @@ void UGA_CommaBowAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
 	
-	CurrentComboData = Comma->GetComboAttackData();
+	CurrentComboData = Comma->GetComboBowData();
 		
 	Comma->RotateToMouse();
-	Comma->GetHammerWeaponMesh()->SetVisibility(false);
+	Comma->GetSwordWeaponMesh()->SetVisibility(false);
 	Comma->GetBowWeaponMesh()->SetVisibility(true);
 
-	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetComboAttackMontage(), 1.0f, GetNextSection());
+	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetBowComboMontage(), 1.0f, GetNextSection());
 	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaBowAttack::OnComplete);
 	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaBowAttack::OnInterrupted);
 	PlayAttackTask->ReadyForActivation();

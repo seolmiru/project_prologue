@@ -7,7 +7,8 @@
 #include "GameplayTagContainer.h"
 #include "Comma.generated.h"
 
-class UComboAttackData;
+class UComboSwordData;
+class UComboBowData;
 class UInputAction;
 class UInputMappingContext;
 class UCommaCombatComponent;
@@ -58,7 +59,10 @@ private:
 	TObjectPtr<UDataAsset_InputConfig> InputConfigDataAsset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChracterData", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UComboAttackData> ComboAttackData;
+	TObjectPtr<UComboBowData> ComboBowData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChracterData", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UComboSwordData> ComboSwordData;
 
 	//Inputs
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
@@ -72,7 +76,7 @@ private:
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> HammerWeaponMesh;
+	TObjectPtr<UStaticMeshComponent> SwordWeaponMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> BowWeaponMesh;
@@ -83,12 +87,17 @@ private:
 
 public:
 	FORCEINLINE UCommaCombatComponent* GetCommaCombatComponent() const { return CommaCombatComponent; }
+	
 	FORCEINLINE FVector2D GetDirection() const { return Direction; }
-	FORCEINLINE UComboAttackData* GetComboAttackData() const { return ComboAttackData; }
-	FORCEINLINE UAnimMontage* GetComboAttackMontage() const { return ComboAttackMontage; }
+	
+	FORCEINLINE UComboBowData* GetComboBowData() const { return ComboBowData; }
+	FORCEINLINE UComboSwordData* GetComboSwordData() const { return ComboSwordData; }
+	
+	FORCEINLINE UAnimMontage* GetBowComboMontage() const { return BowComboMontage; }
+	FORCEINLINE UAnimMontage* GetSwordComboMontage() const { return SwordComboMontage; }
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
-	UStaticMeshComponent* GetHammerWeaponMesh() const;
+	UStaticMeshComponent* GetSwordWeaponMesh() const;
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	UStaticMeshComponent* GetBowWeaponMesh() const;
@@ -98,5 +107,8 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TObjectPtr<class UAnimMontage> ComboAttackMontage;
+	TObjectPtr<class UAnimMontage> BowComboMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TObjectPtr<class UAnimMontage> SwordComboMontage;
 };

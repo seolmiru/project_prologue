@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "AT/AT_TickCurve.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Prologue/Character/Comma.h"
@@ -32,7 +33,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		InputDirection = Comma->GetActorForwardVector();
 	}
 	
-	FVector EndPos = StartPos + InputDirection * MoveLength;
+	FVector TentativeEndPos = StartPos + InputDirection * MoveLength;
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(Comma);
 	FHitResult HIt;
@@ -40,18 +41,56 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	bool bResult = UKismetSystemLibrary::LineTraceSingle(
 		GetWorld(),
 		StartPos,
-		EndPos,
-		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4),
+		TentativeEndPos,
+		UEngineTypes::ConvertToTraceType(ECC_Visibility),
 		false,
 		IgnoreActors,
-		EDrawDebugTrace::None,
+		EDrawDebugTrace::ForDuration,
 		HIt,
 		true
 	);
 
-	BasePos = StartPos;
-	TargetPos = bResult ? HIt.ImpactPoint : EndPos;
+	FVector CheckedEndPos = bResult ? HIt.ImpactPoint : TentativeEndPos;
 
+	FHitResult GroundHit;
+	FVector GroundTraceStart = CheckedEndPos + FVector(0.f, 0.f, GroundTraceUpOffset);
+	FVector GroundTraceEnd = CheckedEndPos - FVector(0.f, 0.f, GroundTraceDistance);
+
+	bool bHitGround = UKismetSystemLibrary::LineTraceSingle(
+		GetWorld(),
+		GroundTraceStart,
+		GroundTraceEnd,
+		UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
+		false,
+		IgnoreActors,
+		EDrawDebugTrace::ForDuration,
+		GroundHit,
+		true,
+		FLinearColor::Green,
+		FLinearColor::Red,
+		5.0f
+	);
+
+	BasePos = StartPos;
+	if (bHitGround)
+	{
+		float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		TargetPos = CheckedEndPos;
+		TargetPos.Z = GroundHit.ImpactPoint.Z + CapsuleHalfHeight + TargetZOffset;
+	}
+	else
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
+	}
+
+	if (FVector::DistSquared(BasePos, TargetPos) < MinDashDistance * MinDashDistance)
+	{
+		LOG_SCREEN("Dash distance too short.");
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+		return;
+	}
+		
 	TickCurve->ReadyForActivation();
 }
 
