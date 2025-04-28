@@ -29,6 +29,8 @@ protected:
 	UFUNCTION()
 	virtual void OnInterrupted();
 
+	FName GetNextSection();
+	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAnimMontage> AnimMontage;
 };
