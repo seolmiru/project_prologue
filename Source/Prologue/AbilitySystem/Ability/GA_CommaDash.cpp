@@ -60,12 +60,16 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
     bool bFoundAnyGroundSpot = false;
     FVector CurrentPathPos;
     FHitResult GroundHit;
+	FHitResult VerticalHit;
 	
     int32 EffectiveSteps = FMath::Max(1, PathCheckSteps);
     for (int32 i = 1; i <= EffectiveSteps; ++i)
     {
         float Alpha = static_cast<float>(i) / static_cast<float>(EffectiveSteps);
         CurrentPathPos = FMath::Lerp(ActorStartPos, CheckedEndPos, Alpha);
+
+    	bool bFoundTargetThisStep = false;
+    	FVector TargetPosThisStep = FVector::ZeroVector;
 
         FVector GroundTraceStart = CurrentPathPos + FVector(0.f, 0.f, GroundTraceUpOffset);
         FVector GroundTraceEnd = CurrentPathPos - FVector(0.f, 0.f, GroundTraceDistance);
@@ -91,6 +95,45 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
             LastValidTargetPos.Z = GroundHit.ImpactPoint.Z + CapsuleHalfHeight + TargetZOffset;
             bFoundAnyGroundSpot = true;
         }
+
+    	if (bAllowVerticalDash)
+    	{
+    		FVector VerticalCheckTop = CurrentPathPos + FVector(0.f, 0.f, MaxAscendHeight);
+    		FVector VerticalCheckBottom = VerticalCheckTop - FVector(0.f, 0.f, VerticalCheckTraceLength);
+
+    		bool bHitPlatformAbove = UKismetSystemLibrary::LineTraceSingle(
+			   GetWorld(),
+			   VerticalCheckTop,
+			   VerticalCheckBottom,
+			   UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
+			   false,
+			   IgnoreActors,
+			   EDrawDebugTrace::ForDuration, // Debug only
+			   VerticalHit,
+			   true,
+			   FLinearColor::Green,
+			   FLinearColor::Red,
+			   1.0f
+			);
+
+    		if (bHitPlatformAbove)
+    		{
+    			if (VerticalHit.ImpactPoint.Z > CurrentPathPos.Z + KINDA_SMALL_NUMBER)
+    			{
+    				FVector HigherTargetPos = CurrentPathPos;
+    				HigherTargetPos.Z = VerticalHit.ImpactPoint.Z + CapsuleHalfHeight + TargetZOffset;
+
+    				TargetPosThisStep = HigherTargetPos;
+    				bFoundTargetThisStep = true;
+    			}
+    		}
+    	}
+
+    	if (bFoundTargetThisStep)
+    	{
+    		LastValidTargetPos = TargetPosThisStep;
+    		bFoundAnyGroundSpot = true;
+    	}
     }
 
     if (bFoundAnyGroundSpot)
