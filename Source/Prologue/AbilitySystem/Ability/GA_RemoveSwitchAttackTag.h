@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GA_RemoveTags.generated.h"
+#include "GA_RemoveSwitchAttackTag.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_RemoveTags : public UGameplayAbility
+class PROLOGUE_API UGA_RemoveSwitchAttackTag : public UGameplayAbility
 {
 	GENERATED_BODY()
 

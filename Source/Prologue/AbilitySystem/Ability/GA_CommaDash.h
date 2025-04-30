@@ -26,6 +26,9 @@ public:
 protected:
 	virtual void OnComplete() override;
 
+	UFUNCTION(BlueprintCallable, Category = "Dash|GroundCheck")
+	bool IsSafeLandingZone(const FVector& CandidateFootLocation, const TArray<AActor*>& IgnoreActors) const;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MoveLength = 500.f;
 

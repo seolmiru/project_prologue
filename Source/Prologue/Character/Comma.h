@@ -59,11 +59,11 @@ private:
 	TObjectPtr<UDataAsset_InputConfig> InputConfigDataAsset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChracterData", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UComboBowData> ComboBowData;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChracterData", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UComboSwordData> ComboSwordData;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChracterData", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UComboBowData> ComboBowData;
+	
 	//Inputs
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
@@ -90,11 +90,15 @@ public:
 	
 	FORCEINLINE FVector2D GetDirection() const { return Direction; }
 	
-	FORCEINLINE UComboBowData* GetComboBowData() const { return ComboBowData; }
 	FORCEINLINE UComboSwordData* GetComboSwordData() const { return ComboSwordData; }
+	FORCEINLINE UComboBowData* GetComboBowData() const { return ComboBowData; }
 	
-	FORCEINLINE UAnimMontage* GetBowComboMontage() const { return BowComboMontage; }
 	FORCEINLINE UAnimMontage* GetSwordComboMontage() const { return SwordComboMontage; }
+	FORCEINLINE UAnimMontage* GetBowComboMontage() const { return BowComboMontage; }
+
+	FORCEINLINE UAnimMontage* GetSwordSwitchAttackMontage() const { return SwordSwitchAttackMontage; }
+	FORCEINLINE UAnimMontage* GetBowSwitchAttackMontage() const { return BowSwitchAttackMontage; }
+	
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	UStaticMeshComponent* GetSwordWeaponMesh() const;
@@ -107,8 +111,14 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TObjectPtr<class UAnimMontage> SwordComboMontage;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<class UAnimMontage> BowComboMontage;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TObjectPtr<class UAnimMontage> SwordSwitchAttackMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TObjectPtr<class UAnimMontage> SwordComboMontage;
+	TObjectPtr<class UAnimMontage> BowSwitchAttackMontage;
 };

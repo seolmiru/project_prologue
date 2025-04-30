@@ -13,6 +13,8 @@
 	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOutOfHealthDelegate);
+
 /**
  * 
  */
@@ -24,21 +26,37 @@ class PROLOGUE_API UPrologueAttributeSet : public UAttributeSet
 public:
 	UPrologueAttributeSet();
 
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentHealth);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxHealth);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, Damage);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, SwitchAttackDamage);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentGauge);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxGauge);
+	
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	virtual bool PreGameplayEffectExecute(struct FGameplayEffectModCallbackData& Data) override;
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	mutable FOutOfHealthDelegate OnOutOfHealth;
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData CurrentHealth;
-	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentHealth);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	UPROPERTY(BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData MaxHealth;
-	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxHealth);
 
-	UPROPERTY(BlueprintReadOnly, Category = "OverClock")
+	UPROPERTY(BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData Damage;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData SwitchAttackDamage;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "OverClock", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData CurrentGauge;
-	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentGauge);
 
-	UPROPERTY(BlueprintReadOnly, Category = "OverClock")
+	UPROPERTY(BlueprintReadOnly, Category = "OverClock", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData MaxGauge;
-	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxGauge);
+
+	bool bOufOfHealth = false;
 };

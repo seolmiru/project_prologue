@@ -91,9 +91,14 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
         if (bHitGroundThisStep)
         {
-            LastValidTargetPos = CurrentPathPos;
-            LastValidTargetPos.Z = GroundHit.ImpactPoint.Z + CapsuleHalfHeight + TargetZOffset;
-            bFoundAnyGroundSpot = true;
+			FVector CandidateFootLocation = GroundHit.ImpactPoint;
+
+        	if (IsSafeLandingZone(CandidateFootLocation, IgnoreActors))
+        	{
+        		LastValidTargetPos = CurrentPathPos;
+        		LastValidTargetPos.Z = GroundHit.ImpactPoint.Z + CapsuleHalfHeight + TargetZOffset;
+        		bFoundAnyGroundSpot = true;
+        	}
         }
 
     	if (bAllowVerticalDash)
@@ -108,7 +113,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			   UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
 			   false,
 			   IgnoreActors,
-			   EDrawDebugTrace::ForDuration, // Debug only
+			   EDrawDebugTrace::ForDuration,
 			   VerticalHit,
 			   true,
 			   FLinearColor::Green,
@@ -181,4 +186,40 @@ void UGA_CommaDash::OnCurveTick(float Alpha)
 void UGA_CommaDash::OnComplete()
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateFootLocation, const TArray<AActor*>& IgnoreActors) const
+{
+	const float CheckRadius = 30.f;
+	const int32 NumCheckPoints = 8;
+
+	for (int32 i = 0; i < NumCheckPoints; ++i)
+	{
+		float Angle = 2 * PI * (static_cast<float>(i) / NumCheckPoints);
+		FVector Offset(FMath::Cos(Angle), FMath::Sin(Angle), 0.f);
+		Offset *= CheckRadius;
+
+		FVector Start = CandidateFootLocation + Offset + FVector(0.f, 0.f, GroundTraceUpOffset);
+		FVector End = CandidateFootLocation + Offset - FVector(0.f, 0.f, GroundTraceDistance);
+
+		FHitResult Hit;
+		bool bHit = UKismetSystemLibrary::LineTraceSingle(
+			GetWorld(),
+			Start,
+			End,
+			UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
+			false,
+			IgnoreActors,
+			EDrawDebugTrace::None,
+			Hit,
+			true
+		);
+
+		if (!bHit)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }

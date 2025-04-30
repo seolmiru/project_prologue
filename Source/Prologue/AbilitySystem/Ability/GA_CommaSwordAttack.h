@@ -36,6 +36,9 @@ protected:
 protected:
 	UPROPERTY()
 	TObjectPtr<class UComboSwordData> CurrentComboData;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	TSubclassOf<UGameplayEffect> SwitchAttackEffectClass;
 
 	uint8 CurrentCombo = 0;
 	FTimerHandle ComboTimerHandle;
