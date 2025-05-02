@@ -43,4 +43,6 @@ protected:
 	uint8 CurrentCombo = 0;
 	FTimerHandle ComboTimerHandle;
 	bool HasNextComboInput = false;
+
+	bool bIsSwitchAttack = false;
 };

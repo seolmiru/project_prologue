@@ -8,6 +8,7 @@
 
 class UProjectileMovementComponent;
 class UBoxComponent;
+class UNiagaraComponent;
 
 UENUM(BlueprintType)
 enum class EProjectileDamagePolicy : uint8
@@ -24,6 +25,8 @@ class PROLOGUE_API APrologueProjectileBase : public AActor
 public:
 	APrologueProjectileBase();
 
+	void FireInDirection(const FVector& ShootDirection) const;
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -34,8 +37,14 @@ protected:
 	UProjectileMovementComponent* ProjectileMovementComp;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	UStaticMeshComponent* ProjectileMesh;
+	UNiagaraComponent* ProjectileNiagaraComponent;
 	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	EProjectileDamagePolicy ProjectileDamagePolicy = EProjectileDamagePolicy::OnHit;
+
+	UFUNCTION()
+	virtual void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION()
+	virtual void OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

@@ -4,7 +4,7 @@
 #include "GA_RemoveWeaponTag.h"
 
 #include "AbilitySystemComponent.h"
-#include "Prologue/Character/Comma.h"
+#include "Prologue/Character/Player/Comma.h"
 
 void UGA_RemoveWeaponTag::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                      const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,

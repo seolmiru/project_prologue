@@ -15,7 +15,8 @@ public class Prologue : ModuleRules
 			"GameplayAbilities",
 			"GameplayTasks",
 			"GameplayTags",
-			"EnhancedInput"
+			"EnhancedInput",
+			"Niagara"
 		});
 	}
 }
