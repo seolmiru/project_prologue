@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "PrologueProjectileBase.generated.h"
 
+class UGameplayEffect;
 class UProjectileMovementComponent;
 class UBoxComponent;
 class UNiagaraComponent;
@@ -47,4 +48,8 @@ protected:
 
 	UFUNCTION()
 	virtual void OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+protected:
+	UPROPERTY(EditAnywhere, Category = "GAS")
+	TSubclassOf<UGameplayEffect> AttackDamageEffect;
 };

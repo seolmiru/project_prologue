@@ -6,6 +6,7 @@
 #include "Prologue/Character/PrologueCharacter.h"
 #include "PrologueEnemyCharacter.generated.h"
 
+class UEnemyWidget;
 class UGameplayAbility;
 
 UCLASS()
@@ -27,6 +28,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
 	UPrologueAttributeSet* Attributes;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	class UWidgetComponent* EnemyWidgetComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_EnemyWidget;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")

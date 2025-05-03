@@ -27,7 +27,7 @@ protected:
 	virtual void OnComplete() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Dash|GroundCheck")
-	bool IsSafeLandingZone(const FVector& CandidateFootLocation, const TArray<AActor*>& IgnoreActors) const;
+	bool IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MoveLength = 500.f;
@@ -43,7 +43,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
 	int32 PathCheckSteps = 10;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	float MinDashDistance = 10.f;
 

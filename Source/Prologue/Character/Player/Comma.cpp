@@ -15,8 +15,10 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "AbilitySystemComponent.h"
+#include "Blueprint/UserWidget.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/Player/ProloguePlayerState.h"
+#include "Prologue/UI/Comma/CommaWidget.h"
 
 
 AComma::AComma()
@@ -113,6 +115,13 @@ void AComma::PossessedBy(AController* NewController)
 			FGameplayAbilitySpec GameplayAbilitySpec(Ability);
 			ASC->GiveAbility(GameplayAbilitySpec);
 		}
+	}
+
+	if (BP_CommaWidget)
+	{
+		CommaWidget = CreateWidget<UCommaWidget>(GetWorld(), BP_CommaWidget);
+		CommaWidget->SetAbilitySystemComponent(this);
+		CommaWidget->AddToViewport();
 	}
 
 	if (!StartEffect.IsEmpty())

@@ -69,6 +69,16 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
 
 			SourceASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
 		}
+
+		if (IncreaseGaugeEffect)
+		{
+			FGameplayEffectSpecHandle GaugeEffectSpecHandle = MakeOutgoingGameplayEffectSpec(IncreaseGaugeEffect);
+			if (GaugeEffectSpecHandle.IsValid())
+			{
+				UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+				ASC->ApplyGameplayEffectSpecToSelf(*GaugeEffectSpecHandle.Data.Get());
+			}
+		}
 	}
 
 	bool bReplicatedEndAbility = true;

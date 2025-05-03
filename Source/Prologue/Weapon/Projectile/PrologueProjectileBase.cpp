@@ -3,10 +3,14 @@
 
 #include "PrologueProjectileBase.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "NiagaraComponent.h"
 #include "Prologue/Prologue.h"
+#include "Prologue/PrologueGameplayTags.h"
 
 APrologueProjectileBase::APrologueProjectileBase()
 {
@@ -51,12 +55,36 @@ void APrologueProjectileBase::BeginPlay()
 void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (OtherActor)
+	if (!OtherActor || OtherActor == this || !AttackDamageEffect)
 	{
-		LOG_SCREEN("%s", *OtherActor->GetActorNameOrLabel());
-
 		Destroy();
+		return;
 	}
+
+	if (OtherActor->Implements<UAbilitySystemInterface>())
+	{
+		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
+		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
+
+		if (TargetASC && SourceASC)
+		{
+			FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
+			EffectContext.AddSourceObject(this);
+			EffectContext.AddHitResult(Hit);
+
+			FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(AttackDamageEffect, 1.f, EffectContext);
+			if (SpecHandle.IsValid())
+			{
+				SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data, TargetASC);
+
+				FGameplayCueParameters CueParams;
+				CueParams.EffectContext = EffectContext;
+				TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParams);
+			}
+		}
+	}
+
+	Destroy();
 }
 
 void APrologueProjectileBase::OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

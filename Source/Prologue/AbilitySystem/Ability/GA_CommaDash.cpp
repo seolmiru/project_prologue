@@ -16,148 +16,83 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
-
 	UCharacterMovementComponent* MovementComponent = Comma->GetCharacterMovement();
-	
+
 	UAT_TickCurve* TickCurve = UAT_TickCurve::CreateTask(this, Curve);
 	TickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
 	TickCurve->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 
 	FVector ActorStartPos = Comma->GetActorLocation();
-    float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-    FVector FootStartPos = ActorStartPos - FVector(0.f, 0.f, CapsuleHalfHeight);
+	const float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
-    FVector InputDirection = MovementComponent->GetLastInputVector();
-    InputDirection.Normalize();
+	FVector InputDirection = MovementComponent->GetLastInputVector();
+	InputDirection.Normalize();
+	if (InputDirection.IsNearlyZero())
+	{
+		InputDirection = Comma->GetActorForwardVector();
+	}
 
-    if (InputDirection.IsNearlyZero())
-    {
-       InputDirection = Comma->GetActorForwardVector();
-    }
+	const FVector DashEndPos = ActorStartPos + InputDirection * MoveLength;
 
-    FVector TentativeEndFootPos = FootStartPos + InputDirection * MoveLength;
-    TArray<AActor*> IgnoreActors;
-    IgnoreActors.Add(Comma);
-    FHitResult ObstacleHit;
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(Comma);
 
-    bool bHitObstacle = UKismetSystemLibrary::LineTraceSingle(
-       GetWorld(),
-       FootStartPos,
-       TentativeEndFootPos,
-       UEngineTypes::ConvertToTraceType(ECC_Visibility),
-       false,
-       IgnoreActors,
-       EDrawDebugTrace::ForDuration,
-       ObstacleHit,
-       true
-    );
+	BasePos = ActorStartPos;
+	FVector LastValidTargetPos = ActorStartPos;
+	bool bFoundAnyGroundSpot = false;
 
-    FVector CheckedEndFootPos = bHitObstacle ? ObstacleHit.ImpactPoint : TentativeEndFootPos;
-    FVector CheckedEndPos = CheckedEndFootPos + FVector(0.f, 0.f, CapsuleHalfHeight);
+	const int32 EffectiveSteps = FMath::Max(1, PathCheckSteps);
+	for (int32 i = 1; i <= EffectiveSteps; ++i)
+	{
+		const float Alpha = static_cast<float>(i) / static_cast<float>(EffectiveSteps);
+		const FVector SamplePos = FMath::Lerp(ActorStartPos, DashEndPos, Alpha);
 
-    BasePos = ActorStartPos;
-    FVector LastValidTargetPos = ActorStartPos;
-    bool bFoundAnyGroundSpot = false;
-    FVector CurrentPathPos;
-    FHitResult GroundHit;
-	FHitResult VerticalHit;
-	
-    int32 EffectiveSteps = FMath::Max(1, PathCheckSteps);
-    for (int32 i = 1; i <= EffectiveSteps; ++i)
-    {
-        float Alpha = static_cast<float>(i) / static_cast<float>(EffectiveSteps);
-        CurrentPathPos = FMath::Lerp(ActorStartPos, CheckedEndPos, Alpha);
+		const FVector GroundTraceStart = SamplePos + FVector(0.f, 0.f, GroundTraceUpOffset);
+		const FVector GroundTraceEnd = SamplePos - FVector(0.f, 0.f, GroundTraceDistance);
 
-    	bool bFoundTargetThisStep = false;
-    	FVector TargetPosThisStep = FVector::ZeroVector;
+		FHitResult GroundHit;
+		const bool bHitGround = UKismetSystemLibrary::LineTraceSingle(
+			GetWorld(),
+			GroundTraceStart,
+			GroundTraceEnd,
+			UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
+			false,
+			IgnoreActors,
+			EDrawDebugTrace::ForDuration,
+			GroundHit,
+			true,
+			FLinearColor::Green,
+			FLinearColor::Red,
+			1.0f
+		);
 
-        FVector GroundTraceStart = CurrentPathPos + FVector(0.f, 0.f, GroundTraceUpOffset);
-        FVector GroundTraceEnd = CurrentPathPos - FVector(0.f, 0.f, GroundTraceDistance);
+		if (bHitGround)
+		{
+			FVector AdjustedLandingPos;
+			if (IsSafeLandingZone(GroundHit.ImpactPoint, IgnoreActors, AdjustedLandingPos))
+			{
+				LastValidTargetPos = AdjustedLandingPos + FVector(0.f, 0.f, CapsuleHalfHeight + TargetZOffset);
+				bFoundAnyGroundSpot = true;
+			}
+		}
+	}
 
-        bool bHitGroundThisStep = UKismetSystemLibrary::LineTraceSingle(
-           GetWorld(),
-           GroundTraceStart,
-           GroundTraceEnd,
-           UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-           false,
-           IgnoreActors,
-           EDrawDebugTrace::ForDuration,
-           GroundHit,
-           true,
-           FLinearColor::Green,
-           FLinearColor::Red,
-           1.0f
-        );
+	if (bFoundAnyGroundSpot)
+	{
+		TargetPos = LastValidTargetPos;
 
-        if (bHitGroundThisStep)
-        {
-			FVector CandidateFootLocation = GroundHit.ImpactPoint;
+		if (FVector::DistSquared(BasePos, TargetPos) < MinDashDistance * MinDashDistance)
+		{
+			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+			return;
+		}
 
-        	if (IsSafeLandingZone(CandidateFootLocation, IgnoreActors))
-        	{
-        		LastValidTargetPos = CurrentPathPos;
-        		LastValidTargetPos.Z = GroundHit.ImpactPoint.Z + CapsuleHalfHeight + TargetZOffset;
-        		bFoundAnyGroundSpot = true;
-        	}
-        }
-
-    	if (bAllowVerticalDash)
-    	{
-    		FVector VerticalCheckTop = CurrentPathPos + FVector(0.f, 0.f, MaxAscendHeight);
-    		FVector VerticalCheckBottom = VerticalCheckTop - FVector(0.f, 0.f, VerticalCheckTraceLength);
-
-    		bool bHitPlatformAbove = UKismetSystemLibrary::LineTraceSingle(
-			   GetWorld(),
-			   VerticalCheckTop,
-			   VerticalCheckBottom,
-			   UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-			   false,
-			   IgnoreActors,
-			   EDrawDebugTrace::ForDuration,
-			   VerticalHit,
-			   true,
-			   FLinearColor::Green,
-			   FLinearColor::Red,
-			   1.0f
-			);
-
-    		if (bHitPlatformAbove)
-    		{
-    			if (VerticalHit.ImpactPoint.Z > CurrentPathPos.Z + KINDA_SMALL_NUMBER)
-    			{
-    				FVector HigherTargetPos = CurrentPathPos;
-    				HigherTargetPos.Z = VerticalHit.ImpactPoint.Z + CapsuleHalfHeight + TargetZOffset;
-
-    				TargetPosThisStep = HigherTargetPos;
-    				bFoundTargetThisStep = true;
-    			}
-    		}
-    	}
-
-    	if (bFoundTargetThisStep)
-    	{
-    		LastValidTargetPos = TargetPosThisStep;
-    		bFoundAnyGroundSpot = true;
-    	}
-    }
-
-    if (bFoundAnyGroundSpot)
-    {
-        TargetPos = LastValidTargetPos;
-
-        if (FVector::DistSquared(BasePos, TargetPos) < MinDashDistance * MinDashDistance)
-        {
-            EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-            return;
-        }
-    	
-        TickCurve->ReadyForActivation();
-    }
-    else
-    {
-        EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-        return;
-    }
+		TickCurve->ReadyForActivation();
+	}
+	else
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+	}
 }
 
 void UGA_CommaDash::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -188,19 +123,22 @@ void UGA_CommaDash::OnComplete()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateFootLocation, const TArray<AActor*>& IgnoreActors) const
+bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const
 {
 	const float CheckRadius = 30.f;
 	const int32 NumCheckPoints = 8;
+	const float MinValidHitRatio = 0.75f;
+
+	int32 HitCount = 0;
+	FVector AccumulatedOffset = FVector::ZeroVector;
 
 	for (int32 i = 0; i < NumCheckPoints; ++i)
 	{
 		float Angle = 2 * PI * (static_cast<float>(i) / NumCheckPoints);
-		FVector Offset(FMath::Cos(Angle), FMath::Sin(Angle), 0.f);
-		Offset *= CheckRadius;
+		FVector Offset = FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * CheckRadius;
 
-		FVector Start = CandidateFootLocation + Offset + FVector(0.f, 0.f, GroundTraceUpOffset);
-		FVector End = CandidateFootLocation + Offset - FVector(0.f, 0.f, GroundTraceDistance);
+		FVector Start = CandidateLocation + Offset + FVector(0.f, 0.f, GroundTraceUpOffset);
+		FVector End = CandidateLocation + Offset - FVector(0.f, 0.f, GroundTraceDistance);
 
 		FHitResult Hit;
 		bool bHit = UKismetSystemLibrary::LineTraceSingle(
@@ -215,11 +153,26 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateFootLocation, cons
 			true
 		);
 
-		if (!bHit)
+		if (bHit)
 		{
-			return false;
+			HitCount++;
+			AccumulatedOffset -= Offset;
 		}
 	}
 
-	return true;
+	float HitRatio = static_cast<float>(HitCount) / static_cast<float>(NumCheckPoints);
+
+	if (HitRatio >= MinValidHitRatio)
+	{
+		OutAdjustedLocation = CandidateLocation;
+		return true;
+	}
+	else if (HitCount >= 4)
+	{
+		const FVector Adjusted = CandidateLocation + AccumulatedOffset.GetSafeNormal() * 20.f;
+		if (bool bRecursiveResult = IsSafeLandingZone(Adjusted, IgnoreActors, OutAdjustedLocation))
+			return true;
+	}
+	
+	return false;
 }
