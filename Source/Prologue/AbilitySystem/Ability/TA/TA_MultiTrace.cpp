@@ -28,6 +28,7 @@ FGameplayAbilityTargetDataHandle ATA_MultiTrace::MakeTargetData() const
 	}
 
 	TArray<FOverlapResult> Overlaps;
+	const float SwitchAttackRadius = AttributeSet->GetSwordSwitchAttackRange();
 
 	FVector Origin = Character->GetActorLocation();
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ATA_MultiTrace), false, Character);
@@ -36,7 +37,7 @@ FGameplayAbilityTargetDataHandle ATA_MultiTrace::MakeTargetData() const
 		Origin,
 		FQuat::Identity,
 		TraceChannel,
-		FCollisionShape::MakeSphere(300.f),
+		FCollisionShape::MakeSphere(SwitchAttackRadius),
 		Params
 	);
 

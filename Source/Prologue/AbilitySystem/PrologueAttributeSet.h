@@ -29,7 +29,11 @@ public:
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentHealth);
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxHealth);
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, Damage);
-	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, SwitchAttackDamage);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, SwordSwitchAttackDamage);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxSwordSwitchAttackDamage);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, SwordSwitchAttackRange);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxSwordSwitchAttackRange);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, BowSwitchAttackDamage);
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentGauge);
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxGauge);
 	
@@ -50,7 +54,19 @@ protected:
 	FGameplayAttributeData Damage;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = true))
-	FGameplayAttributeData SwitchAttackDamage;
+	FGameplayAttributeData SwordSwitchAttackDamage;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData MaxSwordSwitchAttackDamage;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData SwordSwitchAttackRange;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData MaxSwordSwitchAttackRange;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData BowSwitchAttackDamage;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "OverClock", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData CurrentGauge;

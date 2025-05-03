@@ -6,14 +6,17 @@
 #include "../PrologueGameplayTags.h"
 #include "Prologue/Prologue.h"
 
-UPrologueAttributeSet::UPrologueAttributeSet()
+UPrologueAttributeSet::UPrologueAttributeSet() :
+	SwordSwitchAttackDamage(10.f),
+	MaxSwordSwitchAttackDamage(30.f),
+	SwordSwitchAttackRange(800.f),
+	MaxSwordSwitchAttackRange(1200.f)
 {
 	InitCurrentHealth(1.f);
 	InitMaxHealth(1.f);
 	InitCurrentGauge(1.f);
 	InitMaxGauge(1.f);
 	InitDamage(1.f);
-	InitSwitchAttackDamage(1.f);
 }
 
 void UPrologueAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -23,6 +26,14 @@ void UPrologueAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribu
 	if (Attribute == GetDamageAttribute())
 	{
 		NewValue = NewValue < 0.0f ? 0.0f : NewValue;
+	}
+	else if (Attribute == GetSwordSwitchAttackRangeAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.1f, GetMaxSwordSwitchAttackRange());
+	}
+	else if (Attribute == GetSwordSwitchAttackDamageAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxSwordSwitchAttackDamage());
 	}
 }
 
