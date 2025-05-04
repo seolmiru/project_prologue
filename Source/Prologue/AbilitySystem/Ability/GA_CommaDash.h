@@ -16,8 +16,6 @@ class PROLOGUE_API UGA_CommaDash : public UGA_MontageAbility
 
 public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
-	virtual void CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 	UFUNCTION(BlueprintCallable)
@@ -33,10 +31,7 @@ protected:
 	float MoveLength = 500.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
-	float GroundTraceUpOffset = 50.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
-	float GroundTraceDistance = 100.f;
+	float MaxPlatformHeightDiff = 800.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
 	float TargetZOffset = 2.f;
@@ -46,15 +41,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	float MinDashDistance = 10.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Vertical")
-	bool bAllowVerticalDash = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Vertical", meta = (EditCondition = "bAllowVerticalDash", ClampMin = "0.0", UIMin = "0.0"))
-	float MaxAscendHeight = 300.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Vertical", meta = (EditCondition = "bAllowVerticalDash", ClampMin = "0.0", UIMin = "0.0"))
-	float VerticalCheckTraceLength = 400.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	TObjectPtr<class UCurveFloat> Curve;
