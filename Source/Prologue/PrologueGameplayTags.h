@@ -22,11 +22,7 @@ namespace PrologueGameplayTags
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_OverClock);
 
-	//State Tags
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_IsDead);
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_IsAttacking);
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_IsMoving);
-	
+	//Comma State Tags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_SwitchAttack_Sword);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_SwitchAttack_Bow);
 
@@ -34,6 +30,8 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_CanCancel);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_Invincible);
+
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_OverClock);
 
 	//Effect Tags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_Damaging);
@@ -48,4 +46,11 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_AddBow);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_SpawnProjectile);
+
+	//Shared Tags
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_Ability_Death);
+	
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_State_IsDead);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_State_IsAttacking);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_State_IsMoving);
 }

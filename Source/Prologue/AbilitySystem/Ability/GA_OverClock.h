@@ -6,6 +6,7 @@
 #include "Abilities/GameplayAbility.h"
 #include "GA_OverClock.generated.h"
 
+class APrologueEnemyCharacter;
 /**
  * 
  */
@@ -28,7 +29,13 @@ protected:
 	float OverClockDuration = 3.0f;
 
 	UPROPERTY(EditAnywhere)
-	float GlobalTimeScale = 0.2f;
+	float TimeScale = 0.2f;
 
 	FTimerHandle OverClockTimerHandle;
+
+protected:
+	TArray<APrologueEnemyCharacter*> AffectedEnemies;
+
+	void ApplySlowToEnemies();
+	void RestoreEnemyTime();
 };

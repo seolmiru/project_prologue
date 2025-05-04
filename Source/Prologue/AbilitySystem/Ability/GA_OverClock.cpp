@@ -5,7 +5,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
-#include "Prologue/Character/Player/Comma.h"
+#include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 
 UGA_OverClock::UGA_OverClock()
 {
@@ -28,21 +28,15 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	const_cast<UPrologueAttributeSet*>(AttributeSet)->SetCurrentGauge(0.0f);
 
-	const float TimerDelay = OverClockDuration * GlobalTimeScale;
+	ApplySlowToEnemies();
+	
 	GetWorld()->GetTimerManager().SetTimer(
 		OverClockTimerHandle,
 		this,
 		&UGA_OverClock::OnOverClockFinished,
-		TimerDelay,
+		OverClockDuration,
 		false
 	);
-	
-	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), GlobalTimeScale);
-
-	if (AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get()))
-	{
-		Comma->CustomTimeDilation = 1.0f / FMath::Max(GlobalTimeScale, KINDA_SMALL_NUMBER);
-	}
 }
 
 void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -51,17 +45,48 @@ void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
 	GetWorld()->GetTimerManager().ClearTimer(OverClockTimerHandle);
+
+	RestoreEnemyTime();
 }
 
 void UGA_OverClock::OnOverClockFinished()
 {
-	LOG_SCREEN("End OverClock. Restoring time.");
-	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+	LOG_SCREEN_R("End OverClock. Restoring time.");
 
-	if (AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo()))
-	{
-		Comma->CustomTimeDilation = 1.0f;
-	}
-
+	RestoreEnemyTime();
+	
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UGA_OverClock::ApplySlowToEnemies()
+{
+	AffectedEnemies.Empty();
+
+	TArray<AActor*> Found;
+	UGameplayStatics::GetAllActorsOfClass(
+		GetWorld(),
+		APrologueEnemyCharacter::StaticClass(),
+		Found
+	);
+
+	for (AActor* Actor : Found)
+	{
+		if (auto* Enemy = Cast<APrologueEnemyCharacter>(Actor))
+		{
+			Enemy->CustomTimeDilation = TimeScale;
+			AffectedEnemies.Add(Enemy);
+		}
+	}
+}
+
+void UGA_OverClock::RestoreEnemyTime()
+{
+	for (auto* Enemy : AffectedEnemies)
+	{
+		if (IsValid(Enemy))
+		{
+			Enemy->CustomTimeDilation = 1.0f;
+		}
+	}
+	AffectedEnemies.Empty();
 }

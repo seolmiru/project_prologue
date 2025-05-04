@@ -180,7 +180,7 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 {
 	if (ASC)
 	{
-		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_IsAttacking))
+		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
 		{
 			return;
 		}

@@ -79,7 +79,7 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 
 	if ((GetCurrentHealth() <= 0.0f) && !bOufOfHealth)
 	{
-		Data.Target.AddLooseGameplayTag(PrologueGameplayTags::Comma_State_IsDead);
+		Data.Target.AddLooseGameplayTag(PrologueGameplayTags::Shared_State_IsDead);
 		OnOutOfHealth.Broadcast();
 	}
 
