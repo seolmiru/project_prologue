@@ -22,7 +22,7 @@ APrologueCharacter::APrologueCharacter()
 	GetMesh()->bReceivesDecals = false;
 
 	GetCharacterMovement()->bCanWalkOffLedges = false;
-	GetCharacterMovement()->PerchRadiusThreshold = 50.f;
+	GetCharacterMovement()->PerchRadiusThreshold = 70.f;
 	GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
 }
 

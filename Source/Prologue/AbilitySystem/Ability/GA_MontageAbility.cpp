@@ -16,10 +16,10 @@ void UGA_MontageAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayMontage"), AnimMontage, 1.0f);
-	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_MontageAbility::OnComplete);
-	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_MontageAbility::OnInterrupted);
-	PlayAttackTask->ReadyForActivation();
+	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayMontage"), AnimMontage, 1.0f);
+	PlayTask->OnCompleted.AddDynamic(this, &UGA_MontageAbility::OnComplete);
+	PlayTask->OnInterrupted.AddDynamic(this, &UGA_MontageAbility::OnInterrupted);
+	PlayTask->ReadyForActivation();
 }
 
 void UGA_MontageAbility::InputPressed(const FGameplayAbilitySpecHandle Handle,

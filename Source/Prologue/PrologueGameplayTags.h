@@ -4,14 +4,14 @@
 
 namespace PrologueGameplayTags
 {
-	//Input Tags
+	/** Input Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Move);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Look);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Attack_Sword);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Attack_Bow);
 
-	//Comma Tags
+	/** Comma Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Weapon_Sword);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Weapon_Bow);
 	
@@ -22,7 +22,7 @@ namespace PrologueGameplayTags
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_OverClock);
 
-	//Comma State Tags
+	/** Comma State Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_SwitchAttack_Sword);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_SwitchAttack_Bow);
 
@@ -33,12 +33,12 @@ namespace PrologueGameplayTags
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_OverClock);
 
-	//Effect Tags
+	/** Effect Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_Damaging);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_PlayerHit);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_EnemyHit);
 
-	//Event Tags
+	/** Event Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_AttackHitCheck);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_SwitchAttackHitCheck);
 
@@ -47,7 +47,11 @@ namespace PrologueGameplayTags
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_SpawnProjectile);
 
-	//Shared Tags
+	/** Enemy Tags */
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Ability_Attack);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Ability_Jump);
+	
+	/** Shared Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_Ability_Death);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_State_IsDead);
