@@ -28,4 +28,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<class ATA_Trace> TargetActorClass;
+
+	UPROPERTY(EditAnywhere, Category = "GAS")
+	TSubclassOf<UGameplayEffect> IncreaseGaugeEffect;
 };

@@ -3,7 +3,7 @@
 
 #include "CommaAnimInstance.h"
 
-#include "Prologue/Character/Comma.h"
+#include "Prologue/Character/Player/Comma.h"
 
 void UCommaAnimInstance::NativeInitializeAnimation()
 {
