@@ -17,7 +17,7 @@ APrologueAIController::APrologueAIController(const FObjectInitializer& ObjectIni
 	AISenseConfig_Sight->DetectionByAffiliation.bDetectNeutrals = false;
 	AISenseConfig_Sight->SightRadius = 1000.f;
 	AISenseConfig_Sight->LoseSightRadius = 0.f;
-	AISenseConfig_Sight->PeripheralVisionAngleDegrees = 30.f;
+	AISenseConfig_Sight->PeripheralVisionAngleDegrees = 60.f;
 
 	EnemyPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>("EnemyPerceptionComponent");
 	EnemyPerceptionComponent->ConfigureSense(*AISenseConfig_Sight);

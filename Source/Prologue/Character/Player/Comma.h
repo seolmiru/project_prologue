@@ -43,6 +43,9 @@ protected:
 
 protected:
 	FVector2D Direction;
+
+	UPROPERTY()
+	FVector2D CachedMovementInput = FVector2D::ZeroVector;
 	
 private:
 	/** Components */
@@ -110,7 +113,8 @@ public:
 
 	FORCEINLINE UAnimMontage* GetSwordSwitchAttackMontage() const { return SwordSwitchAttackMontage; }
 	FORCEINLINE UAnimMontage* GetBowSwitchAttackMontage() const { return BowSwitchAttackMontage; }
-	
+
+	FVector2D GetCachedMovementInput() const { return CachedMovementInput; }
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	UStaticMeshComponent* GetSwordWeaponMesh() const;

@@ -178,6 +178,9 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AComma::Input_Move(const FInputActionValue& InputActionValue)
 {
+	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
+	CachedMovementInput = MovementVector;
+	
 	if (ASC)
 	{
 		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
@@ -185,8 +188,6 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 			return;
 		}
 	}
-	
-	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
