@@ -6,7 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Prologue/PrologueGameplayTags.h"
-#include "Prologue/Character/Comma.h"
+#include "Prologue/Character/Player/Comma.h"
 #include "Prologue/DataAsset/ComboBowData.h"
 #include "Prologue/DataAsset/ComboSwordData.h"
 
@@ -23,16 +23,38 @@ void UGA_CommaSwordAttack::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
 
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	
+	if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_SwitchAttack_Sword))
+	{
+		bIsSwitchAttack = true;
+		ASC->RemoveActiveEffectsWithTags(FGameplayTagContainer(PrologueGameplayTags::Comma_State_SwitchAttack_Sword));
+	}
+	else
+	{
+		bIsSwitchAttack = false;
+	}
+	
 	CurrentComboData = Comma->GetComboSwordData();
 
 	Comma->RotateToMouse();
 	Comma->GetSwordWeaponMesh()->SetVisibility(true);
 	Comma->GetBowWeaponMesh()->SetVisibility(false);
 
-	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetSwordComboMontage(), 1.0f, GetNextSection());
-	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaSwordAttack::OnComplete);
-	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaSwordAttack::OnInterrupted);
-	PlayAttackTask->ReadyForActivation();
+	if (bIsSwitchAttack)
+	{
+		UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetSwordSwitchAttackMontage(), 1.0f, GetNextSection());
+		PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaSwordAttack::OnComplete);
+		PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaSwordAttack::OnInterrupted);
+		PlayAttackTask->ReadyForActivation();
+	}
+	else
+	{
+		UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetSwordComboMontage(), 1.0f, GetNextSection());
+		PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaSwordAttack::OnComplete);
+		PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaSwordAttack::OnInterrupted);
+		PlayAttackTask->ReadyForActivation();
+	}
 	
 	StartComboTimer();
 }
@@ -57,6 +79,11 @@ void UGA_CommaSwordAttack::CancelAbility(const FGameplayAbilitySpecHandle Handle
 	bool bReplicateCancelAbility)
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
+
+	bIsSwitchAttack = false;
+	CurrentComboData = nullptr;
+	CurrentCombo = 0;
+	HasNextComboInput = false;
 }
 
 void UGA_CommaSwordAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
@@ -65,6 +92,15 @@ void UGA_CommaSwordAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
+	if (!bIsSwitchAttack && CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
+	{
+		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+		EffectContextHandle.AddSourceObject(this);
+		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
+		GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
+	}
+
+	bIsSwitchAttack = false;
 	CurrentComboData = nullptr;
 	CurrentCombo = 0;
 	HasNextComboInput = false;
