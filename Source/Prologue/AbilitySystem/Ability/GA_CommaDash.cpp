@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Prologue/Character/Player/Comma.h"
+#include "Prologue/Controller/CommaController.h"
 
 void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
                                     const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -28,8 +29,23 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	FVector ActorStartPos = Comma->GetActorLocation();
 	const float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
-	FVector InputDirection = MovementComponent->GetLastInputVector();
-	InputDirection.Normalize();
+	ACommaController* Controller = Cast<ACommaController>(Comma->GetController());
+	FVector InputDirection = FVector::ZeroVector;
+
+	if (Controller)
+	{
+		FVector2D CachedVec = Comma->GetCachedMovementInput();
+
+		const FRotator ControlRotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, ControlRotation.Yaw, 0);
+
+		const FVector ForwardDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector RightDir   = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		InputDirection = ForwardDir * CachedVec.Y + RightDir * CachedVec.X;
+		InputDirection.Normalize();
+	}
+	
 	if (InputDirection.IsNearlyZero())
 	{
 		InputDirection = Comma->GetActorForwardVector();
