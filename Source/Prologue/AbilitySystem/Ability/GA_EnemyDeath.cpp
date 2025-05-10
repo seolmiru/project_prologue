@@ -20,3 +20,13 @@ void UGA_EnemyDeath::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
+
+APrologueEnemyCharacter* UGA_EnemyDeath::GetEnemyCharacterFromActorInfo()
+{
+	if (!CachedEnemyCharacter.IsValid())
+	{
+		CachedEnemyCharacter = Cast<APrologueEnemyCharacter>(CurrentActorInfo->AvatarActor);
+	}
+
+	return CachedEnemyCharacter.IsValid() ? CachedEnemyCharacter.Get() : nullptr;
+}
