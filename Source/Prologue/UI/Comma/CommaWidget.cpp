@@ -9,7 +9,7 @@ void UCommaWidget::SetAbilitySystemComponent(AActor* InOwner)
 
 	if (ASC)
 	{
-		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetCurrentHealthAttribute()).AddUObject(this, &UCommaWidget::OnHealthChanged);
+		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetCurrentHealthAttribute()).AddUObject(this, &UCommaWidget::OnCurrentHealthChanged);
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetMaxHealthAttribute()).AddUObject(this, &UCommaWidget::OnMaxHealthChanged);
 
 		if (const UPrologueAttributeSet* CurrentAttributeSet = ASC->GetSet<UPrologueAttributeSet>())
@@ -20,7 +20,7 @@ void UCommaWidget::SetAbilitySystemComponent(AActor* InOwner)
 	}
 }
 
-void UCommaWidget::OnHealthChanged(const FOnAttributeChangeData& ChangeData)
+void UCommaWidget::OnCurrentHealthChanged(const FOnAttributeChangeData& ChangeData)
 {
 	CurrentHealth = ChangeData.NewValue;
 }

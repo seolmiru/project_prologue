@@ -5,6 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "GenericTeamAgentInterface.h"
 
 UAbilitySystemComponent* UPrologueFunctionLibrary::NativeGetASCFromActor(AActor* InActor)
 {
@@ -31,4 +32,19 @@ void UPrologueFunctionLibrary::RemoveGameplayTagFromActorIfFound(AActor* InActor
 	{
 		ASC->RemoveLooseGameplayTag(TagToRemove);
 	}
+}
+
+bool UPrologueFunctionLibrary::IsTargetPawnHostile(APawn* QueryPawn, APawn* TargetPawn)
+{
+	check(QueryPawn && TargetPawn);
+	
+	IGenericTeamAgentInterface* QueryTeamAgent = Cast<IGenericTeamAgentInterface>(QueryPawn->GetController());
+	IGenericTeamAgentInterface* TargetTeamAgent = Cast<IGenericTeamAgentInterface>(TargetPawn->GetController());
+
+	if (QueryTeamAgent && TargetTeamAgent)
+	{
+		return QueryTeamAgent->GetGenericTeamId() != TargetTeamAgent->GetGenericTeamId();
+	}
+
+	return false;
 }

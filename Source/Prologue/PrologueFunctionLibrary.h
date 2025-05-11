@@ -24,4 +24,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Prologue|FunctionLibrary")
 	static void RemoveGameplayTagFromActorIfFound(AActor* InActor, FGameplayTag TagToRemove);
+
+	UFUNCTION(BlueprintCallable, Category = "Prologue|FunctionLibrary")
+	static bool IsTargetPawnHostile(APawn* QueryPawn, APawn* TargetPawn);
 };
