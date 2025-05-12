@@ -60,7 +60,7 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 		Destroy();
 		return;
 	}
-
+	
 	if (OtherActor->Implements<UAbilitySystemInterface>())
 	{
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
@@ -73,9 +73,12 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 			EffectContext.AddHitResult(Hit);
 
 			FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(AttackDamageEffect, 1.f, EffectContext);
+			FGameplayEffectSpecHandle HitReactSpecHandle = SourceASC->MakeOutgoingSpec(HitReactEffect, 1.f, EffectContext);
+			
 			if (SpecHandle.IsValid())
 			{
 				SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data, TargetASC);
+				SourceASC->ApplyGameplayEffectSpecToTarget(*HitReactSpecHandle.Data, TargetASC);
 
 				FGameplayCueParameters CueParams;
 				CueParams.EffectContext = EffectContext;
