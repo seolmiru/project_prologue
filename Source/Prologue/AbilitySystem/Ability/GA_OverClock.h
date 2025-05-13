@@ -6,6 +6,7 @@
 #include "Abilities/GameplayAbility.h"
 #include "GA_OverClock.generated.h"
 
+ class AExplodingProjectile;
 class APrologueEnemyCharacter;
 /**
  * 
@@ -35,6 +36,8 @@ protected:
 
 protected:
 	TArray<APrologueEnemyCharacter*> AffectedEnemies;
+
+	TArray<AExplodingProjectile*> AffectedProjectiles;
 
 	void ApplySlowToEnemies();
 	void RestoreEnemyTime();
