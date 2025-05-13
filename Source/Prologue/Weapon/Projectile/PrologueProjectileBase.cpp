@@ -60,6 +60,11 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 		Destroy();
 		return;
 	}
+
+	if (OtherActor == GetInstigator())
+	{
+		return;
+	}
 	
 	if (OtherActor->Implements<UAbilitySystemInterface>())
 	{

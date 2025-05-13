@@ -11,11 +11,16 @@ void UCommaWidget::SetAbilitySystemComponent(AActor* InOwner)
 	{
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetCurrentHealthAttribute()).AddUObject(this, &UCommaWidget::OnCurrentHealthChanged);
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetMaxHealthAttribute()).AddUObject(this, &UCommaWidget::OnMaxHealthChanged);
+		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetCurrentGaugeAttribute()).AddUObject(this, &UCommaWidget::OnCurrentGaugeChanged);
+		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetMaxGaugeAttribute()).AddUObject(this, &UCommaWidget::OnMaxGaugeChanged);
 
 		if (const UPrologueAttributeSet* CurrentAttributeSet = ASC->GetSet<UPrologueAttributeSet>())
 		{
 			CurrentHealth = CurrentAttributeSet->GetCurrentHealth();
 			CurrentMaxHealth = CurrentAttributeSet->GetMaxHealth();
+
+			CurrentGauge = CurrentAttributeSet->GetCurrentGauge();
+			CurrentMaxGauge = CurrentAttributeSet->GetMaxGauge();
 		}
 	}
 }
@@ -28,4 +33,14 @@ void UCommaWidget::OnCurrentHealthChanged(const FOnAttributeChangeData& ChangeDa
 void UCommaWidget::OnMaxHealthChanged(const FOnAttributeChangeData& ChangeData)
 {
 	CurrentMaxHealth = ChangeData.NewValue;
+}
+
+void UCommaWidget::OnCurrentGaugeChanged(const FOnAttributeChangeData& ChangeData)
+{
+	CurrentGauge = ChangeData.NewValue;
+}
+
+void UCommaWidget::OnMaxGaugeChanged(const FOnAttributeChangeData& ChangeData)
+{
+	CurrentMaxGauge = ChangeData.NewValue;
 }
