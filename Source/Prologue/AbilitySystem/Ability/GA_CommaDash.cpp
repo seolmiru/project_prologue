@@ -78,7 +78,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
 			false,
 			IgnoreActors,
-			EDrawDebugTrace::ForDuration,
+			EDrawDebugTrace::None,
 			GroundHit,
 			true
 		);
