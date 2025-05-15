@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GA_CommaSwordAttack.generated.h"
+#include "GA_CommaAttackSword.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_CommaSwordAttack : public UGameplayAbility
+class PROLOGUE_API UGA_CommaAttackSword : public UGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-	UGA_CommaSwordAttack();
+	UGA_CommaAttackSword();
 
 	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;

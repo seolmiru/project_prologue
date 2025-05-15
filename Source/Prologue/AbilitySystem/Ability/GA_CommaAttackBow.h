@@ -4,19 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GA_CommaBowAttack.generated.h"
+#include "GA_CommaAttackBow.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_CommaBowAttack : public UGameplayAbility
+class PROLOGUE_API UGA_CommaAttackBow : public UGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-	UGA_CommaBowAttack();
-	
+	UGA_CommaAttackBow();
+
 	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
@@ -40,7 +40,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TSubclassOf<UGameplayEffect> SwitchAttackEffectClass;
-
+ 
 	UPROPERTY()
 	AActor* TargetActor = nullptr;
 

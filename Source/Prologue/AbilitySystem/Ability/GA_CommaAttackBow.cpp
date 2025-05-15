@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA_CommaBowAttack.h"
+#include "GA_CommaAttackBow.h"
 
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
@@ -10,12 +10,12 @@
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/DataAsset/ComboBowData.h"
 
-UGA_CommaBowAttack::UGA_CommaBowAttack()
+UGA_CommaAttackBow::UGA_CommaAttackBow()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
-bool UGA_CommaBowAttack::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
+bool UGA_CommaAttackBow::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
 	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
 {
@@ -27,12 +27,12 @@ bool UGA_CommaBowAttack::CanActivateAbility(const FGameplayAbilitySpecHandle Han
 	return !ActorInfo->AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Bow")));
 }
 
-void UGA_CommaBowAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	
+
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
 	
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
@@ -91,14 +91,14 @@ void UGA_CommaBowAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	Comma->GetBowWeaponMesh()->SetVisibility(true);
 	
 	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetBowComboMontage(), 1.0f, GetNextSection());
-	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaBowAttack::OnComplete);
-	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaBowAttack::OnInterrupted);
+	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaAttackBow::OnComplete);
+	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaAttackBow::OnInterrupted);
 	PlayAttackTask->ReadyForActivation();
 	
 	StartComboTimer();
 }
 
-void UGA_CommaBowAttack::InputPressed(const FGameplayAbilitySpecHandle Handle,
+void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
@@ -113,7 +113,7 @@ void UGA_CommaBowAttack::InputPressed(const FGameplayAbilitySpecHandle Handle,
 	}
 }
 
-void UGA_CommaBowAttack::CancelAbility(const FGameplayAbilitySpecHandle Handle,
+void UGA_CommaAttackBow::CancelAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool bReplicateCancelAbility)
 {
@@ -124,7 +124,7 @@ void UGA_CommaBowAttack::CancelAbility(const FGameplayAbilitySpecHandle Handle,
 	HasNextComboInput = false;
 }
 
-void UGA_CommaBowAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -142,28 +142,28 @@ void UGA_CommaBowAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	HasNextComboInput = false;
 }
 
-void UGA_CommaBowAttack::OnComplete()
+void UGA_CommaAttackBow::OnComplete()
 {
 	bool bReplicatedEndAbility = true;
 	bool bWasCancelled = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
 }
 
-void UGA_CommaBowAttack::OnInterrupted()
+void UGA_CommaAttackBow::OnInterrupted()
 {
 	bool bReplicatedEndAbility = true;
 	bool bWasCancelled = true;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
 }
 
-FName UGA_CommaBowAttack::GetNextSection()
+FName UGA_CommaAttackBow::GetNextSection()
 {
 	CurrentCombo = FMath::Clamp(CurrentCombo + 1, 1, CurrentComboData->MaxComboCount);
 	FName NextSection = *FString::Printf(TEXT("%s%d"), *CurrentComboData->MontageSectionNamePrefix, CurrentCombo);
 	return NextSection;
 }
 
-void UGA_CommaBowAttack::StartComboTimer()
+void UGA_CommaAttackBow::StartComboTimer()
 {
 	int32 ComboIndex = CurrentCombo - 1;
 	ensure(CurrentComboData->EffectiveFrameCount.IsValidIndex(ComboIndex));
@@ -171,11 +171,11 @@ void UGA_CommaBowAttack::StartComboTimer()
 	const float ComboEffectiveTime = CurrentComboData->EffectiveFrameCount[ComboIndex] / CurrentComboData->FrameRate;
 	if (ComboEffectiveTime > 0.f)
 	{
-		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaBowAttack::CheckComboInput, ComboEffectiveTime, false);
+		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackBow::CheckComboInput, ComboEffectiveTime, false);
 	}
 }
 
-void UGA_CommaBowAttack::CheckComboInput()
+void UGA_CommaAttackBow::CheckComboInput()
 {
 	ComboTimerHandle.Invalidate();
 	if (HasNextComboInput)
