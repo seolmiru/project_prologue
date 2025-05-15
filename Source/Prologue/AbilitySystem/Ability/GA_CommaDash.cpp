@@ -52,7 +52,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 
 	const FVector DashEndPos = ActorStartPos + InputDirection * MoveLength;
-
+	
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(Comma);
 
@@ -63,23 +63,26 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	const int32 EffectiveSteps = FMath::Max(1, PathCheckSteps);
 	const float UpOffset = MaxPlatformHeightDiff + 50.f;
 	const float DownOffset = MaxPlatformHeightDiff * 2 + 50.f;
-
 	
 	for (int32 i = 1; i <= EffectiveSteps; ++i)
 	{
-		const float Alpha     = float(i) / EffectiveSteps;
+		const float Alpha = float(i) / EffectiveSteps;
 		const FVector SamplePos = FMath::Lerp(ActorStartPos, DashEndPos, Alpha);
 
 		FHitResult GroundHit;
-		const bool bHitGround = UKismetSystemLibrary::LineTraceSingle(
+		const bool bHitGround = UKismetSystemLibrary::SphereTraceSingle(
 			GetWorld(),
-			SamplePos + FVector(0, 0, UpOffset),
-			SamplePos - FVector(0, 0, DownOffset),
+			SamplePos + FVector(0.f, 0.f, UpOffset),
+			SamplePos - FVector(0.f, 0.f, DownOffset),
+			GroundTraceRadius,
 			UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-			false, IgnoreActors, EDrawDebugTrace::None,
-			GroundHit, true
+			false,
+			IgnoreActors,
+			EDrawDebugTrace::None,
+			GroundHit,
+			true
 		);
-
+		
 		if (!bHitGround)
 			continue;
 
@@ -145,54 +148,71 @@ void UGA_CommaDash::OnComplete()
 
 bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const
 {
-	const float CheckRadius = 30.f;
-	const int32 NumCheckPoints = 8;
-	const float MinValidHitRatio = 0.75f;
+    const int32 MaxIterations = 3;
 
-	int32 HitCount = 0;
-	FVector AccumulatedOffset = FVector::ZeroVector;
+    const float StepOffset = 20.f;
 
-	for (int32 i = 0; i < NumCheckPoints; ++i)
-	{
-		float Angle = 2 * PI * (static_cast<float>(i) / NumCheckPoints);
-		FVector Offset = FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * CheckRadius;
-
-		FVector Start = CandidateLocation + Offset + FVector(0.f, 0.f, MaxPlatformHeightDiff);
-		FVector End = CandidateLocation + Offset - FVector(0.f, 0.f, MaxPlatformHeightDiff);
-
-		FHitResult Hit;
-		bool bHit = UKismetSystemLibrary::LineTraceSingle(
-			GetWorld(),
-			Start,
-			End,
-			UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-			false,
-			IgnoreActors,
-			EDrawDebugTrace::None,
-			Hit,
-			true
-		);
-
-		if (bHit)
-		{
-			HitCount++;
-			AccumulatedOffset -= Offset;
-		}
-	}
-
-	float HitRatio = static_cast<float>(HitCount) / static_cast<float>(NumCheckPoints);
-
-	if (HitRatio >= MinValidHitRatio)
-	{
-		OutAdjustedLocation = CandidateLocation;
-		return true;
-	}
-	else if (HitCount >= 4)
-	{
-		const FVector Adjusted = CandidateLocation + AccumulatedOffset.GetSafeNormal() * 20.f;
-		if (bool bRecursiveResult = IsSafeLandingZone(Adjusted, IgnoreActors, OutAdjustedLocation))
-			return true;
-	}
+    const FVector UpDownOffset(0.f, 0.f, MaxPlatformHeightDiff);
 	
-	return false;
+    const float CheckRadius = 30.f;
+    const int32 NumCheckPoints = 8;
+    const float MinValidHitRatio = 0.75f;
+
+    FVector Candidate = CandidateLocation;
+
+    for (int32 Iter = 0; Iter < MaxIterations; ++Iter)
+    {
+        int32 HitCount = 0;
+        FVector AccumulatedOffset = FVector::ZeroVector;
+
+        for (int32 i = 0; i < NumCheckPoints; ++i)
+        {
+            float Angle = 2 * PI * (static_cast<float>(i) / NumCheckPoints);
+            FVector Offset = FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * CheckRadius;
+
+            FVector Start = Candidate + Offset + UpDownOffset;
+            FVector End   = Candidate + Offset - UpDownOffset;
+
+            FHitResult Hit;
+            bool bHit = UKismetSystemLibrary::LineTraceSingle(
+                GetWorld(),
+                Start,
+                End,
+                UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
+                false,
+                IgnoreActors,
+                EDrawDebugTrace::None,
+                Hit,
+                true
+            );
+
+            if (bHit)
+            {
+                HitCount++;
+                AccumulatedOffset -= Offset;
+            }
+        }
+
+        float HitRatio = static_cast<float>(HitCount) / static_cast<float>(NumCheckPoints);
+        if (HitRatio >= MinValidHitRatio)
+        {
+            OutAdjustedLocation = Candidate;
+            return true;
+        }
+
+        if (HitCount < 4)
+        {
+            break;
+        }
+
+        FVector Direction = AccumulatedOffset.GetSafeNormal();
+        if (Direction.IsNearlyZero())
+        {
+            break;
+        }
+
+        Candidate += Direction * StepOffset;
+    }
+
+    return false;
 }

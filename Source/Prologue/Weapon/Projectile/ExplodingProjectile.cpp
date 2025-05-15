@@ -28,13 +28,13 @@ AExplodingProjectile::AExplodingProjectile()
 	ProjectileMovementComp->InitialSpeed = 1200.f;
 	ProjectileMovementComp->MaxSpeed = 1200.f;
 	ProjectileMovementComp->bRotationFollowsVelocity = true;
-	ProjectileMovementComp->ProjectileGravityScale = 5.0f;
+	ProjectileMovementComp->ProjectileGravityScale = 0.7f;
 
 	ProjectileNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ProjectileNiagaraComponent"));
 	ProjectileNiagaraComponent->SetupAttachment(GetRootComponent());
 
-	ExplosionRadius = 300.f;
-	TimeToExplode = 2.f;
+	ExplosionRadius = 400.f;
+	TimeToExplode = 3.f;
 }
 
 void AExplodingProjectile::FireInDirection(const FVector& ShootDirection) const

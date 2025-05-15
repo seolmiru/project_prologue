@@ -40,7 +40,10 @@ protected:
 	int32 PathCheckSteps = 10;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
-	float MinDashDistance = 10.f;
+	float MinDashDistance = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float GroundTraceRadius = 200.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	TObjectPtr<class UCurveFloat> Curve;

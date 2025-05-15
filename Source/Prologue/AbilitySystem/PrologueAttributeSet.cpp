@@ -7,9 +7,9 @@
 #include "Prologue/Prologue.h"
 
 UPrologueAttributeSet::UPrologueAttributeSet() :
-	SwordSwitchAttackDamage(30.f),
+	SwordSwitchAttackDamage(80.f),
 	MaxSwordSwitchAttackDamage(300.f),
-	SwordSwitchAttackRange(300.f),
+	SwordSwitchAttackRange(500.f),
 	MaxSwordSwitchAttackRange(800.f)
 {
 	InitCurrentHealth(1.f);

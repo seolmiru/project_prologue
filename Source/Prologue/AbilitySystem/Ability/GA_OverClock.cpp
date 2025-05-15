@@ -3,9 +3,11 @@
 
 #include "GA_OverClock.h"
 
+#include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
+#include "Prologue/Weapon/Projectile/ExplodingProjectile.h"
 
 UGA_OverClock::UGA_OverClock()
 {
@@ -61,6 +63,7 @@ void UGA_OverClock::OnOverClockFinished()
 void UGA_OverClock::ApplySlowToEnemies()
 {
 	AffectedEnemies.Empty();
+	AffectedProjectiles.Empty();
 
 	TArray<AActor*> Found;
 	UGameplayStatics::GetAllActorsOfClass(
@@ -77,6 +80,22 @@ void UGA_OverClock::ApplySlowToEnemies()
 			AffectedEnemies.Add(Enemy);
 		}
 	}
+
+	TArray<AActor*> FoundProjectiles;
+	UGameplayStatics::GetAllActorsOfClass(
+		GetWorld(),
+		AExplodingProjectile::StaticClass(),
+		FoundProjectiles
+	);
+
+	for (AActor* Actor : FoundProjectiles)
+	{
+		if (auto* Projectile = Cast<AExplodingProjectile>(Actor))
+		{
+			Projectile->CustomTimeDilation = TimeScale;
+			AffectedProjectiles.Add(Projectile);
+		}
+	}
 }
 
 void UGA_OverClock::RestoreEnemyTime()
@@ -88,5 +107,15 @@ void UGA_OverClock::RestoreEnemyTime()
 			Enemy->CustomTimeDilation = 1.0f;
 		}
 	}
+
+	for (auto* Projectile : AffectedProjectiles)
+	{
+		if (IsValid(Projectile))
+		{
+			Projectile->CustomTimeDilation = 1.0f;
+		}
+	}
+	
 	AffectedEnemies.Empty();
+	AffectedProjectiles.Empty();
 }

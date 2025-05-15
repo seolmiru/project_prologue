@@ -27,6 +27,9 @@ protected:
 	TSubclassOf<UGameplayEffect> AttackDamageEffect;
 
 	UPROPERTY(EditAnywhere, Category = "GAS")
+	TSubclassOf<UGameplayEffect> HitReactEffect;
+	
+	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<class ATA_Trace> TargetActorClass;
 
 	UPROPERTY(EditAnywhere, Category = "GAS")
