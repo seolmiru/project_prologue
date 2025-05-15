@@ -5,9 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/DataAsset/ComboBowData.h"
@@ -17,26 +15,26 @@ UGA_CommaBowAttack::UGA_CommaBowAttack()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
+bool UGA_CommaBowAttack::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
+	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
+	{
+		return false;
+	}
+
+	return !ActorInfo->AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Bow")));
+}
+
 void UGA_CommaBowAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-                                         const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-                                         const FGameplayEventData* TriggerEventData)
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
+	
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
 	
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	
-	if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_SwitchAttack_Bow))
-	{
-		bIsSwitchAttack = true;
-		ASC->RemoveActiveEffectsWithTags(FGameplayTagContainer(PrologueGameplayTags::Comma_State_SwitchAttack_Bow));
-	}
-	else
-	{
-		bIsSwitchAttack = false;
-	}
-
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel2));
 
@@ -91,21 +89,11 @@ void UGA_CommaBowAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	
 	Comma->GetSwordWeaponMesh()->SetVisibility(false);
 	Comma->GetBowWeaponMesh()->SetVisibility(true);
-
-	if (bIsSwitchAttack)
-	{
-		UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetBowSwitchAttackMontage(), 1.0f, GetNextSection());
-		PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaBowAttack::OnComplete);
-		PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaBowAttack::OnInterrupted);
-		PlayAttackTask->ReadyForActivation();
-	}
-	else
-	{
-		UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetBowComboMontage(), 1.0f, GetNextSection());
-		PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaBowAttack::OnComplete);
-		PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaBowAttack::OnInterrupted);
-		PlayAttackTask->ReadyForActivation();
-	}
+	
+	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetBowComboMontage(), 1.0f, GetNextSection());
+	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaBowAttack::OnComplete);
+	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaBowAttack::OnInterrupted);
+	PlayAttackTask->ReadyForActivation();
 	
 	StartComboTimer();
 }
@@ -131,7 +119,6 @@ void UGA_CommaBowAttack::CancelAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 
-	bIsSwitchAttack = false;
 	CurrentComboData = nullptr;
 	CurrentCombo = 0;
 	HasNextComboInput = false;
@@ -141,16 +128,15 @@ void UGA_CommaBowAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-	
-	if (!bIsSwitchAttack && CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
+
+	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
 		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
 		GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
 	}
-
-	bIsSwitchAttack = false;
+	
 	CurrentComboData = nullptr;
 	CurrentCombo = 0;
 	HasNextComboInput = false;

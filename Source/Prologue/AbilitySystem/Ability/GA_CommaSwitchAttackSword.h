@@ -4,22 +4,21 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GA_CommaSwordAttack.generated.h"
+#include "GA_CommaSwitchAttackSword.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_CommaSwordAttack : public UGameplayAbility
+class PROLOGUE_API UGA_CommaSwitchAttackSword : public UGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-	UGA_CommaSwordAttack();
-
+	UGA_CommaSwitchAttackSword();
+	
 	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 	virtual void CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
@@ -29,19 +28,4 @@ protected:
 
 	UFUNCTION()
 	void OnInterrupted();
-	
-	FName GetNextSection();
-	void StartComboTimer();
-	void CheckComboInput();
-
-protected:
-	UPROPERTY()
-	TObjectPtr<class UComboSwordData> CurrentComboData;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-	TSubclassOf<UGameplayEffect> SwitchAttackEffectClass;
-
-	uint8 CurrentCombo = 0;
-	FTimerHandle ComboTimerHandle;
-	bool HasNextComboInput = false;
 };

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GA_MontageAbility.h"
+#include "Abilities/GameplayAbility.h"
 #include "GA_CommaBowAttack.generated.h"
 
 /**
@@ -16,7 +16,8 @@ class PROLOGUE_API UGA_CommaBowAttack : public UGameplayAbility
 
 public:
 	UGA_CommaBowAttack();
-		
+	
+	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 	virtual void CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
@@ -45,10 +46,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
 	float SphereRadius;
-
+	
 	uint8 CurrentCombo = 0;
 	FTimerHandle ComboTimerHandle;
 	bool HasNextComboInput = false;
-
-	bool bIsSwitchAttack = false;
 };

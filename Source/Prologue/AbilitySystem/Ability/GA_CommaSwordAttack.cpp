@@ -15,46 +15,36 @@ UGA_CommaSwordAttack::UGA_CommaSwordAttack()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
+bool UGA_CommaSwordAttack::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
+	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
+	{
+		return false;
+	}
+
+	return !ActorInfo->AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword")));
+}
+
 void UGA_CommaSwordAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-                                           const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-                                           const FGameplayEventData* TriggerEventData)
+                                              const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                                              const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
-
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	
-	if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_SwitchAttack_Sword))
-	{
-		bIsSwitchAttack = true;
-		ASC->RemoveActiveEffectsWithTags(FGameplayTagContainer(PrologueGameplayTags::Comma_State_SwitchAttack_Sword));
-	}
-	else
-	{
-		bIsSwitchAttack = false;
-	}
 	
 	CurrentComboData = Comma->GetComboSwordData();
 
 	Comma->RotateToMouse();
 	Comma->GetSwordWeaponMesh()->SetVisibility(true);
 	Comma->GetBowWeaponMesh()->SetVisibility(false);
-
-	if (bIsSwitchAttack)
-	{
-		UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetSwordSwitchAttackMontage(), 1.0f, GetNextSection());
-		PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaSwordAttack::OnComplete);
-		PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaSwordAttack::OnInterrupted);
-		PlayAttackTask->ReadyForActivation();
-	}
-	else
-	{
-		UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetSwordComboMontage(), 1.0f, GetNextSection());
-		PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaSwordAttack::OnComplete);
-		PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaSwordAttack::OnInterrupted);
-		PlayAttackTask->ReadyForActivation();
-	}
+	
+	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetSwordComboMontage(), 1.0f, GetNextSection());
+	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaSwordAttack::OnComplete);
+	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaSwordAttack::OnInterrupted);
+	PlayAttackTask->ReadyForActivation();
 	
 	StartComboTimer();
 }
@@ -80,7 +70,6 @@ void UGA_CommaSwordAttack::CancelAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 
-	bIsSwitchAttack = false;
 	CurrentComboData = nullptr;
 	CurrentCombo = 0;
 	HasNextComboInput = false;
@@ -92,15 +81,14 @@ void UGA_CommaSwordAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
-	if (!bIsSwitchAttack && CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
+	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
 		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
 		GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
 	}
-
-	bIsSwitchAttack = false;
+	
 	CurrentComboData = nullptr;
 	CurrentCombo = 0;
 	HasNextComboInput = false;
