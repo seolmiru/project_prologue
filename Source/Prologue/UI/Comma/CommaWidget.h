@@ -21,10 +21,19 @@ public:
 	virtual void OnCurrentHealthChanged(const FOnAttributeChangeData& ChangeData);
 	virtual void OnMaxHealthChanged(const FOnAttributeChangeData& ChangeData);
 
+	virtual void OnCurrentGaugeChanged(const FOnAttributeChangeData& ChangeData);
+	virtual void OnMaxGaugeChanged(const FOnAttributeChangeData& ChangeData);
+
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	float CurrentHealth = 0.0f;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	float CurrentMaxHealth = 0.0f;	
+	float CurrentMaxHealth = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	float CurrentGauge = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	float CurrentMaxGauge = 0.0f;
 };

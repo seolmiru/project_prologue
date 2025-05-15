@@ -52,7 +52,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 
 	const FVector DashEndPos = ActorStartPos + InputDirection * MoveLength;
-
+	
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(Comma);
 
@@ -63,23 +63,26 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	const int32 EffectiveSteps = FMath::Max(1, PathCheckSteps);
 	const float UpOffset = MaxPlatformHeightDiff + 50.f;
 	const float DownOffset = MaxPlatformHeightDiff * 2 + 50.f;
-
 	
 	for (int32 i = 1; i <= EffectiveSteps; ++i)
 	{
-		const float Alpha     = float(i) / EffectiveSteps;
+		const float Alpha = float(i) / EffectiveSteps;
 		const FVector SamplePos = FMath::Lerp(ActorStartPos, DashEndPos, Alpha);
 
 		FHitResult GroundHit;
-		const bool bHitGround = UKismetSystemLibrary::LineTraceSingle(
+		const bool bHitGround = UKismetSystemLibrary::SphereTraceSingle(
 			GetWorld(),
-			SamplePos + FVector(0, 0, UpOffset),
-			SamplePos - FVector(0, 0, DownOffset),
+			SamplePos + FVector(0.f, 0.f, UpOffset),
+			SamplePos - FVector(0.f, 0.f, DownOffset),
+			GroundTraceRadius,
 			UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-			false, IgnoreActors, EDrawDebugTrace::None,
-			GroundHit, true
+			false,
+			IgnoreActors,
+			EDrawDebugTrace::None,
+			GroundHit,
+			true
 		);
-
+		
 		if (!bHitGround)
 			continue;
 
