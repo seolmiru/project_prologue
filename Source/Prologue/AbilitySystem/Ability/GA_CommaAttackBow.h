@@ -34,6 +34,8 @@ protected:
 	void StartComboTimer();
 	void CheckComboInput();
 
+	void StartCheckComboTimer();
+
 protected:
 	UPROPERTY()
 	TObjectPtr<class UComboBowData> CurrentComboData;
@@ -50,4 +52,9 @@ protected:
 	uint8 CurrentCombo = 0;
 	FTimerHandle ComboTimerHandle;
 	bool HasNextComboInput = false;
+
+	UPROPERTY(EditAnywhere)
+	float CurrentComboTime = 0.f;
+	
+	FTimerHandle CheckComboTimerHandle;
 };

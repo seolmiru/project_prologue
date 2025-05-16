@@ -136,10 +136,13 @@ void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
 		GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
 	}
-	
-	CurrentComboData = nullptr;
-	CurrentCombo = 0;
-	HasNextComboInput = false;
+
+	if (CurrentComboTime <= 0.f)
+	{
+		CurrentComboData = nullptr;
+		CurrentCombo = 0;
+		HasNextComboInput = false;
+	}
 }
 
 void UGA_CommaAttackBow::OnComplete()
@@ -184,4 +187,9 @@ void UGA_CommaAttackBow::CheckComboInput()
 		StartComboTimer();
 		HasNextComboInput = false;
 	}
+}
+
+void UGA_CommaAttackBow::StartCheckComboTimer()
+{
+	//GetWorld()->GetTimerManager().SetTimer(CheckComboTimerHandle, this, &UGA_CommaAttackBow::CheckComboInput,CurrentComboTime, false);
 }

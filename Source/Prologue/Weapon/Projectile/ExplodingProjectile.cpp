@@ -29,7 +29,7 @@ AExplodingProjectile::AExplodingProjectile()
 	ProjectileMovementComp->InitialSpeed = 1200.f;
 	ProjectileMovementComp->MaxSpeed = 1200.f;
 	ProjectileMovementComp->bRotationFollowsVelocity = true;
-	ProjectileMovementComp->ProjectileGravityScale = 0.7f;
+	ProjectileMovementComp->ProjectileGravityScale = 1.f;
 
 	ProjectileNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ProjectileNiagaraComponent"));
 	ProjectileNiagaraComponent->SetupAttachment(GetRootComponent());
