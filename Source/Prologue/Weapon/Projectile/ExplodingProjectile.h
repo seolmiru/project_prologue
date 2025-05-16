@@ -23,6 +23,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	UBoxComponent* ProjectileCollisionBox;
@@ -39,6 +40,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 	float TimeToExplode;	
 
+	bool bIsStuck = false;
+	float ElapsedTime = 0.f;
+	
 	FTimerHandle ExplosionTimerHandle;
 	
 protected:
