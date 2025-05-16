@@ -11,6 +11,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
+#include "Prologue/AbilitySystem/Ability/GA_OverClock.h"
 
 AExplodingProjectile::AExplodingProjectile()
 {
@@ -45,6 +46,38 @@ void AExplodingProjectile::FireInDirection(const FVector& ShootDirection) const
 void AExplodingProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (UGA_OverClock::bIsOverClockActive)
+	{
+		CustomTimeDilation = UGA_OverClock::OverClockTimeScale;
+	}
+}
+
+void AExplodingProjectile::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (!bIsStuck)
+		return;
+
+	ElapsedTime += DeltaSeconds;
+
+	if (ElapsedTime > TimeToExplode)
+	{
+		Explode();
+		Destroy();
+		return;
+	}
+
+	if (UGA_OverClock::bIsOverClockActive)
+	{
+		if (CustomTimeDilation != UGA_OverClock::OverClockTimeScale)
+			CustomTimeDilation = UGA_OverClock::OverClockTimeScale;
+	}
+	else if (CustomTimeDilation != 1.f)
+	{
+		CustomTimeDilation = 1.f;
+	}
 }
 
 void AExplodingProjectile::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
@@ -66,6 +99,10 @@ void AExplodingProjectile::StickAndExplosion(const FHitResult& Hit)
 
 	ProjectileCollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	bIsStuck = true;
+	ElapsedTime = 0.f;
+	PrimaryActorTick.bCanEverTick = true;
+	
 	GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &AExplodingProjectile::Explode, TimeToExplode, false);
 }
 

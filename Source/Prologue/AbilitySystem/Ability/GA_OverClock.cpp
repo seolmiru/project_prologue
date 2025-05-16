@@ -9,6 +9,9 @@
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Weapon/Projectile/ExplodingProjectile.h"
 
+bool UGA_OverClock::bIsOverClockActive = false;
+float UGA_OverClock::OverClockTimeScale = 1.0f;
+
 UGA_OverClock::UGA_OverClock()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
@@ -30,6 +33,9 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	const_cast<UPrologueAttributeSet*>(AttributeSet)->SetCurrentGauge(0.0f);
 
+	bIsOverClockActive = true;
+	OverClockTimeScale = TimeScale;
+	
 	ApplySlowToEnemies();
 	
 	GetWorld()->GetTimerManager().SetTimer(
@@ -48,6 +54,8 @@ void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 
 	GetWorld()->GetTimerManager().ClearTimer(OverClockTimerHandle);
 
+	bIsOverClockActive = false;
+	
 	RestoreEnemyTime();
 }
 
