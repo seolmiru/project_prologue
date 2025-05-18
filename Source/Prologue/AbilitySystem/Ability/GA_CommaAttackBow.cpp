@@ -188,8 +188,3 @@ void UGA_CommaAttackBow::CheckComboInput()
 		HasNextComboInput = false;
 	}
 }
-
-void UGA_CommaAttackBow::StartCheckComboTimer()
-{
-	//GetWorld()->GetTimerManager().SetTimer(CheckComboTimerHandle, this, &UGA_CommaAttackBow::CheckComboInput,CurrentComboTime, false);
-}

@@ -34,8 +34,6 @@ protected:
 	void StartComboTimer();
 	void CheckComboInput();
 
-	void StartCheckComboTimer();
-
 protected:
 	UPROPERTY()
 	TObjectPtr<class UComboBowData> CurrentComboData;

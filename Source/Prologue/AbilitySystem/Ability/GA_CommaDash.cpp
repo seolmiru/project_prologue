@@ -103,7 +103,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 				DebugTraceType,
 				GroundHitResult,
 				true,
-				FLinearColor::Red, FLinearColor::Green, 1.0f;
+				FLinearColor::Red, FLinearColor::Green, 1.0f
 			);
 			
 			if (!bHitGround) continue;

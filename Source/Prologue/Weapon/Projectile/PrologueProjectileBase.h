@@ -55,4 +55,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<UGameplayEffect> HitReactEffect;
+
+	UPROPERTY(EditAnywhere, Category = "GAS")
+	TSubclassOf<UGameplayEffect> IncreaseGaugeEffect;
 };

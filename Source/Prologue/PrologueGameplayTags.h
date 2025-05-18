@@ -48,6 +48,8 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_AddBow);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_SpawnProjectile);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_SpawnSwitchProjectile);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_SpawnSwitchSubProjectile);
 
 	/** Enemy Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Ability_Attack);
