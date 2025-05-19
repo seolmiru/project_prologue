@@ -45,7 +45,7 @@ void UGA_SpawnProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 			FireDirection = AvatarActor->GetActorTransform().TransformVectorNoScale(CustomLaunchDirection.GetSafeNormal());
 			break;
 
-		case ELaunchDirectionType::CustomWorldDirection:
+		case ELaunchDirectionType::FindTargetProjectile:
 			if (bFindTarget)
 			{
 				FVector TargetLocation;
@@ -58,12 +58,12 @@ void UGA_SpawnProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 				}
 				else
 				{
-					FireDirection = CustomLaunchDirection.GetSafeNormal();
+					FireDirection = AvatarActor->GetActorForwardVector();
 				}
 			}
 			else
 			{
-				FireDirection = CustomLaunchDirection.GetSafeNormal();
+				FireDirection = AvatarActor->GetActorForwardVector();
 			}
 			break;
 

@@ -11,7 +11,7 @@ enum class ELaunchDirectionType : uint8
 {
 	Forward UMETA(DisplayName = "Forward"),
 	CustomLocalDirection UMETA(DisplayName = "Custom Local Direction"),
-	CustomWorldDirection UMETA(DisplayName = "Custom World Direction"),
+	FindTargetProjectile UMETA(DisplayName = "Find Target Projectile"),
 };
 
 /**
