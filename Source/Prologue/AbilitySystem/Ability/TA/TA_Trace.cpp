@@ -45,7 +45,7 @@ FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
 		GetWorld(),
 		Start,
 		End,
-		80.0f,
+		120.0f,
 		UEngineTypes::ConvertToTraceType(TraceChannel),
 		false,
 		IgnoreActors,
