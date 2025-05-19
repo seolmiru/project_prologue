@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "GA_CommaDash.h"
 
@@ -12,117 +11,187 @@
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/Controller/CommaController.h"
 
+struct FPotentialDashTarget
+{
+    FVector FeetLocation;
+    float DistanceSqToStart;
+
+    FPotentialDashTarget(const FVector& InFeetLocation, const FVector& StartActorPos)
+        : FeetLocation(InFeetLocation), DistanceSqToStart(FVector::DistSquared(StartActorPos, InFeetLocation)) {}
+
+    bool operator<(const FPotentialDashTarget& Other) const
+    {
+        return DistanceSqToStart < Other.DistanceSqToStart;
+    }
+};
+
+
 void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
                                     const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
-	UCharacterMovementComponent* MovementComponent = Comma->GetCharacterMovement();
-
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
 	
-	UAT_TickCurve* TickCurve = UAT_TickCurve::CreateTask(this, Curve);
-	TickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
-	TickCurve->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
+	UAT_TickCurve* TickCurveTask = UAT_TickCurve::CreateTask(this, Curve);
+	if (!TickCurveTask)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
+	TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 
 	FVector ActorStartPos = Comma->GetActorLocation();
 	const float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
 	ACommaController* Controller = Cast<ACommaController>(Comma->GetController());
-	FVector InputDirection = FVector::ZeroVector;
+	FVector DesiredDirection = FVector::ZeroVector;
 
 	if (Controller)
 	{
-		FVector2D CachedVec = Comma->GetCachedMovementInput();
+		FVector2D CachedMovementInput = Comma->GetCachedMovementInput();
+		if (!CachedMovementInput.IsNearlyZero())
+		{
+			const FRotator ControlRotation = Controller->GetControlRotation();
+			const FRotator YawRotation(0, ControlRotation.Yaw, 0);
+			const FVector ForwardDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			const FVector RightDir   = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		const FRotator ControlRotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, ControlRotation.Yaw, 0);
-
-		const FVector ForwardDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		const FVector RightDir   = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		InputDirection = ForwardDir * CachedVec.Y + RightDir * CachedVec.X;
-		InputDirection.Normalize();
+			DesiredDirection = (ForwardDir * CachedMovementInput.Y + RightDir * CachedMovementInput.X).GetSafeNormal();
+		}
 	}
 	
-	if (InputDirection.IsNearlyZero())
+	if (DesiredDirection.IsNearlyZero())
 	{
-		InputDirection = Comma->GetActorForwardVector();
+		DesiredDirection = Comma->GetActorForwardVector().GetSafeNormal();
 	}
-
-	const FVector DashEndPos = ActorStartPos + InputDirection * MoveLength;
-	
-	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(Comma);
 
 	BasePos = ActorStartPos;
-	FVector LastValidTargetPos = ActorStartPos;
-	bool bFoundAnyGroundSpot = false;
+	TargetPos = ActorStartPos;
+	bool bSuccessfullyFoundTarget = false;
 
-	const int32 EffectiveSteps = FMath::Max(1, PathCheckSteps);
-	const float UpOffset = MaxPlatformHeightDiff + 50.f;
-	const float DownOffset = MaxPlatformHeightDiff * 2 + 50.f;
-	
-	for (int32 i = 1; i <= EffectiveSteps; ++i)
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(Comma);
+
+	const int32 EffectivePathCheckSteps = FMath::Max(1, PathCheckSteps);
+	const float SphereTraceStartUpOffset = MaxPlatformHeightDiff + 50.f;
+	const float SphereTraceEndDownOffset = MaxPlatformHeightDiff * 2.f + 50.f;
+
+	auto PerformTraceInDirection = 
+		[&](const FVector& TraceDirection, FVector& OutValidatedFeetPos, EDrawDebugTrace::Type DebugTraceType) -> bool
 	{
-		const float Alpha = float(i) / EffectiveSteps;
-		const FVector SamplePos = FMath::Lerp(ActorStartPos, DashEndPos, Alpha);
+		FVector CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * MoveLength;
+		FVector BestValidFeetPosInDirection = ActorStartPos;
+		bool bFoundAnyGroundSpotInThisDirection = false;
 
-		FHitResult GroundHit;
-		const bool bHitGround = UKismetSystemLibrary::SphereTraceSingle(
-			GetWorld(),
-			SamplePos + FVector(0.f, 0.f, UpOffset),
-			SamplePos - FVector(0.f, 0.f, DownOffset),
-			GroundTraceRadius,
-			UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-			false,
-			IgnoreActors,
-			EDrawDebugTrace::None,
-			GroundHit,
-			true
-		);
-		
-		if (!bHitGround)
-			continue;
-
-		FVector Candidate = GroundHit.ImpactPoint;
-		Candidate.Z += CapsuleHalfHeight + TargetZOffset;
-		
-		FVector LocalLanding;
-		
-		if (!IsSafeLandingZone(Candidate, IgnoreActors, LocalLanding))
-			continue;
-
-		if (Nav)
+		for (int32 StepIndex = 1; StepIndex <= EffectivePathCheckSteps; ++StepIndex)
 		{
-			FNavLocation NavLoc;
-			const FVector NavExtent(20.f, 20.f, MaxPlatformHeightDiff + 50.f);
+			const float Alpha = static_cast<float>(StepIndex) / EffectivePathCheckSteps;
+			const FVector SamplePosForTrace = FMath::Lerp(ActorStartPos, CurrentDashAttemptEndPos, Alpha);
+
+			FHitResult GroundHitResult;
+			const bool bHitGround = UKismetSystemLibrary::SphereTraceSingle(
+				GetWorld(),
+				SamplePosForTrace + FVector(0.f, 0.f, SphereTraceStartUpOffset),
+				SamplePosForTrace - FVector(0.f, 0.f, SphereTraceEndDownOffset),
+				GroundTraceRadius,
+				UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
+				false,
+				ActorsToIgnore,
+				DebugTraceType,
+				GroundHitResult,
+				true,
+				FLinearColor::Red, FLinearColor::Green, 1.0f
+			);
 			
-			if (!Nav->ProjectPointToNavigation(LocalLanding, NavLoc, NavExtent))
+			if (!bHitGround) continue;
+
+			FVector GroundImpactPoint = GroundHitResult.ImpactPoint;
+			FVector AdjustedSafeFeetPosOnGround;
+
+			if (!IsSafeLandingZone(GroundImpactPoint, ActorsToIgnore, AdjustedSafeFeetPosOnGround)) continue;
+			
+			if (Nav)
 			{
-				continue;
+				FNavLocation NavMeshLocation;
+				const FVector ProjectionExtent(GroundTraceRadius, GroundTraceRadius, MaxPlatformHeightDiff + 100.f); 
+				
+				if (!Nav->ProjectPointToNavigation(AdjustedSafeFeetPosOnGround, NavMeshLocation, ProjectionExtent))
+				{
+					continue;
+				}
+				AdjustedSafeFeetPosOnGround = NavMeshLocation.Location;
 			}
 			
-			LocalLanding = NavLoc.Location;
-			bFoundAnyGroundSpot = true;
+			BestValidFeetPosInDirection = AdjustedSafeFeetPosOnGround;
+			bFoundAnyGroundSpotInThisDirection = true;
 		}
+		
+		if (bFoundAnyGroundSpotInThisDirection) {
+			OutValidatedFeetPos = BestValidFeetPosInDirection;
+			return true;
+		}
+		return false;
+	};
 
-		LastValidTargetPos = LocalLanding + FVector(0, 0, CapsuleHalfHeight + TargetZOffset);
-		bFoundAnyGroundSpot = true;
+	FVector ForwardDashTargetFeetLocation;
+	EDrawDebugTrace::Type PrimaryTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+
+	if (PerformTraceInDirection(DesiredDirection, ForwardDashTargetFeetLocation, PrimaryTraceDebugType))
+	{
+		TargetPos = ForwardDashTargetFeetLocation;
+		bSuccessfullyFoundTarget = true;
 	}
 
-	if (bFoundAnyGroundSpot)
+	if (!bSuccessfullyFoundTarget && NumFOVTracesPerSide > 0 && FOVAngleDegrees > 0.f)
 	{
-		TargetPos = LastValidTargetPos;
-		
-		if (FVector::DistSquared(BasePos, TargetPos) < MinDashDistance * MinDashDistance)
+		TArray<FPotentialDashTarget> PotentialTargetsInFOV;
+		FVector CharacterActualForwardDir = Comma->GetActorForwardVector().GetSafeNormal();
+
+		float HalfFOV_Rads = FMath::DegreesToRadians(FOVAngleDegrees / 2.0f);
+        float AngleIncrementPerTrace = (FOVAngleDegrees / 2.0f) / FMath::Max(1, NumFOVTracesPerSide);
+
+
+		for (int32 Side = -1; Side <= 1; Side += 2)
 		{
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+			for (int32 TraceIndex = 1; TraceIndex <= NumFOVTracesPerSide; ++TraceIndex)
+			{
+				float CurrentSampleAngleDegrees = AngleIncrementPerTrace * TraceIndex * Side;
+				
+				FRotator AngleOffsetRotator(0, CurrentSampleAngleDegrees, 0);
+				FVector SampleDirectionForFOV = AngleOffsetRotator.RotateVector(CharacterActualForwardDir);
+				
+				FVector FOVTargetFeetLocation;
+				EDrawDebugTrace::Type FOVTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+
+				if (PerformTraceInDirection(SampleDirectionForFOV, FOVTargetFeetLocation, FOVTraceDebugType))
+				{
+					PotentialTargetsInFOV.Emplace(FOVTargetFeetLocation, ActorStartPos);
+				}
+			}
+		}
+
+		if (PotentialTargetsInFOV.Num() > 0)
+		{
+			PotentialTargetsInFOV.Sort();
+			TargetPos = PotentialTargetsInFOV[0].FeetLocation;
+			bSuccessfullyFoundTarget = true;
+		}
+	}
+
+	if (bSuccessfullyFoundTarget)
+	{
+		TargetPos.Z += CapsuleHalfHeight + TargetZOffset; 
+
+		if (FVector::DistSquared(BasePos, TargetPos) < FMath::Square(MinDashDistance))
+		{
+			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 			return;
 		}
 		
-		TickCurve->ReadyForActivation();
+		TickCurveTask->ReadyForActivation();
 	}
 	else
 	{
@@ -138,7 +207,11 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 
 void UGA_CommaDash::OnCurveTick(float Alpha)
 {
-	GetAvatarActorFromActorInfo()->SetActorLocation(FMath::Lerp(BasePos, TargetPos, Alpha));
+	AActor* AvatarActor = GetAvatarActorFromActorInfo();
+	if (AvatarActor)
+	{
+		AvatarActor->SetActorLocation(FMath::Lerp(BasePos, TargetPos, Alpha));
+	}
 }
 
 void UGA_CommaDash::OnComplete()
@@ -149,39 +222,36 @@ void UGA_CommaDash::OnComplete()
 bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const
 {
     const int32 MaxIterations = 3;
-
     const float StepOffset = 20.f;
-
-    const FVector UpDownOffset(0.f, 0.f, MaxPlatformHeightDiff);
-	
+    const FVector UpDownOffsetForCheck(0.f, 0.f, MaxPlatformHeightDiff);
     const float CheckRadius = 30.f;
     const int32 NumCheckPoints = 8;
     const float MinValidHitRatio = 0.75f;
 
-    FVector Candidate = CandidateLocation;
+    FVector CurrentCandidate = CandidateLocation;
 
     for (int32 Iter = 0; Iter < MaxIterations; ++Iter)
     {
         int32 HitCount = 0;
-        FVector AccumulatedOffset = FVector::ZeroVector;
+        FVector AccumulatedNonHitOffset = FVector::ZeroVector;
 
         for (int32 i = 0; i < NumCheckPoints; ++i)
         {
             float Angle = 2 * PI * (static_cast<float>(i) / NumCheckPoints);
-            FVector Offset = FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * CheckRadius;
+            FVector OffsetFromCandidate = FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * CheckRadius;
 
-            FVector Start = Candidate + Offset + UpDownOffset;
-            FVector End   = Candidate + Offset - UpDownOffset;
+            FVector TraceStart = CurrentCandidate + OffsetFromCandidate + UpDownOffsetForCheck;
+            FVector TraceEnd   = CurrentCandidate + OffsetFromCandidate - UpDownOffsetForCheck;
 
             FHitResult Hit;
             bool bHit = UKismetSystemLibrary::LineTraceSingle(
                 GetWorld(),
-                Start,
-                End,
+                TraceStart,
+                TraceEnd,
                 UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
                 false,
                 IgnoreActors,
-                EDrawDebugTrace::None,
+                bDebugFOVTraces ? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None,
                 Hit,
                 true
             );
@@ -189,30 +259,38 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
             if (bHit)
             {
                 HitCount++;
-                AccumulatedOffset -= Offset;
+            }
+            else
+            {
+                AccumulatedNonHitOffset += OffsetFromCandidate;
             }
         }
 
         float HitRatio = static_cast<float>(HitCount) / static_cast<float>(NumCheckPoints);
         if (HitRatio >= MinValidHitRatio)
         {
-            OutAdjustedLocation = Candidate;
+            OutAdjustedLocation = CurrentCandidate;
             return true;
         }
 
-        if (HitCount < 4)
+        if (HitCount < NumCheckPoints / 2 && Iter > 0)
         {
             break;
         }
 
-        FVector Direction = AccumulatedOffset.GetSafeNormal();
-        if (Direction.IsNearlyZero())
+        if (!AccumulatedNonHitOffset.IsNearlyZero())
+        {
+            FVector AdjustmentDirection = -AccumulatedNonHitOffset.GetSafeNormal();
+            CurrentCandidate += AdjustmentDirection * StepOffset;
+        }
+        else if (HitCount > 0 && HitCount < NumCheckPoints)
         {
             break;
         }
-
-        Candidate += Direction * StepOffset;
+        else
+        {
+            break;
+        }
     }
-
     return false;
 }

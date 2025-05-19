@@ -34,7 +34,12 @@ protected:
 	void StartComboTimer();
 	void CheckComboInput();
 
-	void StartCheckComboTimer();
+	void StartPerfectShot();
+
+	UFUNCTION()
+	void OnPerfectShotEnd();
+
+	void ClearPerfectShotState();
 
 protected:
 	UPROPERTY()
@@ -55,6 +60,20 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float CurrentComboTime = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
+	float PerfectShotDuration = 0.3f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
+	float PerfectShotGracePeriod = 0.1f;
+
+	bool bIsPerfectShotActive = false;
+	bool bNextAttackWillBePerfect = false;
+
+	FTimerHandle PerfectShotTimerHandle;
 	
 	FTimerHandle CheckComboTimerHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
+	FGameplayTag PerfectShotReadyTag;
 };

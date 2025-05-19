@@ -44,6 +44,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	float GroundTraceRadius = 200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|FOV")
+	float FOVAngleDegrees = 90.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|FOV")
+	int32 NumFOVTracesPerSide = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|FOV")
+	bool bDebugFOVTraces = false;	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	TObjectPtr<class UCurveFloat> Curve;
