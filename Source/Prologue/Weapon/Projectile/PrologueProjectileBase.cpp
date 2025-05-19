@@ -65,6 +65,11 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 	{
 		return;
 	}
+
+	if (Cast<APrologueProjectileBase>(OtherActor))
+	{
+		return;
+	}
 	
 	if (OtherActor->Implements<UAbilitySystemInterface>())
 	{
@@ -88,6 +93,16 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 				FGameplayCueParameters CueParams;
 				CueParams.EffectContext = EffectContext;
 				TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParams);
+			}
+			
+			if (IncreaseGaugeEffect)
+			{
+				FGameplayEffectSpecHandle GaugeEffectSpecHandle = SourceASC->MakeOutgoingSpec(IncreaseGaugeEffect, 1.f, EffectContext);
+
+				if (GaugeEffectSpecHandle.IsValid())
+				{
+					SourceASC->ApplyGameplayEffectSpecToSelf(*GaugeEffectSpecHandle.Data.Get());
+				}
 			}
 		}
 	}
