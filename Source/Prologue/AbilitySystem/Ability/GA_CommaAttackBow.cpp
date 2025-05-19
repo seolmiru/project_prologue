@@ -96,12 +96,34 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	PlayAttackTask->ReadyForActivation();
 	
 	StartComboTimer();
+
+	StartPerfectShot();
 }
 
 void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
+
+	if (bIsPerfectShotActive)
+	{
+		float TimeRemainingInPerfect = GetWorld()->GetTimerManager().GetTimerRemaining(PerfectShotTimerHandle);
+
+		if (TimeRemainingInPerfect > 0.f && TimeRemainingInPerfect <= PerfectShotGracePeriod)
+		{
+			bNextAttackWillBePerfect = true;
+			LOG_SCREEN_R("Perfect Shot Timed");
+		}
+		else
+		{
+			bNextAttackWillBePerfect = false;
+			LOG_SCREEN_R("Perfect Shot Missed");
+		}
+	}
+	else
+	{
+		bNextAttackWillBePerfect = false;
+	}
 
 	if (!ComboTimerHandle.IsValid())
 	{
@@ -176,6 +198,10 @@ void UGA_CommaAttackBow::StartComboTimer()
 	{
 		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackBow::CheckComboInput, ComboEffectiveTime, false);
 	}
+	else
+	{
+		HasNextComboInput = false;
+	}
 }
 
 void UGA_CommaAttackBow::CheckComboInput()
@@ -183,13 +209,52 @@ void UGA_CommaAttackBow::CheckComboInput()
 	ComboTimerHandle.Invalidate();
 	if (HasNextComboInput)
 	{
+		if (bNextAttackWillBePerfect && PerfectShotReadyTag.IsValid())
+		{
+			if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
+			{
+				ASC->AddLooseGameplayTag(PerfectShotReadyTag);
+			}
+		}
+
+		bNextAttackWillBePerfect = false;
+
 		MontageJumpToSection(GetNextSection());
+
 		StartComboTimer();
+		StartPerfectShot();
+
 		HasNextComboInput = false;
 	}
 }
 
-void UGA_CommaAttackBow::StartCheckComboTimer()
+void UGA_CommaAttackBow::StartPerfectShot()
 {
-	//GetWorld()->GetTimerManager().SetTimer(CheckComboTimerHandle, this, &UGA_CommaAttackBow::CheckComboInput,CurrentComboTime, false);
+	GetWorld()->GetTimerManager().ClearTimer(PerfectShotTimerHandle);
+	bIsPerfectShotActive = true;
+
+	GetWorld()->GetTimerManager().SetTimer(PerfectShotTimerHandle, this, &UGA_CommaAttackBow::OnPerfectShotEnd, PerfectShotDuration, false);
+}
+
+void UGA_CommaAttackBow::OnPerfectShotEnd()
+{
+	bIsPerfectShotActive = false;
+}
+
+void UGA_CommaAttackBow::ClearPerfectShotState()
+{
+	GetWorld()->GetTimerManager().ClearTimer(PerfectShotTimerHandle);
+	bIsPerfectShotActive = false;
+	bNextAttackWillBePerfect = false;
+
+	if (PerfectShotReadyTag.IsValid())
+	{
+		if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
+		{
+			if (ASC->HasMatchingGameplayTag(PerfectShotReadyTag))
+			{
+				ASC->RemoveLooseGameplayTag(PerfectShotReadyTag);
+			}
+		}
+	}
 }
