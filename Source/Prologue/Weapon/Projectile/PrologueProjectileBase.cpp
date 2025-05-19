@@ -94,7 +94,7 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 				CueParams.EffectContext = EffectContext;
 				TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParams);
 			}
-
+			
 			if (IncreaseGaugeEffect)
 			{
 				FGameplayEffectSpecHandle GaugeEffectSpecHandle = SourceASC->MakeOutgoingSpec(IncreaseGaugeEffect, 1.f, EffectContext);

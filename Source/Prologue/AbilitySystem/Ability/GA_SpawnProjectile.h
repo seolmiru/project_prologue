@@ -32,6 +32,12 @@ protected:
 	TSubclassOf<AActor> ProjectileClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	TSubclassOf<AActor> PerfectProjectileClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	FGameplayTag PerfectShotRequiredTag;	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	FName SocketName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")

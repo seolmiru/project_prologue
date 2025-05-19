@@ -4,6 +4,7 @@
 #include "GA_SpawnProjectile.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -80,6 +81,27 @@ void UGA_SpawnProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	if (NumProjectiles <= 0)
 		NumProjectiles = 1;
 
+	TSubclassOf<AActor> ChosenProjectileClass = ProjectileClass;
+	bool bIsPerfectShot = false;
+
+	if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(AvatarActor))
+	{
+		if (PerfectShotRequiredTag.IsValid() && ASC->HasMatchingGameplayTag(PerfectShotRequiredTag))
+		{
+			if (PerfectProjectileClass)
+			{
+				ChosenProjectileClass = PerfectProjectileClass;
+				bIsPerfectShot = true;
+				LOG_SCREEN_R("Using PerfectShot Projectile");
+			}
+			else
+			{
+				LOG_SCREEN_R("PerfectProjectileClass is Not Set");
+			}
+
+			ASC->RemoveLooseGameplayTag(PerfectShotRequiredTag);
+		}
+	}
 	
 	for (int32 i = 0; i < NumProjectiles; ++i)
 	{
@@ -91,7 +113,7 @@ void UGA_SpawnProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 		}
 
 		FRotator SpawnRotation = FireDirection.Rotation();
-		AActor* SpawnActor = GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
+		AActor* SpawnActor = GetWorld()->SpawnActor<AActor>(ChosenProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
 
 		if (SpawnActor)
 		{
