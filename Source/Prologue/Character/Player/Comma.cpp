@@ -48,8 +48,8 @@ AComma::AComma()
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
-	SwordWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HammerWeaponMesh"));
-	SwordWeaponMesh->SetupAttachment(GetMesh(),TEXT("HammerSocket"));
+	SwordWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SwordWeaponMesh"));
+	SwordWeaponMesh->SetupAttachment(GetMesh(),TEXT("SwordSocket"));
 
 	BowWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BowWeaponMesh"));
 	BowWeaponMesh->SetupAttachment(GetMesh(),TEXT("BowSocket"));
