@@ -201,28 +201,6 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 			return;
 		}
-
-		FHitResult ObstacleHitResult;
-		FCollisionQueryParams CapsuleParams(SCENE_QUERY_STAT(DashFinalSpotCheck), false, Comma);
-		FCollisionShape CapsuleShape = FCollisionShape::MakeCapsule(42.f, CapsuleHalfHeight);
-
-		FVector CapsuleCheckCenter = TargetPos + FVector(0.f, 0.f, CapsuleHalfHeight);
-
-		bool bHitObstacle = GetWorld()->SweepSingleByChannel(
-			ObstacleHitResult,
-			CapsuleCheckCenter,
-			CapsuleCheckCenter,
-			FQuat::Identity,
-			ECC_WorldStatic,
-			CapsuleShape,
-			CapsuleParams
-		);
-
-		if (bHitObstacle)
-		{
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-			return;
-		}
 		
 		TickCurveTask->ReadyForActivation();
 	}
