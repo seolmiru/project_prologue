@@ -109,8 +109,6 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 			DisableComboInputEventTask->ReadyForActivation();
 		}
 	}
-
-	EffectCount++;
 }
 
 void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
@@ -122,6 +120,8 @@ void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 	{
 		GetWorld()->GetTimerManager().ClearTimer(ComboTimerHandle);
 
+		K2_ActivateAbility();
+		
 		bComboInputActivate = false;
 	}
 }
@@ -140,8 +140,6 @@ void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	
 	if (EffectCount == 3)
 	{
-		EffectCount = 0;
-		
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
 		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);

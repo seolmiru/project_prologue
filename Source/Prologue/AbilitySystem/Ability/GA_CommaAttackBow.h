@@ -74,6 +74,7 @@ protected:
 	UPROPERTY()
 	bool bComboInputActivate = false;
 
+	UPROPERTY(BlueprintReadWrite)
 	uint8 EffectCount = 0;
 
 	bool HasNextComboInput = false;
