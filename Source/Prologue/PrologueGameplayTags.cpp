@@ -51,6 +51,11 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SpawnProjectile, "Event.Character.SpawnProjectile");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SpawnSwitchProjectile, "Event.Character.SpawnSwitchProjectile");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SpawnSwitchSubProjectile, "Event.Character.SpawnSwitchSubProjectile");
+
+	UE_DEFINE_GAMEPLAY_TAG(Event_Character_EnableInput, "Event.Character.EnableInput");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Character_DisableInput, "Event.Character.DisableInput");
+
+	UE_DEFINE_GAMEPLAY_TAG(Event_Character_NextCombo, "Event.Character.NextCombo");
 	
 	/** Enemy Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_Attack, "Enemy.Ability.Attack");

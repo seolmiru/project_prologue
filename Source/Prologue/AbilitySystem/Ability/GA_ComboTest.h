@@ -29,4 +29,11 @@ protected:
 
 	UFUNCTION()
 	void OnInterrupted();
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TMap<int32, UAnimMontage*> ComboMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combo")
+	int32 CurrentComboCount = 1;
 };
