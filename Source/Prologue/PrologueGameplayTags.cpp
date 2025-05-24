@@ -32,7 +32,7 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_OverClock, "Comma.State.OverClock");
 
-	UE_DEFINE_GAMEPLAY_TAG(Comma_State_PerfectShotReady, "Comma.State.PerfectShotReady");
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_PerfectShot, "Comma.State.PerfectShot");
 
 	/** Effect Tags */
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Damaging, "GameplayCue.Effect.Damaging");

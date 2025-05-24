@@ -37,6 +37,18 @@ protected:
 	UFUNCTION()
 	void HandleDisableComboInputEvent(FGameplayEventData Payload);
 
+	UFUNCTION()
+	void StartDebugTimer();
+
+	UFUNCTION()
+	void DebugTimerInfo();
+
+	UPROPERTY()
+	FTimerHandle DebugTimerHandle;
+
+	UPROPERTY()
+	float PerfectShotStartWorldTime = 0.f;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = true))
 	TMap<int32, UAnimMontage*> ComboMontageMap;
@@ -68,9 +80,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UAbilityTask_WaitGameplayEvent> DisableComboInputEventTask;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PerfectShot")
-	FGameplayTag PerfectShotReadyTag;
-
 	UPROPERTY()
 	bool bComboInputActivate = false;
 
@@ -78,4 +87,38 @@ protected:
 	uint8 EffectCount = 0;
 
 	bool HasNextComboInput = false;
+
+protected:
+	UFUNCTION()
+	void InitializePerfectShotTimer();
+
+	UFUNCTION()
+	void ClearPerfectShotTimers();
+
+	UFUNCTION()
+	void HandleAddPerfectShotTag();
+
+	UFUNCTION()
+	void HandleRemovePerfectShotTag();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
+	bool bIsPerfectShotActive = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
+	FTimerHandle PerfectShotTimerHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
+	FTimerHandle AddPerfectShotTagTimerHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
+	FTimerHandle RemovePerfectShotTagTimerHandle;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
+	float PerfectShotDuration = 1.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
+	float PerfectShotStartTime = 0.5f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
+	FGameplayTag PerfectShotRequiredTag;
 };
