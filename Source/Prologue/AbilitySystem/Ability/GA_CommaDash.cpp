@@ -218,11 +218,11 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			CapsuleParams
 		);
 
-		if (bHitObstacle)
+		/*if (bHitObstacle)
 		{
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 			return;
-		}
+		}*/
 		
 		TickCurveTask->ReadyForActivation();
 	}
