@@ -123,11 +123,6 @@ void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 	if (bComboInputActivate)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(ComboTimerHandle);
-
-		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-		EffectContextHandle.AddSourceObject(this);
-		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
-		GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
 		
 		K2_ActivateAbility();
 		
