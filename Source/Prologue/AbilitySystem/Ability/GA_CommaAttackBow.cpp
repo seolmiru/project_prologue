@@ -90,16 +90,6 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	Comma->GetSwordWeaponMesh()->SetVisibility(false);
 	Comma->GetBowWeaponMesh()->SetVisibility(true);
 
-	if (EnableComboInputTag.IsValid())
-	{
-		EnableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, EnableComboInputTag);
-		if (EnableComboInputEventTask)
-		{
-			EnableComboInputEventTask->EventReceived.AddDynamic(this, &UGA_CommaAttackBow::HandleEnableComboInputEvent);
-			EnableComboInputEventTask->ReadyForActivation();
-		}
-	}
-
 	if (DisableComboInputTag.IsValid())
 	{
 		DisableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, DisableComboInputTag);
@@ -109,7 +99,17 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 			DisableComboInputEventTask->ReadyForActivation();
 		}
 	}
-
+	
+	if (EnableComboInputTag.IsValid())
+	{
+		EnableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, EnableComboInputTag);
+		if (EnableComboInputEventTask)
+		{
+			EnableComboInputEventTask->EventReceived.AddDynamic(this, &UGA_CommaAttackBow::HandleEnableComboInputEvent);
+			EnableComboInputEventTask->ReadyForActivation();
+		}
+	}
+	
 	InitializePerfectShotTimer();
 
 	StartDebugTimer();
@@ -125,8 +125,6 @@ void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 		GetWorld()->GetTimerManager().ClearTimer(ComboTimerHandle);
 		
 		K2_ActivateAbility();
-		
-		bComboInputActivate = false;
 	}
 }
 
@@ -134,8 +132,6 @@ void UGA_CommaAttackBow::CancelAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool bReplicateCancelAbility)
 {
-	ClearPerfectShotTimers();
-	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
@@ -155,7 +151,7 @@ void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 
 void UGA_CommaAttackBow::OnComplete()
 {
-	bool bReplicatedEndAbility = true;
+	bool bReplicatedEndAbility = true; 
 	bool bWasCancelled = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
 }
