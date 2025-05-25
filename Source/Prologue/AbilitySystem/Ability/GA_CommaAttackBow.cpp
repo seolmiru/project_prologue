@@ -3,9 +3,11 @@
 
 #include "GA_CommaAttackBow.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/DataAsset/ComboBowData.h"
@@ -85,53 +87,46 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 		Comma->RotateToMouse();
 	}
 	
-	CurrentComboData = Comma->GetComboBowData();
-	
 	Comma->GetSwordWeaponMesh()->SetVisibility(false);
 	Comma->GetBowWeaponMesh()->SetVisibility(true);
-	
-	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetBowComboMontage(), 1.0f, GetNextSection());
-	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaAttackBow::OnComplete);
-	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaAttackBow::OnInterrupted);
-	PlayAttackTask->ReadyForActivation();
-	
-	StartComboTimer();
 
-	StartPerfectShot();
+	if (EnableComboInputTag.IsValid())
+	{
+		EnableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, EnableComboInputTag);
+		if (EnableComboInputEventTask)
+		{
+			EnableComboInputEventTask->EventReceived.AddDynamic(this, &UGA_CommaAttackBow::HandleEnableComboInputEvent);
+			EnableComboInputEventTask->ReadyForActivation();
+		}
+	}
+
+	if (DisableComboInputTag.IsValid())
+	{
+		DisableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, DisableComboInputTag);
+		if (DisableComboInputEventTask)
+		{
+			DisableComboInputEventTask->EventReceived.AddDynamic(this, &UGA_CommaAttackBow::HandleDisableComboInputEvent);
+			DisableComboInputEventTask->ReadyForActivation();
+		}
+	}
+
+	InitializePerfectShotTimer();
+
+	StartDebugTimer();
 }
 
 void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
-
-	if (bIsPerfectShotActive)
+	
+	if (bComboInputActivate)
 	{
-		float TimeRemainingInPerfect = GetWorld()->GetTimerManager().GetTimerRemaining(PerfectShotTimerHandle);
-
-		if (TimeRemainingInPerfect > 0.f && TimeRemainingInPerfect <= PerfectShotGracePeriod)
-		{
-			bNextAttackWillBePerfect = true;
-			LOG_SCREEN_R("Perfect Shot Timed");
-		}
-		else
-		{
-			bNextAttackWillBePerfect = false;
-			LOG_SCREEN_R("Perfect Shot Missed");
-		}
-	}
-	else
-	{
-		bNextAttackWillBePerfect = false;
-	}
-
-	if (!ComboTimerHandle.IsValid())
-	{
-		HasNextComboInput = false;
-	}
-	else
-	{
-		HasNextComboInput = true;
+		GetWorld()->GetTimerManager().ClearTimer(ComboTimerHandle);
+		
+		K2_ActivateAbility();
+		
+		bComboInputActivate = false;
 	}
 }
 
@@ -140,30 +135,19 @@ void UGA_CommaAttackBow::CancelAbility(const FGameplayAbilitySpecHandle Handle,
 	bool bReplicateCancelAbility)
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
-
-	CurrentComboData = nullptr;
-	CurrentCombo = 0;
-	HasNextComboInput = false;
 }
 
 void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
-	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
+	
+	if (EffectCount == 3)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
 		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
 		GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
-	}
-
-	if (CurrentComboTime <= 0.f)
-	{
-		CurrentComboData = nullptr;
-		CurrentCombo = 0;
-		HasNextComboInput = false;
 	}
 }
 
@@ -181,80 +165,95 @@ void UGA_CommaAttackBow::OnInterrupted()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
 }
 
-FName UGA_CommaAttackBow::GetNextSection()
+void UGA_CommaAttackBow::HandleEnableComboInputEvent(FGameplayEventData Payload)
 {
-	CurrentCombo = FMath::Clamp(CurrentCombo + 1, 1, CurrentComboData->MaxComboCount);
-	FName NextSection = *FString::Printf(TEXT("%s%d"), *CurrentComboData->MontageSectionNamePrefix, CurrentCombo);
-	return NextSection;
+	bComboInputActivate = true;
 }
 
-void UGA_CommaAttackBow::StartComboTimer()
+void UGA_CommaAttackBow::HandleDisableComboInputEvent(FGameplayEventData Payload)
 {
-	int32 ComboIndex = CurrentCombo - 1;
-	ensure(CurrentComboData->EffectiveFrameCount.IsValidIndex(ComboIndex));
-
-	const float ComboEffectiveTime = CurrentComboData->EffectiveFrameCount[ComboIndex] / CurrentComboData->FrameRate;
-	if (ComboEffectiveTime > 0.f)
-	{
-		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackBow::CheckComboInput, ComboEffectiveTime, false);
-	}
-	else
-	{
-		HasNextComboInput = false;
-	}
+	bComboInputActivate = false;
 }
 
-void UGA_CommaAttackBow::CheckComboInput()
+void UGA_CommaAttackBow::StartDebugTimer()
 {
-	ComboTimerHandle.Invalidate();
-	if (HasNextComboInput)
+	GetWorld()->GetTimerManager().SetTimer(DebugTimerHandle, this, &UGA_CommaAttackBow::DebugTimerInfo, 0.1f, true);
+}
+
+void UGA_CommaAttackBow::DebugTimerInfo()
+{
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+	float ElapsedTime = CurrentTime - PerfectShotStartWorldTime;
+
+	float TimeToTagAdd = FMath::Max(0.f, PerfectShotStartTime - ElapsedTime);
+	float TimeToTagRemove = FMath::Max(0.f, PerfectShotDuration - ElapsedTime);
+
+	bool bHasPerfectShotTag = false;
+	if (GetAbilitySystemComponentFromActorInfo() && PerfectShotRequiredTag.IsValid())
 	{
-		if (bNextAttackWillBePerfect && PerfectShotReadyTag.IsValid())
-		{
-			if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
-			{
-				ASC->AddLooseGameplayTag(PerfectShotReadyTag);
-			}
-		}
+		bHasPerfectShotTag = GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(PerfectShotRequiredTag);
+	}
 
-		bNextAttackWillBePerfect = false;
+	LOG_SCREEN("Perfect Shot Debug : \n Elapsed : %.1fs \n Time To Tag Add : %1.fs \n Time To Tag Remove : %1.fs \n Tag Active : %s \n PerfectShot Active : %s",
+		ElapsedTime,
+		TimeToTagAdd,
+		TimeToTagRemove,
+		bHasPerfectShotTag ? TEXT("YES") : TEXT("NO"),
+		bIsPerfectShotActive ? TEXT("YES") : TEXT("NO")
+	);
 
-		MontageJumpToSection(GetNextSection());
-
-		StartComboTimer();
-		StartPerfectShot();
-
-		HasNextComboInput = false;
+	if (ElapsedTime >= PerfectShotDuration)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(DebugTimerHandle);
 	}
 }
 
-void UGA_CommaAttackBow::StartPerfectShot()
+void UGA_CommaAttackBow::InitializePerfectShotTimer()
 {
-	GetWorld()->GetTimerManager().ClearTimer(PerfectShotTimerHandle);
-	bIsPerfectShotActive = true;
+	ClearPerfectShotTimers();
 
-	GetWorld()->GetTimerManager().SetTimer(PerfectShotTimerHandle, this, &UGA_CommaAttackBow::OnPerfectShotEnd, PerfectShotDuration, false);
+	PerfectShotStartWorldTime = GetWorld()->GetTimeSeconds();
+
+	GetWorld()->GetTimerManager().SetTimer(AddPerfectShotTagTimerHandle, this, &UGA_CommaAttackBow::HandleAddPerfectShotTag, PerfectShotStartTime, false);
+
+	GetWorld()->GetTimerManager().SetTimer(RemovePerfectShotTagTimerHandle, this, &UGA_CommaAttackBow::HandleRemovePerfectShotTag, PerfectShotDuration, false);
+
+	LOG_SCREEN("PerfectShot Timer Start Time : %.1fs, Duration : %.1fs", PerfectShotStartTime, PerfectShotDuration);
 }
 
-void UGA_CommaAttackBow::OnPerfectShotEnd()
+void UGA_CommaAttackBow::ClearPerfectShotTimers()
 {
+	GetWorld()->GetTimerManager().ClearTimer(AddPerfectShotTagTimerHandle);
+
+	GetWorld()->GetTimerManager().ClearTimer(RemovePerfectShotTagTimerHandle);
+
+	if (GetAbilitySystemComponentFromActorInfo() && PerfectShotRequiredTag.IsValid())
+	{
+		GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(PerfectShotRequiredTag);
+	}
+
 	bIsPerfectShotActive = false;
 }
 
-void UGA_CommaAttackBow::ClearPerfectShotState()
+void UGA_CommaAttackBow::HandleAddPerfectShotTag()
 {
-	GetWorld()->GetTimerManager().ClearTimer(PerfectShotTimerHandle);
-	bIsPerfectShotActive = false;
-	bNextAttackWillBePerfect = false;
-
-	if (PerfectShotReadyTag.IsValid())
+	if (GetAbilitySystemComponentFromActorInfo() && PerfectShotRequiredTag.IsValid())
 	{
-		if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
-		{
-			if (ASC->HasMatchingGameplayTag(PerfectShotReadyTag))
-			{
-				ASC->RemoveLooseGameplayTag(PerfectShotReadyTag);
-			}
-		}
+		GetAbilitySystemComponentFromActorInfo()->AddLooseGameplayTag(PerfectShotRequiredTag);
+		bIsPerfectShotActive = true;
+
+		LOG_SCREEN_R("PerfectShot On");
 	}
+}
+
+void UGA_CommaAttackBow::HandleRemovePerfectShotTag()
+{
+	if (GetAbilitySystemComponentFromActorInfo() && PerfectShotRequiredTag.IsValid())
+	{
+		GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(PerfectShotRequiredTag);
+	}
+
+	LOG_SCREEN_R("PerfectShot Off");
+	
+	bIsPerfectShotActive = false;
 }

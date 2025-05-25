@@ -33,6 +33,12 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
+
+	if (!Nav)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
 	
 	UAT_TickCurve* TickCurveTask = UAT_TickCurve::CreateTask(this, Curve);
 	if (!TickCurveTask)
@@ -79,8 +85,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	const float SphereTraceStartUpOffset = MaxPlatformHeightDiff + 50.f;
 	const float SphereTraceEndDownOffset = MaxPlatformHeightDiff * 2.f + 50.f;
 
-	auto PerformTraceInDirection = 
-		[&](const FVector& TraceDirection, FVector& OutValidatedFeetPos, EDrawDebugTrace::Type DebugTraceType) -> bool
+	auto PerformTraceInDirection = [&](const FVector& TraceDirection, FVector& OutValidatedFeetPos, EDrawDebugTrace::Type DebugTraceType, UNavigationSystemV1* NavSystem) -> bool
 	{
 		FVector CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * MoveLength;
 		FVector BestValidFeetPosInDirection = ActorStartPos;
@@ -112,34 +117,40 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			FVector AdjustedSafeFeetPosOnGround;
 
 			if (!IsSafeLandingZone(GroundImpactPoint, ActorsToIgnore, AdjustedSafeFeetPosOnGround)) continue;
-			
-			if (Nav)
+
+			if (!NavSystem)
 			{
-				FNavLocation NavMeshLocation;
-				const FVector ProjectionExtent(GroundTraceRadius, GroundTraceRadius, MaxPlatformHeightDiff + 100.f); 
-				
-				if (!Nav->ProjectPointToNavigation(AdjustedSafeFeetPosOnGround, NavMeshLocation, ProjectionExtent))
-				{
-					continue;
-				}
-				AdjustedSafeFeetPosOnGround = NavMeshLocation.Location;
+				continue;
 			}
-			
+
+			FNavLocation NavMeshLocation;
+
+			const FVector ProjectionExtent(GroundTraceRadius, GroundTraceRadius, MaxPlatformHeightDiff + 100.f);
+
+			if (!NavSystem->ProjectPointToNavigation(AdjustedSafeFeetPosOnGround, NavMeshLocation, ProjectionExtent))
+			{
+				continue;				
+			}
+
+			AdjustedSafeFeetPosOnGround = NavMeshLocation.Location;
 			BestValidFeetPosInDirection = AdjustedSafeFeetPosOnGround;
 			bFoundAnyGroundSpotInThisDirection = true;
 		}
-		
-		if (bFoundAnyGroundSpotInThisDirection) {
+
+		if (bFoundAnyGroundSpotInThisDirection)
+		{
 			OutValidatedFeetPos = BestValidFeetPosInDirection;
+
 			return true;
 		}
+
 		return false;
 	};
 
 	FVector ForwardDashTargetFeetLocation;
 	EDrawDebugTrace::Type PrimaryTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
 
-	if (PerformTraceInDirection(DesiredDirection, ForwardDashTargetFeetLocation, PrimaryTraceDebugType))
+	if (PerformTraceInDirection(DesiredDirection, ForwardDashTargetFeetLocation, PrimaryTraceDebugType, Nav))
 	{
 		TargetPos = ForwardDashTargetFeetLocation;
 		bSuccessfullyFoundTarget = true;
@@ -166,7 +177,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 				FVector FOVTargetFeetLocation;
 				EDrawDebugTrace::Type FOVTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
 
-				if (PerformTraceInDirection(SampleDirectionForFOV, FOVTargetFeetLocation, FOVTraceDebugType))
+				if (PerformTraceInDirection(SampleDirectionForFOV, FOVTargetFeetLocation, FOVTraceDebugType, Nav))
 				{
 					PotentialTargetsInFOV.Emplace(FOVTargetFeetLocation, ActorStartPos);
 				}
