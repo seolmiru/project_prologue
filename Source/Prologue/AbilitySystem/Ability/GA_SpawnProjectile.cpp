@@ -98,8 +98,6 @@ void UGA_SpawnProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 			{
 				LOG_SCREEN_R("PerfectProjectileClass is Not Set");
 			}
-
-			ASC->RemoveLooseGameplayTag(PerfectShotRequiredTag);
 		}
 	}
 	

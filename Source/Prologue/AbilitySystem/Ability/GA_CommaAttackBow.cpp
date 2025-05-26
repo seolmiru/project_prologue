@@ -90,16 +90,6 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	Comma->GetSwordWeaponMesh()->SetVisibility(false);
 	Comma->GetBowWeaponMesh()->SetVisibility(true);
 
-	if (EnableComboInputTag.IsValid())
-	{
-		EnableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, EnableComboInputTag);
-		if (EnableComboInputEventTask)
-		{
-			EnableComboInputEventTask->EventReceived.AddDynamic(this, &UGA_CommaAttackBow::HandleEnableComboInputEvent);
-			EnableComboInputEventTask->ReadyForActivation();
-		}
-	}
-
 	if (DisableComboInputTag.IsValid())
 	{
 		DisableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, DisableComboInputTag);
@@ -109,7 +99,17 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 			DisableComboInputEventTask->ReadyForActivation();
 		}
 	}
-
+	
+	if (EnableComboInputTag.IsValid())
+	{
+		EnableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, EnableComboInputTag);
+		if (EnableComboInputEventTask)
+		{
+			EnableComboInputEventTask->EventReceived.AddDynamic(this, &UGA_CommaAttackBow::HandleEnableComboInputEvent);
+			EnableComboInputEventTask->ReadyForActivation();
+		}
+	}
+	
 	InitializePerfectShotTimer();
 
 	StartDebugTimer();
@@ -125,8 +125,6 @@ void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 		GetWorld()->GetTimerManager().ClearTimer(ComboTimerHandle);
 		
 		K2_ActivateAbility();
-		
-		bComboInputActivate = false;
 	}
 }
 
@@ -153,7 +151,7 @@ void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 
 void UGA_CommaAttackBow::OnComplete()
 {
-	bool bReplicatedEndAbility = true;
+	bool bReplicatedEndAbility = true; 
 	bool bWasCancelled = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
 }
@@ -208,9 +206,27 @@ void UGA_CommaAttackBow::DebugTimerInfo()
 	}
 }
 
+void UGA_CommaAttackBow::SyncPerfectShotTag()
+{
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+
+	bool bHasTag = ASC->HasMatchingGameplayTag(PerfectShotRequiredTag);
+
+	if (bIsPerfectShotActive && !bHasTag)
+	{
+		ASC->AddLooseGameplayTag(PerfectShotRequiredTag);
+	}
+	else if (!bIsPerfectShotActive && bHasTag)
+	{
+		ASC->RemoveLooseGameplayTag(PerfectShotRequiredTag);
+	}
+}
+
 void UGA_CommaAttackBow::InitializePerfectShotTimer()
 {
 	ClearPerfectShotTimers();
+
+	SyncPerfectShotTag();
 
 	PerfectShotStartWorldTime = GetWorld()->GetTimeSeconds();
 
@@ -237,23 +253,46 @@ void UGA_CommaAttackBow::ClearPerfectShotTimers()
 
 void UGA_CommaAttackBow::HandleAddPerfectShotTag()
 {
-	if (GetAbilitySystemComponentFromActorInfo() && PerfectShotRequiredTag.IsValid())
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	
+	if (!ASC || !PerfectShotRequiredTag.IsValid())
 	{
-		GetAbilitySystemComponentFromActorInfo()->AddLooseGameplayTag(PerfectShotRequiredTag);
-		bIsPerfectShotActive = true;
+		LOG_SCREEN_R("CommaAttackBow : ASC or Tag invalid");
+		bIsPerfectShotActive = false;
+		return;
+	}
 
-		LOG_SCREEN_R("PerfectShot On");
+	bool bHasTagBefore = ASC->HasMatchingGameplayTag(PerfectShotRequiredTag);
+
+	if (!bHasTagBefore)
+	{
+		ASC->AddLooseGameplayTag(PerfectShotRequiredTag);
+		bIsPerfectShotActive = true;
+	}
+	else
+	{
+		bIsPerfectShotActive = true;
 	}
 }
 
 void UGA_CommaAttackBow::HandleRemovePerfectShotTag()
 {
-	if (GetAbilitySystemComponentFromActorInfo() && PerfectShotRequiredTag.IsValid())
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	
+	if (!ASC || !PerfectShotRequiredTag.IsValid())
 	{
-		GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(PerfectShotRequiredTag);
+		LOG_SCREEN_R("CommaAttackBow : ASC or Tag invalid");
+		bIsPerfectShotActive = false;
+		return;
 	}
 
-	LOG_SCREEN_R("PerfectShot Off");
+
+	bool bHadTagBefore = ASC->HasMatchingGameplayTag(PerfectShotRequiredTag);
+
+	if (bHadTagBefore)
+	{
+		ASC->RemoveLooseGameplayTag(PerfectShotRequiredTag);
+	}
 	
 	bIsPerfectShotActive = false;
 }

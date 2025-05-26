@@ -43,6 +43,9 @@ protected:
 	UFUNCTION()
 	void DebugTimerInfo();
 
+	UFUNCTION()
+	void SyncPerfectShotTag();
+
 	UPROPERTY()
 	FTimerHandle DebugTimerHandle;
 
