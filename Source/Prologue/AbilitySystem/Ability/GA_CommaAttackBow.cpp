@@ -89,7 +89,7 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	
 	Comma->GetSwordWeaponMesh()->SetVisibility(false);
 	Comma->GetBowWeaponMesh()->SetVisibility(true);
-
+	
 	if (DisableComboInputTag.IsValid())
 	{
 		DisableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, DisableComboInputTag);
@@ -123,8 +123,10 @@ void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 	if (bComboInputActivate)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(ComboTimerHandle);
-		
+
 		K2_ActivateAbility();
+		
+		bComboInputActivate = false;
 	}
 }
 
