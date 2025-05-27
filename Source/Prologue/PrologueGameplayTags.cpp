@@ -64,6 +64,7 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_Strafing, "Enemy.State.Strafing");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_RunningAway, "Enemy.State.RunningAway");
+	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_Charge, "Enemy.State.Charge");
 	
 	/** Shared Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Ability_Death, "Shared.Ability.Death");
