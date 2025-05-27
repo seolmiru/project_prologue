@@ -36,6 +36,10 @@ protected:
 
 	void ResetComboCount();
 
+	void EnableComboInput();
+
+	void ProcessNextCombo();
+	
 protected:
 	UPROPERTY()
 	TObjectPtr<class UComboSwordData> CurrentComboData;
