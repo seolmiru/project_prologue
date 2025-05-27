@@ -36,12 +36,12 @@ FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(Character);
 
-	FHitResult HitResult;
+	TArray<FHitResult> HitResults;
 	const FVector Forward = Character->GetActorForwardVector();
 	const FVector Start = Character->GetActorLocation() + Forward * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
 	const FVector End = Start + Forward * 270.0f;
 
-	bool bResult = UKismetSystemLibrary::SphereTraceSingle(
+	bool bResult = UKismetSystemLibrary::SphereTraceMulti(
 		GetWorld(),
 		Start,
 		End,
@@ -50,15 +50,18 @@ FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
 		false,
 		IgnoreActors,
 		bShowDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
-		HitResult,
+		HitResults,
 		false);
 	
 	FGameplayAbilityTargetDataHandle DataHandle;
 	if (bResult)
 	{
-		FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
-		DataHandle.Add(TargetData);
-		LOG_SCREEN("Trace Check");
+		for (const FHitResult& HitResult : HitResults)
+		{
+			FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
+			DataHandle.Add(TargetData);
+			LOG_SCREEN("Trace Check");
+		}
 	}
 
 	return DataHandle;

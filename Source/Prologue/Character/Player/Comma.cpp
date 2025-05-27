@@ -34,8 +34,8 @@ AComma::AComma()
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>("CameraBoom");
 	CameraBoom->SetupAttachment(GetRootComponent());
-	CameraBoom->TargetArmLength = 1000.f;
-	CameraBoom->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
+	CameraBoom->TargetArmLength = 1200.f;
+	CameraBoom->SetRelativeRotation(FRotator(-55.f, 0.f, 0.f));
 	CameraBoom->bUsePawnControlRotation = false;
 	CameraBoom->bEnableCameraLag = true;
 	CameraBoom->bDoCollisionTest = false;
@@ -45,6 +45,7 @@ AComma::AComma()
 	
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	FollowCamera->FieldOfView = 50.f;
 	FollowCamera->bUsePawnControlRotation = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -80,6 +81,16 @@ void AComma::Tick(float DeltaSeconds)
 	float RightDot = FVector::DotProduct(Velocity, Right);
 
 	Direction = FVector2D(ForwardDot, RightDot);
+
+	if (CameraBoom)
+	{
+		FVector TargetLocation = GetActorLocation();
+		TargetLocation.Z += 100.f;
+
+		FVector CurrentLocation = CameraBoom->GetComponentLocation();
+		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
+		CameraBoom->SetWorldLocation(NewLocation);
+	}
 }
 
 void AComma::NotifyControllerChanged()
