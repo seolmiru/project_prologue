@@ -37,6 +37,12 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 	
 	CurrentComboData = Comma->GetComboSwordData();
 
+	if (CurrentComboData && CurrentCombo >= CurrentComboData->MaxComboCount)
+	{
+		CurrentCombo = 0;
+		LOG_SCREEN_R("AttackSword : Reset Combo Count");
+	}
+
 	Comma->RotateToMouse();
 	Comma->GetSwordWeaponMesh()->SetVisibility(true);
 	Comma->GetBowWeaponMesh()->SetVisibility(false);
@@ -45,6 +51,8 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaAttackSword::OnComplete);
 	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaAttackSword::OnInterrupted);
 	PlayAttackTask->ReadyForActivation();
+	
+	GetWorld()->GetTimerManager().ClearTimer(CurrentComboTimerHandle);
 	
 	StartComboTimer();
 }
@@ -71,7 +79,6 @@ void UGA_CommaAttackSword::CancelAbility(const FGameplayAbilitySpecHandle Handle
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 
 	CurrentComboData = nullptr;
-	CurrentCombo = 0;
 	HasNextComboInput = false;
 }
 
@@ -81,6 +88,8 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
+	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackSword::ResetComboCount, 1.2f, false);
+	
 	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
@@ -90,7 +99,6 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	}
 	
 	CurrentComboData = nullptr;
-	CurrentCombo = 0;
 	HasNextComboInput = false;
 }
 
@@ -121,9 +129,13 @@ void UGA_CommaAttackSword::StartComboTimer()
 	ensure(CurrentComboData->EffectiveFrameCount.IsValidIndex(ComboIndex));
 
 	const float ComboEffectiveTime = CurrentComboData->EffectiveFrameCount[ComboIndex] / CurrentComboData->FrameRate;
-	if (ComboEffectiveTime > 0.f)
+
+	const float AdditionalInputTime = 0.3f;
+	const float TotalComboTime = ComboEffectiveTime + AdditionalInputTime;
+	
+	if (TotalComboTime > 0.f)
 	{
-		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackSword::CheckComboInput, ComboEffectiveTime, false);
+		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackSword::CheckComboInput, TotalComboTime, false);
 	}
 }
 
@@ -136,4 +148,9 @@ void UGA_CommaAttackSword::CheckComboInput()
 		StartComboTimer();
 		HasNextComboInput = false;
 	}
+}
+
+void UGA_CommaAttackSword::ResetComboCount()
+{
+	CurrentCombo = 0;
 }

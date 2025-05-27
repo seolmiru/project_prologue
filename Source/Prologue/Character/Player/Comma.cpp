@@ -24,6 +24,7 @@
 AComma::AComma()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
 	
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 	
@@ -33,14 +34,18 @@ AComma::AComma()
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>("CameraBoom");
 	CameraBoom->SetupAttachment(GetRootComponent());
-	CameraBoom->TargetArmLength = 1000.f;
-	CameraBoom->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
-	CameraBoom->bUsePawnControlRotation = true;
+	CameraBoom->TargetArmLength = 1200.f;
+	CameraBoom->SetRelativeRotation(FRotator(-55.f, 0.f, 0.f));
+	CameraBoom->bUsePawnControlRotation = false;
 	CameraBoom->bEnableCameraLag = true;
 	CameraBoom->bDoCollisionTest = false;
+	CameraBoom->bInheritPitch = false;
+	CameraBoom->bInheritYaw = false;
+	CameraBoom->bInheritRoll = false;
 	
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	FollowCamera->FieldOfView = 50.f;
 	FollowCamera->bUsePawnControlRotation = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -48,8 +53,8 @@ AComma::AComma()
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
-	SwordWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HammerWeaponMesh"));
-	SwordWeaponMesh->SetupAttachment(GetMesh(),TEXT("HammerSocket"));
+	SwordWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SwordWeaponMesh"));
+	SwordWeaponMesh->SetupAttachment(GetMesh(),TEXT("SwordSocket"));
 
 	BowWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BowWeaponMesh"));
 	BowWeaponMesh->SetupAttachment(GetMesh(),TEXT("BowSocket"));
@@ -76,6 +81,16 @@ void AComma::Tick(float DeltaSeconds)
 	float RightDot = FVector::DotProduct(Velocity, Right);
 
 	Direction = FVector2D(ForwardDot, RightDot);
+
+	if (CameraBoom)
+	{
+		FVector TargetLocation = GetActorLocation();
+		TargetLocation.Z += 100.f;
+
+		FVector CurrentLocation = CameraBoom->GetComponentLocation();
+		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
+		CameraBoom->SetWorldLocation(NewLocation);
+	}
 }
 
 void AComma::NotifyControllerChanged()

@@ -34,6 +34,8 @@ protected:
 	void StartComboTimer();
 	void CheckComboInput();
 
+	void ResetComboCount();
+
 protected:
 	UPROPERTY()
 	TObjectPtr<class UComboSwordData> CurrentComboData;
@@ -41,7 +43,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TSubclassOf<UGameplayEffect> SwitchAttackEffectClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combo")
 	uint8 CurrentCombo = 0;
+	
 	FTimerHandle ComboTimerHandle;
 	bool HasNextComboInput = false;
+
+	FTimerHandle CurrentComboTimerHandle;
 };
