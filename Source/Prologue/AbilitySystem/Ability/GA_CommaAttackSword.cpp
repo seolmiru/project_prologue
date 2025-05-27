@@ -45,6 +45,17 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaAttackSword::OnComplete);
 	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaAttackSword::OnInterrupted);
 	PlayAttackTask->ReadyForActivation();
+
+	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
+	{
+		LOG_SCREEN_R("CurrentCombo : %d", CurrentCombo);
+	}
+	else
+	{
+		LOG_SCREEN_R("CurrentCombo : %d", CurrentCombo);
+	}
+
+	GetWorld()->GetTimerManager().ClearTimer(CurrentComboTimerHandle);
 	
 	StartComboTimer();
 }
@@ -71,7 +82,6 @@ void UGA_CommaAttackSword::CancelAbility(const FGameplayAbilitySpecHandle Handle
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 
 	CurrentComboData = nullptr;
-	CurrentCombo = 0;
 	HasNextComboInput = false;
 }
 
@@ -81,6 +91,8 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
+	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackSword::ResetComboCount, 1.2f, false);
+	
 	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
@@ -90,7 +102,6 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	}
 	
 	CurrentComboData = nullptr;
-	CurrentCombo = 0;
 	HasNextComboInput = false;
 }
 
@@ -136,4 +147,9 @@ void UGA_CommaAttackSword::CheckComboInput()
 		StartComboTimer();
 		HasNextComboInput = false;
 	}
+}
+
+void UGA_CommaAttackSword::ResetComboCount()
+{
+	CurrentCombo = 0;
 }
