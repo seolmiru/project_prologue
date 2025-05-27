@@ -64,7 +64,7 @@ void UGA_CommaAttackSword::InputPressed(const FGameplayAbilitySpecHandle Handle,
 
 	if (!ComboTimerHandle.IsValid())
 	{
-		HasNextComboInput = false;
+		ProcessNextCombo();
 	}
 	else
 	{
@@ -130,12 +130,13 @@ void UGA_CommaAttackSword::StartComboTimer()
 
 	const float ComboEffectiveTime = CurrentComboData->EffectiveFrameCount[ComboIndex] / CurrentComboData->FrameRate;
 
-	const float AdditionalInputTime = 0.3f;
-	const float TotalComboTime = ComboEffectiveTime + AdditionalInputTime;
-	
-	if (TotalComboTime > 0.f)
+	if (ComboEffectiveTime > 0.f)
 	{
-		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackSword::CheckComboInput, TotalComboTime, false);
+		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackSword::CheckComboInput, ComboEffectiveTime, false);
+	}
+	else
+	{
+		EnableComboInput();
 	}
 }
 
@@ -144,6 +145,12 @@ void UGA_CommaAttackSword::CheckComboInput()
 	ComboTimerHandle.Invalidate();
 	if (HasNextComboInput)
 	{
+		if (CurrentCombo >= CurrentComboData->MaxComboCount)
+		{
+			HasNextComboInput = false;
+			return;
+		}
+		
 		MontageJumpToSection(GetNextSection());
 		StartComboTimer();
 		HasNextComboInput = false;
@@ -153,4 +160,26 @@ void UGA_CommaAttackSword::CheckComboInput()
 void UGA_CommaAttackSword::ResetComboCount()
 {
 	CurrentCombo = 0;
+}
+
+void UGA_CommaAttackSword::EnableComboInput()
+{
+	ComboTimerHandle.Invalidate();
+
+	if (HasNextComboInput)
+	{
+		ProcessNextCombo();
+	}
+}
+
+void UGA_CommaAttackSword::ProcessNextCombo()
+{
+	if (CurrentCombo >= CurrentComboData->MaxComboCount)
+	{
+		return;
+	}
+
+	MontageJumpToSection(GetNextSection());
+	StartComboTimer();
+	HasNextComboInput = false;
 }
