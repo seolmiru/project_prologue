@@ -36,6 +36,14 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
+
+	CurrentComboData = Comma->GetComboBowData();
+
+	if (CurrentComboData && CurrentCombo >= CurrentComboData->MaxComboCount)
+	{
+		CurrentCombo = 0;
+		LOG_SCREEN_R("AttackBow : Reset Combo Count");
+	}
 	
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel2));
@@ -89,26 +97,15 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	
 	Comma->GetSwordWeaponMesh()->SetVisibility(false);
 	Comma->GetBowWeaponMesh()->SetVisibility(true);
-	
-	if (DisableComboInputTag.IsValid())
-	{
-		DisableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, DisableComboInputTag);
-		if (DisableComboInputEventTask)
-		{
-			DisableComboInputEventTask->EventReceived.AddDynamic(this, &UGA_CommaAttackBow::HandleDisableComboInputEvent);
-			DisableComboInputEventTask->ReadyForActivation();
-		}
-	}
-	
-	if (EnableComboInputTag.IsValid())
-	{
-		EnableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, EnableComboInputTag);
-		if (EnableComboInputEventTask)
-		{
-			EnableComboInputEventTask->EventReceived.AddDynamic(this, &UGA_CommaAttackBow::HandleEnableComboInputEvent);
-			EnableComboInputEventTask->ReadyForActivation();
-		}
-	}
+
+	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetBowComboMontage(), 1.0f, GetNextSection());
+	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaAttackBow::OnComplete);
+	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaAttackBow::OnInterrupted);
+	PlayAttackTask->ReadyForActivation();
+
+	GetWorld()->GetTimerManager().ClearTimer(CurrentComboTimerHandle);
+
+	StartComboTimer();
 	
 	InitializePerfectShotTimer();
 
@@ -120,13 +117,13 @@ void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
 	
-	if (bComboInputActivate)
+	if (!ComboTimerHandle.IsValid())
 	{
-		GetWorld()->GetTimerManager().ClearTimer(ComboTimerHandle);
-
-		K2_ActivateAbility();
-		
-		bComboInputActivate = false;
+		ProcessNextCombo();
+	}
+	else
+	{
+		HasNextComboInput = true;
 	}
 }
 
@@ -135,20 +132,28 @@ void UGA_CommaAttackBow::CancelAbility(const FGameplayAbilitySpecHandle Handle,
 	bool bReplicateCancelAbility)
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
+
+	CurrentComboData = nullptr;
+	HasNextComboInput = false;
 }
 
 void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackBow::ResetComboCount, 1.2f, false);
 	
-	if (EffectCount == 3)
+	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
 		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
 		GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
 	}
+
+	CurrentComboData = nullptr;
+	HasNextComboInput = false;
 }
 
 void UGA_CommaAttackBow::OnComplete()
@@ -163,16 +168,6 @@ void UGA_CommaAttackBow::OnInterrupted()
 	bool bReplicatedEndAbility = true;
 	bool bWasCancelled = true;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
-}
-
-void UGA_CommaAttackBow::HandleEnableComboInputEvent(FGameplayEventData Payload)
-{
-	bComboInputActivate = true;
-}
-
-void UGA_CommaAttackBow::HandleDisableComboInputEvent(FGameplayEventData Payload)
-{
-	bComboInputActivate = false;
 }
 
 void UGA_CommaAttackBow::StartDebugTimer()
@@ -222,6 +217,74 @@ void UGA_CommaAttackBow::SyncPerfectShotTag()
 	{
 		ASC->RemoveLooseGameplayTag(PerfectShotRequiredTag);
 	}
+}
+
+FName UGA_CommaAttackBow::GetNextSection()
+{
+	CurrentCombo = FMath::Clamp(CurrentCombo + 1, 1, CurrentComboData->MaxComboCount);
+	FName NextSection = *FString::Printf(TEXT("%s%d"), *CurrentComboData->MontageSectionNamePrefix, CurrentCombo);
+	return NextSection;
+}
+
+void UGA_CommaAttackBow::StartComboTimer()
+{
+	int32 ComboIndex = CurrentCombo - 1;
+	ensure(CurrentComboData->EffectiveFrameCount.IsValidIndex(ComboIndex));
+
+	const float ComboEffectiveTime = CurrentComboData->EffectiveFrameCount[ComboIndex] / CurrentComboData->FrameRate;
+
+	if (ComboEffectiveTime > 0.f)
+	{
+		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackBow::CheckComboInput, ComboEffectiveTime, false);
+	}
+	else
+	{
+		EnableComboInput();
+	}
+}
+
+void UGA_CommaAttackBow::CheckComboInput()
+{
+	ComboTimerHandle.Invalidate();
+	if (HasNextComboInput)
+	{
+		if (CurrentCombo >= CurrentComboData->MaxComboCount)
+		{
+			HasNextComboInput = false;
+			return;
+		}
+
+		MontageJumpToSection(GetNextSection());
+		StartComboTimer();
+		HasNextComboInput = false;
+	}
+}
+
+void UGA_CommaAttackBow::ResetComboCount()
+{
+	CurrentCombo = 0;
+}
+
+void UGA_CommaAttackBow::EnableComboInput()
+{
+	ComboTimerHandle.Invalidate();
+
+	if (HasNextComboInput)
+	{
+		ProcessNextCombo();
+	}
+}
+
+void UGA_CommaAttackBow::ProcessNextCombo()
+{
+	if (CurrentCombo >= CurrentComboData->MaxComboCount)
+	{
+		return;
+	}
+
+	MontageJumpToSection(GetNextSection());
+	StartComboTimer();
+	HasNextComboInput = false;
 }
 
 void UGA_CommaAttackBow::InitializePerfectShotTimer()
