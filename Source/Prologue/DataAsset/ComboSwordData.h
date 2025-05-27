@@ -20,7 +20,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ComboData")
 	FString MontageSectionNamePrefix;
 
-	UPROPERTY(EditAnywhere, Category = "ComboData")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ComboData")
 	uint8 MaxComboCount;
 
 	UPROPERTY(EditAnywhere, Category = "ComboData")
