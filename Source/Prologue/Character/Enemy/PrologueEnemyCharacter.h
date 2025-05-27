@@ -38,4 +38,8 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<class UAnimMontage> AttackMontage;
+
+protected:
+	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	bool TryActivateAbilityByTag(FGameplayTag AbilityTagToActivate);
 };
