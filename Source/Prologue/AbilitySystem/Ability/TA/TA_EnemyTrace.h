@@ -13,4 +13,11 @@ class PROLOGUE_API ATA_EnemyTrace : public ATA_Trace
 
 protected:
 	virtual FGameplayAbilityTargetDataHandle MakeTargetData() const override;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
+	float TraceLength;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
+	float TraceRadius;
 };
