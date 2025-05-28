@@ -2,6 +2,8 @@
 
 
 #include "PrologueAttributeSet.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "../PrologueGameplayTags.h"
 #include "Prologue/Prologue.h"
@@ -44,18 +46,16 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 		return false;
 	}
 
-	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
+	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
 	{
-		if (Data.EvaluatedData.Magnitude > 0.0f)
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
 		{
-			if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
-			{
-				Data.EvaluatedData.Magnitude = 0.0f;
-				return false;
-			}
+			FGameplayEventData PlayData;
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.Target.GetAvatarActor(), PrologueGameplayTags::Comma_Event_JustDash, PlayData);
+			return false;
 		}
 	}
-
+	
 	return true;
 }
 
