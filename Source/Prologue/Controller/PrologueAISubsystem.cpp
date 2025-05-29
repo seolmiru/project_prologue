@@ -8,6 +8,7 @@
 
 void UPrologueAISubsystem::RegisterAIController(APrologueAIController* AIController)
 {
+	// AIController 등록, 중복 등록일 경우에는 제외
 	if (AIController && !RegisteredAIControllers.Contains(AIController))
 	{
 		RegisteredAIControllers.Add(AIController);
@@ -33,6 +34,7 @@ void UPrologueAISubsystem::TriggerCombatAlert(APrologueAIController* InitiatorAI
 	const FVector InitiatorLocation = InitiatorAI->GetPawn() ? InitiatorAI->GetPawn()->GetActorLocation() : FVector::ZeroVector;
 	int32 AlertedCount = 0;
 
+	// 등록된 모든 AI Controller 중에서 AlertRadius 범위 내에 있는 AI 들에게 전투 시작 알림 전송
 	for (const TWeakObjectPtr<APrologueAIController>& WeakAI : RegisteredAIControllers)
 	{
 		if (APrologueAIController* AI = WeakAI.Get())
