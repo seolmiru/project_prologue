@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
+#include "Prologue/Weapon/Projectile/BazierProjectile.h"
 #include "Prologue/Weapon/Projectile/PrologueProjectileBase.h"
 
 UGA_SpawnProjectile::UGA_SpawnProjectile()
@@ -118,6 +119,10 @@ void UGA_SpawnProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 			if (APrologueProjectileBase* Projectile = Cast<APrologueProjectileBase>(SpawnActor))
 			{
 				Projectile->FireInDirection(FinalShootDirection);
+			}
+			else if (ABazierProjectile* Bazier = Cast<ABazierProjectile>(SpawnActor))
+			{
+				Bazier->FireInDirection(FinalShootDirection);
 			}
 		}
 	}
