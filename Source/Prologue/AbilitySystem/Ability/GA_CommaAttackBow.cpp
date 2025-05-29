@@ -44,7 +44,8 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 		CurrentCombo = 0;
 		LOG_SCREEN_R("AttackBow : Reset Combo Count");
 	}
-	
+
+	// SphereRadius 범위 내의 모든 적 감지
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel2));
 
@@ -73,7 +74,8 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 			2.0f
 		);
 	}
-	
+
+	// 감지된 적들 중에 가장 가까운 적을 타겟으로 지정
 	float NearestDist = TNumericLimits<float>::Max();
 	TargetActor = nullptr;
 	for (AActor* Actor : OverlappedActors)
@@ -86,6 +88,7 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 		}
 	}
 
+	// TargetActor가 있다면 그 방향으로 회전, 없다면 마우스 방향에 의존
 	if (TargetActor)
 	{
 		Comma->RotateToTarget(TargetActor);
@@ -116,7 +119,7 @@ void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
-	
+
 	if (!ComboTimerHandle.IsValid())
 	{
 		ProcessNextCombo();
@@ -143,7 +146,8 @@ void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
 	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackBow::ResetComboCount, 1.2f, false);
-	
+
+	// 마지막 콤보 실행 직후 교체 공격 Effect 부여
 	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
@@ -231,8 +235,10 @@ void UGA_CommaAttackBow::StartComboTimer()
 	int32 ComboIndex = CurrentCombo - 1;
 	ensure(CurrentComboData->EffectiveFrameCount.IsValidIndex(ComboIndex));
 
+	// 프레임 수를 시간으로 변환
 	const float ComboEffectiveTime = CurrentComboData->EffectiveFrameCount[ComboIndex] / CurrentComboData->FrameRate;
 
+	// 유효 시간이 있다면 타이머 설정, 없으면 즉시 콤보 입력 허용
 	if (ComboEffectiveTime > 0.f)
 	{
 		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackBow::CheckComboInput, ComboEffectiveTime, false);
@@ -248,6 +254,7 @@ void UGA_CommaAttackBow::CheckComboInput()
 	ComboTimerHandle.Invalidate();
 	if (HasNextComboInput)
 	{
+		// 최대 콤보 수 도달 시에는 콤보 진행 제어
 		if (CurrentCombo >= CurrentComboData->MaxComboCount)
 		{
 			HasNextComboInput = false;
@@ -295,8 +302,10 @@ void UGA_CommaAttackBow::InitializePerfectShotTimer()
 
 	PerfectShotStartWorldTime = GetWorld()->GetTimeSeconds();
 
+	// 활 강공격 활성화 타이머
 	GetWorld()->GetTimerManager().SetTimer(AddPerfectShotTagTimerHandle, this, &UGA_CommaAttackBow::HandleAddPerfectShotTag, PerfectShotStartTime, false);
 
+	// 비활성화 타이머
 	GetWorld()->GetTimerManager().SetTimer(RemovePerfectShotTagTimerHandle, this, &UGA_CommaAttackBow::HandleRemovePerfectShotTag, PerfectShotDuration, false);
 
 	LOG_SCREEN("PerfectShot Timer Start Time : %.1fs, Duration : %.1fs", PerfectShotStartTime, PerfectShotDuration);
