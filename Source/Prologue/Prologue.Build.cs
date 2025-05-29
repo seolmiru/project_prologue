@@ -18,7 +18,8 @@ public class Prologue : ModuleRules
 			"EnhancedInput",
 			"Niagara",
 			"NavigationSystem",
-			"AIModule"
+			"AIModule", 
+			"MoviePlayer"
 		});
 	}
 }

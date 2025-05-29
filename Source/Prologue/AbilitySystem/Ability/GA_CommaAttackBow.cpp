@@ -36,7 +36,16 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
-	
+
+	CurrentComboData = Comma->GetComboBowData();
+
+	if (CurrentComboData && CurrentCombo >= CurrentComboData->MaxComboCount)
+	{
+		CurrentCombo = 0;
+		LOG_SCREEN_R("AttackBow : Reset Combo Count");
+	}
+
+	// SphereRadius 범위 내의 모든 적 감지
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel2));
 
@@ -65,7 +74,8 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 			2.0f
 		);
 	}
-	
+
+	// 감지된 적들 중에 가장 가까운 적을 타겟으로 지정
 	float NearestDist = TNumericLimits<float>::Max();
 	TargetActor = nullptr;
 	for (AActor* Actor : OverlappedActors)
@@ -78,6 +88,7 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 		}
 	}
 
+	// TargetActor가 있다면 그 방향으로 회전, 없다면 마우스 방향에 의존
 	if (TargetActor)
 	{
 		Comma->RotateToTarget(TargetActor);
@@ -89,26 +100,15 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	
 	Comma->GetSwordWeaponMesh()->SetVisibility(false);
 	Comma->GetBowWeaponMesh()->SetVisibility(true);
-	
-	if (DisableComboInputTag.IsValid())
-	{
-		DisableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, DisableComboInputTag);
-		if (DisableComboInputEventTask)
-		{
-			DisableComboInputEventTask->EventReceived.AddDynamic(this, &UGA_CommaAttackBow::HandleDisableComboInputEvent);
-			DisableComboInputEventTask->ReadyForActivation();
-		}
-	}
-	
-	if (EnableComboInputTag.IsValid())
-	{
-		EnableComboInputEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, EnableComboInputTag);
-		if (EnableComboInputEventTask)
-		{
-			EnableComboInputEventTask->EventReceived.AddDynamic(this, &UGA_CommaAttackBow::HandleEnableComboInputEvent);
-			EnableComboInputEventTask->ReadyForActivation();
-		}
-	}
+
+	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetBowComboMontage(), 1.0f, GetNextSection());
+	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaAttackBow::OnComplete);
+	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaAttackBow::OnInterrupted);
+	PlayAttackTask->ReadyForActivation();
+
+	GetWorld()->GetTimerManager().ClearTimer(CurrentComboTimerHandle);
+
+	StartComboTimer();
 	
 	InitializePerfectShotTimer();
 
@@ -119,14 +119,14 @@ void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
-	
-	if (bComboInputActivate)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(ComboTimerHandle);
 
-		K2_ActivateAbility();
-		
-		bComboInputActivate = false;
+	if (!ComboTimerHandle.IsValid())
+	{
+		ProcessNextCombo();
+	}
+	else
+	{
+		HasNextComboInput = true;
 	}
 }
 
@@ -135,20 +135,29 @@ void UGA_CommaAttackBow::CancelAbility(const FGameplayAbilitySpecHandle Handle,
 	bool bReplicateCancelAbility)
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
+
+	CurrentComboData = nullptr;
+	HasNextComboInput = false;
 }
 
 void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-	
-	if (EffectCount == 3)
+
+	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackBow::ResetComboCount, 1.2f, false);
+
+	// 마지막 콤보 실행 직후 교체 공격 Effect 부여
+	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
 		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
 		GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
 	}
+
+	CurrentComboData = nullptr;
+	HasNextComboInput = false;
 }
 
 void UGA_CommaAttackBow::OnComplete()
@@ -163,16 +172,6 @@ void UGA_CommaAttackBow::OnInterrupted()
 	bool bReplicatedEndAbility = true;
 	bool bWasCancelled = true;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
-}
-
-void UGA_CommaAttackBow::HandleEnableComboInputEvent(FGameplayEventData Payload)
-{
-	bComboInputActivate = true;
-}
-
-void UGA_CommaAttackBow::HandleDisableComboInputEvent(FGameplayEventData Payload)
-{
-	bComboInputActivate = false;
 }
 
 void UGA_CommaAttackBow::StartDebugTimer()
@@ -224,6 +223,77 @@ void UGA_CommaAttackBow::SyncPerfectShotTag()
 	}
 }
 
+FName UGA_CommaAttackBow::GetNextSection()
+{
+	CurrentCombo = FMath::Clamp(CurrentCombo + 1, 1, CurrentComboData->MaxComboCount);
+	FName NextSection = *FString::Printf(TEXT("%s%d"), *CurrentComboData->MontageSectionNamePrefix, CurrentCombo);
+	return NextSection;
+}
+
+void UGA_CommaAttackBow::StartComboTimer()
+{
+	int32 ComboIndex = CurrentCombo - 1;
+	ensure(CurrentComboData->EffectiveFrameCount.IsValidIndex(ComboIndex));
+
+	// 프레임 수를 시간으로 변환
+	const float ComboEffectiveTime = CurrentComboData->EffectiveFrameCount[ComboIndex] / CurrentComboData->FrameRate;
+
+	// 유효 시간이 있다면 타이머 설정, 없으면 즉시 콤보 입력 허용
+	if (ComboEffectiveTime > 0.f)
+	{
+		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackBow::CheckComboInput, ComboEffectiveTime, false);
+	}
+	else
+	{
+		EnableComboInput();
+	}
+}
+
+void UGA_CommaAttackBow::CheckComboInput()
+{
+	ComboTimerHandle.Invalidate();
+	if (HasNextComboInput)
+	{
+		// 최대 콤보 수 도달 시에는 콤보 진행 제어
+		if (CurrentCombo >= CurrentComboData->MaxComboCount)
+		{
+			HasNextComboInput = false;
+			return;
+		}
+
+		MontageJumpToSection(GetNextSection());
+		StartComboTimer();
+		HasNextComboInput = false;
+	}
+}
+
+void UGA_CommaAttackBow::ResetComboCount()
+{
+	CurrentCombo = 0;
+}
+
+void UGA_CommaAttackBow::EnableComboInput()
+{
+	ComboTimerHandle.Invalidate();
+
+	if (HasNextComboInput)
+	{
+		ProcessNextCombo();
+	}
+}
+
+void UGA_CommaAttackBow::ProcessNextCombo()
+{
+	if (CurrentCombo >= CurrentComboData->MaxComboCount)
+	{
+		return;
+	}
+
+	MontageJumpToSection(GetNextSection());
+	StartComboTimer();
+	HasNextComboInput = false;
+}
+
 void UGA_CommaAttackBow::InitializePerfectShotTimer()
 {
 	ClearPerfectShotTimers();
@@ -232,8 +302,10 @@ void UGA_CommaAttackBow::InitializePerfectShotTimer()
 
 	PerfectShotStartWorldTime = GetWorld()->GetTimeSeconds();
 
+	// 활 강공격 활성화 타이머
 	GetWorld()->GetTimerManager().SetTimer(AddPerfectShotTagTimerHandle, this, &UGA_CommaAttackBow::HandleAddPerfectShotTag, PerfectShotStartTime, false);
 
+	// 비활성화 타이머
 	GetWorld()->GetTimerManager().SetTimer(RemovePerfectShotTagTimerHandle, this, &UGA_CommaAttackBow::HandleRemovePerfectShotTag, PerfectShotDuration, false);
 
 	LOG_SCREEN("PerfectShot Timer Start Time : %.1fs, Duration : %.1fs", PerfectShotStartTime, PerfectShotDuration);

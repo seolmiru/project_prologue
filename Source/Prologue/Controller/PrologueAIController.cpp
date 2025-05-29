@@ -3,10 +3,13 @@
 
 #include "PrologueAIController.h"
 
+#include "PrologueAISubsystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Navigation/CrowdFollowingComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Prologue/Prologue.h"
 
 APrologueAIController::APrologueAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer.SetDefaultSubobjectClass<UCrowdFollowingComponent>("PathFollowingComponent"))
@@ -41,10 +44,45 @@ ETeamAttitude::Type APrologueAIController::GetTeamAttitudeTowards(const AActor& 
 	return ETeamAttitude::Friendly;
 }
 
+void APrologueAIController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UPrologueAISubsystem* AISubsystem = GetWorld()->GetSubsystem<UPrologueAISubsystem>())
+	{
+		AISubsystem->UnRegisterAIController(this);
+	}
+	
+	Super::EndPlay(EndPlayReason);
+}
+
+void APrologueAIController::ReceiveCombatAlert(AActor* TargetPlayer)
+{
+	if (!TargetPlayer)
+	{
+		return;
+	}
+
+	// 전투 알림을 받았을 때, 즉시 플레이어를 TargetActor로 지정
+	Blackboard->SetValueAsObject(FName("TargetActor"), TargetPlayer);
+}
+
+void APrologueAIController::InitiateCombat(AActor* TargetPlayer)
+{
+	// 플레이어 발견 시 주변 AI들에게 전투 알림 전송
+	if (UPrologueAISubsystem* AISubsystem = GetWorld()->GetSubsystem<UPrologueAISubsystem>())
+	{
+		AISubsystem->TriggerCombatAlert(this, TargetPlayer, CombatAlertRadius);
+	}
+}
+
 void APrologueAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (UPrologueAISubsystem* AISubsystem = GetWorld()->GetSubsystem<UPrologueAISubsystem>())
+	{
+		AISubsystem->RegisterAIController(this);
+	}
+	
 	if (UCrowdFollowingComponent* CrowdComp = Cast<UCrowdFollowingComponent>(GetPathFollowingComponent()))
 	{
 		CrowdComp->SetCrowdSimulationState(bEnableDetourCrowdAvoidance ? ECrowdSimulationState::Enabled : ECrowdSimulationState::Disabled);
@@ -73,12 +111,18 @@ void APrologueAIController::OnEnemyPerceptionUpdated(AActor* Actor, FAIStimulus 
 {
 	if (UBlackboardComponent* BlackboardComponent = GetBlackboardComponent())
 	{
-		if (!BlackboardComponent->GetValueAsObject(FName("TargetActor")))
+		if (Stimulus.WasSuccessfullySensed() && Actor)
 		{
-			if (Stimulus.WasSuccessfullySensed() && Actor)
+			if (!BlackboardComponent->GetValueAsObject(FName("TargetActor")))
 			{
-				BlackboardComponent->SetValueAsObject(FName("TargetActor"), Actor);
+				InitiateCombat(Actor);
 			}
+
+			BlackboardComponent->SetValueAsObject(FName("TargetActor"), Actor);
+		}
+		else
+		{
+			BlackboardComponent->SetValueAsObject(FName("TargetActor"), Actor);
 		}
 	}
 }

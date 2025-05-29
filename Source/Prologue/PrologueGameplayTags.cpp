@@ -34,6 +34,9 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_PerfectShot, "Comma.State.PerfectShot");
 
+	/** State Tags */
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_JustDash, "Comma.Event.JustDash");
+	
 	/** Effect Tags */
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Damaging, "GameplayCue.Effect.Damaging");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_SwitchAttackDamaging, "GameplayCue.Effect.SwitchAttackDamaging");
@@ -64,6 +67,7 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_Strafing, "Enemy.State.Strafing");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_RunningAway, "Enemy.State.RunningAway");
+	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_Charge, "Enemy.State.Charge");
 	
 	/** Shared Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Ability_Death, "Shared.Ability.Death");
