@@ -31,6 +31,18 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	// Just Dash Effect 부여
+	FGameplayEffectContextHandle JustDashEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	JustDashEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle JustDashEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(JustDashTimingEffect, 0.f, JustDashEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(JustDashEffectSpecHandle);
+
+	// Invincible Effect 부여
+	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	InvincibleEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(InvincibleEffect, 0.f, InvincibleEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(InvincibleEffectSpecHandle);
+	
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
 
@@ -93,8 +105,12 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	{
 		FVector CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * MoveLength;
 		FVector BestValidFeetPosInDirection = ActorStartPos;
+		float FarthestValidDistance = 0.f;
 		bool bFoundAnyGroundSpotInThisDirection = false;
 
+		TArray<FVector> ConsecutiveSafePositions;
+		bool bLastPositionWasSafe = false;
+		
 		// MoveLength를 PathCheckSteps로 나누어 단계 별로 검사
 		for (int32 StepIndex = 1; StepIndex <= EffectivePathCheckSteps; ++StepIndex)
 		{
@@ -117,37 +133,79 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 				FLinearColor::Red, FLinearColor::Green, 1.0f
 			);
 			
-			if (!bHitGround) continue;
+			if (!bHitGround) 
+			{
+				bLastPositionWasSafe = false;
+				continue;
+			}
 
 			FVector GroundImpactPoint = GroundHitResult.ImpactPoint;
 			FVector AdjustedSafeFeetPosOnGround;
 
-			if (!IsSafeLandingZone(GroundImpactPoint, ActorsToIgnore, AdjustedSafeFeetPosOnGround)) continue;
-
-			if (!NavSystem)
+			if (!IsSafeLandingZone(GroundImpactPoint, ActorsToIgnore, AdjustedSafeFeetPosOnGround)) 
 			{
+				bLastPositionWasSafe = false;
 				continue;
 			}
 
+			// NavMesh 검증
 			FNavLocation NavMeshLocation;
-
 			const FVector ProjectionExtent(GroundTraceRadius, GroundTraceRadius, MaxPlatformHeightDiff + 100.f);
 
 			if (!NavSystem->ProjectPointToNavigation(AdjustedSafeFeetPosOnGround, NavMeshLocation, ProjectionExtent))
 			{
-				continue;				
+				bLastPositionWasSafe = false;
+				continue;
 			}
 
 			AdjustedSafeFeetPosOnGround = NavMeshLocation.Location;
-			BestValidFeetPosInDirection = AdjustedSafeFeetPosOnGround;
-			bFoundAnyGroundSpotInThisDirection = true;
+        
+			// 연속된 안전한 위치 추적
+			if (bLastPositionWasSafe)
+			{
+				ConsecutiveSafePositions.Add(AdjustedSafeFeetPosOnGround);
+			}
+			else
+			{
+				ConsecutiveSafePositions.Empty();
+				ConsecutiveSafePositions.Add(AdjustedSafeFeetPosOnGround);
+			}
+        
+			bLastPositionWasSafe = true;
+        
+			// 현재 위치까지의 거리 계산
+			float CurrentDistance = FVector::Dist(ActorStartPos, AdjustedSafeFeetPosOnGround);
+        
+			// 더 먼 안전한 위치를 발견했을 때만 업데이트
+			if (CurrentDistance > FarthestValidDistance)
+			{
+				FarthestValidDistance = CurrentDistance;
+				BestValidFeetPosInDirection = AdjustedSafeFeetPosOnGround;
+				bFoundAnyGroundSpotInThisDirection = true;
+			}
 		}
 
 		if (bFoundAnyGroundSpotInThisDirection)
 		{
-			OutValidatedFeetPos = BestValidFeetPosInDirection;
-
-			return true;
+			// 부분 대시 허용 시 거리 체크
+			if (bAllowPartialDash)
+			{
+				float AchievedDistance = FVector::Dist(ActorStartPos, BestValidFeetPosInDirection);
+				float DesiredDistance = MoveLength;
+				float AchievedPercentage = AchievedDistance / DesiredDistance;
+        
+				if (AchievedPercentage >= PartialDashMinPercentage)
+				{
+					OutValidatedFeetPos = BestValidFeetPosInDirection;
+					return true;
+				}
+			}
+			else
+			{
+				// 부분 대시를 허용하지 않을 때는 발견한 위치 그대로 사용
+				OutValidatedFeetPos = BestValidFeetPosInDirection;
+				return true;
+			}
 		}
 
 		return false;
@@ -202,15 +260,15 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	if (bSuccessfullyFoundTarget)
 	{
-		TargetPos.Z += CapsuleHalfHeight + TargetZOffset; 
-
-		// 최소 대시 거리 미달 시에는 대시 취소
+		TargetPos.Z += CapsuleHalfHeight + TargetZOffset;
+    
+		// 최종 검증
 		if (FVector::DistSquared(BasePos, TargetPos) < FMath::Square(MinDashDistance))
 		{
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 			return;
 		}
-		
+    
 		TickCurveTask->ReadyForActivation();
 	}
 	else
@@ -231,24 +289,56 @@ void UGA_CommaDash::OnCurveTick(float Alpha)
 	AActor* AvatarActor = GetAvatarActorFromActorInfo();
 	if (AvatarActor)
 	{
-		AvatarActor->SetActorLocation(FMath::Lerp(BasePos, TargetPos, Alpha));
+		FVector InterpolatedLocation = FMath::Lerp(BasePos, TargetPos, Alpha);
+		AvatarActor->SetActorLocation(InterpolatedLocation);
 	}
 }
 
 void UGA_CommaDash::OnComplete()
 {
+	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
+	if (Comma)
+	{
+		// 캐릭터가 플랫폼 위에 있는지만 확인
+		UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement();
+		if (MovementComp)
+		{
+			// 바닥 업데이트를 통해 낙사 방지 시스템 재활성화
+			MovementComp->UpdateFloorFromAdjustment();
+            
+			// 바닥이 없으면 가장 가까운 안전한 위치로 조정
+			if (!MovementComp->IsMovingOnGround())
+			{
+				FVector CurrentLocation = Comma->GetActorLocation();
+				TArray<AActor*> IgnoreActors;
+				IgnoreActors.Add(Comma);
+                
+				FVector AdjustedLocation;
+				if (IsSafeLandingZone(CurrentLocation, IgnoreActors, AdjustedLocation))
+				{
+					Comma->SetActorLocation(AdjustedLocation);
+				}
+			}
+		}
+	}
+    
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 // 안전한 착지 위치인지 검증하는 함수
 bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const
 {
-    const int32 MaxIterations = 3;
+	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
+	if (!Comma) return false;
+
+	const float CapsuleRadius = Comma->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	const float CheckRadius = CapsuleRadius * 1.5f;
+	
+    const int32 MaxIterations = 2;
     const float StepOffset = 20.f;
     const FVector UpDownOffsetForCheck(0.f, 0.f, MaxPlatformHeightDiff);
-    const float CheckRadius = 30.f;
     const int32 NumCheckPoints = 8;
-    const float MinValidHitRatio = 0.75f;
+    const float MinValidHitRatio = 0.6f;
 
     FVector CurrentCandidate = CandidateLocation;
 

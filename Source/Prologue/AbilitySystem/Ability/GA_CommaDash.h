@@ -52,11 +52,23 @@ protected:
 	int32 NumFOVTracesPerSide = 2;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|FOV")
-	bool bDebugFOVTraces = false;	
+	bool bDebugFOVTraces = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
+	bool bAllowPartialDash = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
+	float PartialDashMinPercentage = 0.7f;	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	TObjectPtr<class UCurveFloat> Curve;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TSubclassOf<UGameplayEffect> JustDashTimingEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TSubclassOf<UGameplayEffect> InvincibleEffect;
+	
 	FVector TargetPos;
 	FVector BasePos;
 };
