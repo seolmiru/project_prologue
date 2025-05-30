@@ -91,6 +91,13 @@ void AComma::Tick(float DeltaSeconds)
 		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
 		CameraBoom->SetWorldLocation(NewLocation);
 	}
+
+	if (bIsUsingSmoothRotation && !TargetRotation.IsZero())
+	{
+		FRotator CurrentRotation = GetActorRotation();
+		FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaSeconds, RotationInterpSpeed);
+		SetActorRotation(NewRotation);
+	}
 }
 
 void AComma::NotifyControllerChanged()
@@ -222,12 +229,6 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 	}
 }
 
-bool AComma::HasTag_FocusedAttack() const
-{
-	FGameplayTag AttackTag = FGameplayTag::RequestGameplayTag(TEXT("Comma.State.IsAttacking"));
-	return ASC->HasMatchingGameplayTag(AttackTag);
-}
-
 UStaticMeshComponent* AComma::GetSwordWeaponMesh() const
 {
 	return SwordWeaponMesh;
@@ -264,6 +265,33 @@ void AComma::RotateToMouse()
 	}
 }
 
+void AComma::RotateToMouseSmooth()
+{
+	ACommaController* CommaController = Cast<ACommaController>(GetController());
+	if (!CommaController) return;
+
+	float MouseX, MouseY;
+	CommaController->GetMousePosition(MouseX, MouseY);
+
+	FVector WorldLocation, WorldDirection;
+	CommaController->DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection);
+
+	FVector MyLocation = GetActorLocation();
+	float Z = MyLocation.Z;
+	float Distance = (Z - WorldLocation.Z) / WorldDirection.Z;
+
+	FVector Target = WorldLocation + WorldDirection * Distance;
+	FVector DirectionToMouse = Target - MyLocation;
+	DirectionToMouse.Z = 0;
+
+	if (!DirectionToMouse.IsNearlyZero())
+	{
+		TargetRotation = DirectionToMouse.Rotation();
+		bIsUsingSmoothRotation = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
+}
+
 void AComma::RotateToTarget(AActor* Target)
 {
 	if (!Target) return;
@@ -276,4 +304,11 @@ void AComma::RotateToTarget(AActor* Target)
 	LookAtRot.Roll = 0.f;
 
 	SetActorRotation(LookAtRot);
+}
+
+void AComma::OnAttackEnded()
+{
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	bIsUsingSmoothRotation = false;
+	TargetRotation = FRotator::ZeroRotator;
 }

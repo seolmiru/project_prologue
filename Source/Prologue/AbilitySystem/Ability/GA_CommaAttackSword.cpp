@@ -43,7 +43,7 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 		LOG_SCREEN_R("AttackSword : Reset Combo Count");
 	}
 
-	Comma->RotateToMouse();
+	Comma->RotateToMouseSmooth();
 	Comma->GetSwordWeaponMesh()->SetVisibility(true);
 	Comma->GetBowWeaponMesh()->SetVisibility(false);
 	
@@ -90,6 +90,11 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 
 	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackSword::ResetComboCount, 1.2f, false);
 
+	if (AComma* Comma = CastChecked<AComma>(CurrentActorInfo->AvatarActor.Get()))
+	{
+		Comma->OnAttackEnded();
+	}
+	
 	// 마지막 콤보 실행 직후 교체 공격 Effect 부여
 	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
 	{
@@ -154,6 +159,9 @@ void UGA_CommaAttackSword::CheckComboInput()
 			HasNextComboInput = false;
 			return;
 		}
+
+		AComma* Comma = CastChecked<AComma>(CurrentActorInfo->AvatarActor.Get());
+		Comma->RotateToMouseSmooth();
 		
 		MontageJumpToSection(GetNextSection());
 		StartComboTimer();
@@ -183,6 +191,9 @@ void UGA_CommaAttackSword::ProcessNextCombo()
 		return;
 	}
 
+	AComma* Comma = CastChecked<AComma>(CurrentActorInfo->AvatarActor.Get());
+	Comma->RotateToMouseSmooth();
+	
 	MontageJumpToSection(GetNextSection());
 	StartComboTimer();
 	HasNextComboInput = false;
