@@ -97,9 +97,7 @@ private:
 	TObjectPtr<UCommaWidget> CommaWidget;	
 
 	void Input_Move(const FInputActionValue& InputActionValue);
-
-	bool HasTag_FocusedAttack() const;
-
+	
 public:
 	FORCEINLINE UCommaCombatComponent* GetCommaCombatComponent() const { return CommaCombatComponent; }
 	
@@ -122,11 +120,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	UStaticMeshComponent* GetBowWeaponMesh() const;
 
-	UFUNCTION(BlueprintCallable)
 	void RotateToMouse();
 
-	UFUNCTION(BlueprintCallable)
+	void RotateToMouseSmooth();
+	
 	void RotateToTarget(AActor* Target);
+
+	void OnAttackEnded();
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -140,4 +140,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<class UAnimMontage> BowSwitchAttackMontage;
+
+private:
+	FRotator TargetRotation = FRotator::ZeroRotator;
+	float RotationInterpSpeed = 12.f;
+	bool bIsUsingSmoothRotation = false;
 };

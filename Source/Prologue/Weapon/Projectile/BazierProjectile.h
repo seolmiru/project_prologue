@@ -59,6 +59,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bazier")
 	float BazierWeight;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bazier")
+	float GroundOffset;
+
 	// 베지어 기준점들
 	UPROPERTY()
 	TArray<FVector> BazierPoints;

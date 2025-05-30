@@ -35,6 +35,7 @@ ABazierProjectile::ABazierProjectile()
 	bFire = false;
 	FireSpeed = 1000.f;
 	BazierWeight = 1.f;
+	GroundOffset = 100.0f;
 }
 
 void ABazierProjectile::FireInDirection(const FVector& ShootDirection)
@@ -45,6 +46,7 @@ void ABazierProjectile::FireInDirection(const FVector& ShootDirection)
 	if (PlayerCharacter)
 	{
 		FVector TargetLocation = PlayerCharacter->GetActorLocation();
+		TargetLocation.Z -= GroundOffset;
 		SetBazierPoint(MyLocation, TargetLocation);
 	}
 }
