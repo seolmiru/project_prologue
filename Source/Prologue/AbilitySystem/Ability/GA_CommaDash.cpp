@@ -45,7 +45,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
-
+	
 	if (!Nav)
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -96,18 +96,23 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(Comma);
 
+	// 경로 검사 단계 수
 	const int32 EffectivePathCheckSteps = FMath::Max(1, PathCheckSteps);
+	// SphereTrace 시작 지점 수직 Offset
 	const float SphereTraceStartUpOffset = MaxPlatformHeightDiff + 50.f;
+	// SphereTrace 종료 지점 수직 Offset
 	const float SphereTraceEndDownOffset = MaxPlatformHeightDiff * 2.f + 50.f;
 
-	// 지정된 방향의 지형 추적 후, 안전한 착지 지점을 검사하는 함수
+	// 지정된 방향의 지형 추적 후, 안전한 착지 지점을 검사하는 람다 함수
 	auto PerformTraceInDirection = [&](const FVector& TraceDirection, FVector& OutValidatedFeetPos, EDrawDebugTrace::Type DebugTraceType, UNavigationSystemV1* NavSystem) -> bool
 	{
+		// 대시 최종 도착 지점 계산
 		FVector CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * MoveLength;
 		FVector BestValidFeetPosInDirection = ActorStartPos;
 		float FarthestValidDistance = 0.f;
 		bool bFoundAnyGroundSpotInThisDirection = false;
 
+		// 안전한 위치들 배열에 저장
 		TArray<FVector> ConsecutiveSafePositions;
 		bool bLastPositionWasSafe = false;
 		
@@ -151,7 +156,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			// NavMesh 검증
 			FNavLocation NavMeshLocation;
 			const FVector ProjectionExtent(GroundTraceRadius, GroundTraceRadius, MaxPlatformHeightDiff + 100.f);
-
+			
 			if (!NavSystem->ProjectPointToNavigation(AdjustedSafeFeetPosOnGround, NavMeshLocation, ProjectionExtent))
 			{
 				bLastPositionWasSafe = false;
@@ -250,6 +255,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			}
 		}
 
+		// FOV 내에 안전한 위치가 존재한다면, 그중 가장 가까운 곳을 최종 목표로 설정
 		if (PotentialTargetsInFOV.Num() > 0)
 		{
 			PotentialTargetsInFOV.Sort();
@@ -271,9 +277,9 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
     
 		TickCurveTask->ReadyForActivation();
 	}
+	// 모든 검사를 실패했다면 대시 취소
 	else
 	{
-		// 모든 검사를 실패했다면 대시 취소
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 }
@@ -331,14 +337,15 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	if (!Comma) return false;
 
+	// 검증을 위한 변수들
 	const float CapsuleRadius = Comma->GetCapsuleComponent()->GetScaledCapsuleRadius();
 	const float CheckRadius = CapsuleRadius * 1.5f;
 	
-    const int32 MaxIterations = 2;
-    const float StepOffset = 20.f;
+    const int32 MaxIterations = 2; // 위치 조정 최대 반복 횟수
+    const float StepOffset = 20.f; // 위치 조정 시 이동할 거리
     const FVector UpDownOffsetForCheck(0.f, 0.f, MaxPlatformHeightDiff);
-    const int32 NumCheckPoints = 8;
-    const float MinValidHitRatio = 0.6f;
+    const int32 NumCheckPoints = 8; // 안전한 위치 후보군 주변으로 검사할 지점 수 
+    const float MinValidHitRatio = 0.6f; // 최소 유효 충돌 비율
 
     FVector CurrentCandidate = CandidateLocation;
 
@@ -347,6 +354,7 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
         int32 HitCount = 0;
         FVector AccumulatedNonHitOffset = FVector::ZeroVector;
 
+    	// 후보 위치 주변 지점 검사
         for (int32 i = 0; i < NumCheckPoints; ++i)
         {
             float Angle = 2 * PI * (static_cast<float>(i) / NumCheckPoints);
@@ -390,8 +398,10 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
             break;
         }
 
+    	// Hit에 감지되지 않은 지점들이 있을 때
         if (!AccumulatedNonHitOffset.IsNearlyZero())
         {
+        	// 반대 방향으로 후보 위치를 이동 시켜서 안전한 위치로 가게끔 조정
             FVector AdjustmentDirection = -AccumulatedNonHitOffset.GetSafeNormal();
             CurrentCandidate += AdjustmentDirection * StepOffset;
         }
