@@ -37,6 +37,12 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 	
 	CurrentComboData = Comma->GetComboSwordData();
 
+	if (CurrentComboData && CurrentCombo >= CurrentComboData->MaxComboCount)
+	{
+		CurrentCombo = 0;
+		LOG_SCREEN_R("AttackSword : Reset Combo Count");
+	}
+	
 	Comma->RotateToMouseSmooth();
 	Comma->GetSwordWeaponMesh()->SetVisibility(true);
 	Comma->GetBowWeaponMesh()->SetVisibility(false);
@@ -72,11 +78,6 @@ void UGA_CommaAttackSword::CancelAbility(const FGameplayAbilitySpecHandle Handle
 	bool bReplicateCancelAbility)
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
-
-	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
-	{
-		ResetComboCount();
-	}
 	
 	CurrentComboData = nullptr;
 	HasNextComboInput = false;
@@ -98,8 +99,6 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	// 마지막 콤보 실행 직후 교체 공격 Effect 부여
 	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
 	{
-		ResetComboCount();
-		
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
 		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
