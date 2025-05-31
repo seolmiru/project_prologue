@@ -76,6 +76,8 @@ void APrologueAIController::InitiateCombat(AActor* TargetPlayer)
 
 void APrologueAIController::BeginPlay()
 {
+	GetWorldTimerManager().ClearTimer(DistanceUpdateTimerHandle);
+	
 	Super::BeginPlay();
 
 	if (UPrologueAISubsystem* AISubsystem = GetWorld()->GetSubsystem<UPrologueAISubsystem>())
@@ -105,6 +107,8 @@ void APrologueAIController::BeginPlay()
 		CrowdComp->SetGroupsToAvoid(1);
 		CrowdComp->SetCrowdCollisionQueryRange(CollisionQueryRange);
 	}
+
+	GetWorldTimerManager().SetTimer(DistanceUpdateTimerHandle, this, &APrologueAIController::UpdateDistanceToTarget, 0.1f, true);
 }
 
 void APrologueAIController::OnEnemyPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
@@ -123,6 +127,24 @@ void APrologueAIController::OnEnemyPerceptionUpdated(AActor* Actor, FAIStimulus 
 		else
 		{
 			BlackboardComponent->SetValueAsObject(FName("TargetActor"), Actor);
+		}
+	}
+}
+
+void APrologueAIController::UpdateDistanceToTarget()
+{
+	if (UBlackboardComponent* BlackboardComponent = GetBlackboardComponent())
+	{
+		AActor* TargetActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(FName("TargetActor")));
+
+		if (TargetActor && GetPawn())
+		{
+			float Distance = FVector::Dist(GetPawn()->GetActorLocation(), TargetActor->GetActorLocation());
+			BlackboardComponent->SetValueAsFloat(FName("DistToTarget"), Distance);
+		}
+		else
+		{
+			BlackboardComponent->SetValueAsFloat(FName("DistToTarget"), 99999.f);
 		}
 	}
 }

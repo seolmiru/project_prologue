@@ -239,6 +239,7 @@ UStaticMeshComponent* AComma::GetBowWeaponMesh() const
 	return BowWeaponMesh;
 }
 
+// 활 공격 시에 사용되는 마우스 방향으로 회전하는 함수
 void AComma::RotateToMouse()
 {
 	ACommaController* CommaController = Cast<ACommaController>(GetController());
@@ -265,6 +266,7 @@ void AComma::RotateToMouse()
 	}
 }
 
+// 검 공격 시에 사용되는 마우스 방향으로 회전하는 함수
 void AComma::RotateToMouseSmooth()
 {
 	ACommaController* CommaController = Cast<ACommaController>(GetController());
@@ -292,6 +294,7 @@ void AComma::RotateToMouseSmooth()
 	}
 }
 
+// TargetLocation으로 회전
 void AComma::RotateToTarget(AActor* Target)
 {
 	if (!Target) return;

@@ -42,7 +42,7 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 		CurrentCombo = 0;
 		LOG_SCREEN_R("AttackSword : Reset Combo Count");
 	}
-
+	
 	Comma->RotateToMouseSmooth();
 	Comma->GetSwordWeaponMesh()->SetVisibility(true);
 	Comma->GetBowWeaponMesh()->SetVisibility(false);
@@ -78,7 +78,7 @@ void UGA_CommaAttackSword::CancelAbility(const FGameplayAbilitySpecHandle Handle
 	bool bReplicateCancelAbility)
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
-
+	
 	CurrentComboData = nullptr;
 	HasNextComboInput = false;
 }
@@ -138,6 +138,8 @@ void UGA_CommaAttackSword::OnBlendOut()
 
 FName UGA_CommaAttackSword::GetNextSection()
 {
+	LOG_SCREEN_R("GetNextSection - Before : %d", CurrentCombo);
+	
 	CurrentCombo = FMath::Clamp(CurrentCombo + 1, 1, CurrentComboData->MaxComboCount);
 	FName NextSection = *FString::Printf(TEXT("%s%d"), *CurrentComboData->MontageSectionNamePrefix, CurrentCombo);
 	return NextSection;
@@ -186,6 +188,7 @@ void UGA_CommaAttackSword::CheckComboInput()
 void UGA_CommaAttackSword::ResetComboCount()
 {
 	CurrentCombo = 0;
+	LOG_SCREEN_R("AttackSword : Reset Combo Count");
 }
 
 void UGA_CommaAttackSword::EnableComboInput()
@@ -200,6 +203,8 @@ void UGA_CommaAttackSword::EnableComboInput()
 
 void UGA_CommaAttackSword::ProcessNextCombo()
 {
+	LOG_SCREEN_R("ProcessNextCombo - Current : %d", CurrentCombo);
+	
 	if (CurrentCombo >= CurrentComboData->MaxComboCount)
 	{
 		return;

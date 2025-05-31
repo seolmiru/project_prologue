@@ -67,4 +67,10 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Crowd Config", meta = (EditCondition = "bEnableDetourCrowdAvoidance"))
 	float CollisionQueryRange = 600.f;
+
+	UPROPERTY()
+	FTimerHandle DistanceUpdateTimerHandle;
+
+	UFUNCTION()
+	void UpdateDistanceToTarget();
 };

@@ -30,6 +30,9 @@ protected:
 
 	UFUNCTION()
 	void OnInterrupted();
+
+	UFUNCTION()
+	void OnBlendOut();
 	
 	UFUNCTION()
 	void StartDebugTimer();
