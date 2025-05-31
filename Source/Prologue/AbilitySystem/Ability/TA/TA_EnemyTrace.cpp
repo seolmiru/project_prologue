@@ -19,13 +19,13 @@ FGameplayAbilityTargetDataHandle ATA_EnemyTrace::MakeTargetData() const
 	FHitResult HitResult;
 	const FVector Forward = Character->GetActorForwardVector();
 	const FVector Start = Character->GetActorLocation() + Forward * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
-	const FVector End = Start + Forward * 150.0f;
+	const FVector End = Start + Forward * TraceLength;
 
 	bool bTraceResult = UKismetSystemLibrary::SphereTraceSingle(
 		GetWorld(),
 		Start,
 		End,
-		50.f,
+		TraceRadius,
 		UEngineTypes::ConvertToTraceType(TraceChannel),
 		false,
 		IgnoreActors,

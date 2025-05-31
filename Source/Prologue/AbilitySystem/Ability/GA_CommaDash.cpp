@@ -52,6 +52,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	FVector ActorStartPos = Comma->GetActorLocation();
 	const float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
+	// 플레이어의 입력 방향 계산
 	ACommaController* Controller = Cast<ACommaController>(Comma->GetController());
 	FVector DesiredDirection = FVector::ZeroVector;
 
@@ -60,6 +61,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		FVector2D CachedMovementInput = Comma->GetCachedMovementInput();
 		if (!CachedMovementInput.IsNearlyZero())
 		{
+			// 카메라 회전을 기준으로 월드 좌표계 방향 계산
 			const FRotator ControlRotation = Controller->GetControlRotation();
 			const FRotator YawRotation(0, ControlRotation.Yaw, 0);
 			const FVector ForwardDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
@@ -68,7 +70,8 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			DesiredDirection = (ForwardDir * CachedMovementInput.Y + RightDir * CachedMovementInput.X).GetSafeNormal();
 		}
 	}
-	
+
+	// 입력이 없을 때는 정면 방향으로 대시
 	if (DesiredDirection.IsNearlyZero())
 	{
 		DesiredDirection = Comma->GetActorForwardVector().GetSafeNormal();
@@ -85,17 +88,20 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	const float SphereTraceStartUpOffset = MaxPlatformHeightDiff + 50.f;
 	const float SphereTraceEndDownOffset = MaxPlatformHeightDiff * 2.f + 50.f;
 
+	// 지정된 방향의 지형 추적 후, 안전한 착지 지점을 검사하는 함수
 	auto PerformTraceInDirection = [&](const FVector& TraceDirection, FVector& OutValidatedFeetPos, EDrawDebugTrace::Type DebugTraceType, UNavigationSystemV1* NavSystem) -> bool
 	{
 		FVector CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * MoveLength;
 		FVector BestValidFeetPosInDirection = ActorStartPos;
 		bool bFoundAnyGroundSpotInThisDirection = false;
 
+		// MoveLength를 PathCheckSteps로 나누어 단계 별로 검사
 		for (int32 StepIndex = 1; StepIndex <= EffectivePathCheckSteps; ++StepIndex)
 		{
 			const float Alpha = static_cast<float>(StepIndex) / EffectivePathCheckSteps;
 			const FVector SamplePosForTrace = FMath::Lerp(ActorStartPos, CurrentDashAttemptEndPos, Alpha);
 
+			// SphereTrace로 바닥 감지
 			FHitResult GroundHitResult;
 			const bool bHitGround = UKismetSystemLibrary::SphereTraceSingle(
 				GetWorld(),
@@ -147,6 +153,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return false;
 	};
 
+	// 플레이어가 원하는 방향으로 대시 시도
 	FVector ForwardDashTargetFeetLocation;
 	EDrawDebugTrace::Type PrimaryTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
 
@@ -156,6 +163,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		bSuccessfullyFoundTarget = true;
 	}
 
+	// 직선 방향에 땅이 없거나 막혔다면 FOV 범위 내에서 대체 경로 탐색
 	if (!bSuccessfullyFoundTarget && NumFOVTracesPerSide > 0 && FOVAngleDegrees > 0.f)
 	{
 		TArray<FPotentialDashTarget> PotentialTargetsInFOV;
@@ -196,6 +204,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	{
 		TargetPos.Z += CapsuleHalfHeight + TargetZOffset; 
 
+		// 최소 대시 거리 미달 시에는 대시 취소
 		if (FVector::DistSquared(BasePos, TargetPos) < FMath::Square(MinDashDistance))
 		{
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -206,6 +215,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 	else
 	{
+		// 모든 검사를 실패했다면 대시 취소
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 }
@@ -230,6 +240,7 @@ void UGA_CommaDash::OnComplete()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
+// 안전한 착지 위치인지 검증하는 함수
 bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const
 {
     const int32 MaxIterations = 3;

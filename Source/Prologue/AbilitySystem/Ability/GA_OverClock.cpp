@@ -7,7 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
-#include "Prologue/Weapon/Projectile/ExplodingProjectile.h"
+#include "Prologue/Weapon/Projectile/BazierProjectile.h"
 
 bool UGA_OverClock::bIsOverClockActive = false;
 float UGA_OverClock::OverClockTimeScale = 1.0f;
@@ -32,7 +32,7 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 
 	const_cast<UPrologueAttributeSet*>(AttributeSet)->SetCurrentGauge(0.0f);
-
+	
 	bIsOverClockActive = true;
 	OverClockTimeScale = TimeScale;
 	
@@ -68,6 +68,7 @@ void UGA_OverClock::OnOverClockFinished()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
+// 월드 내에 존재하는 모든 적과 적이 발사한 투사체에 TimeScale만큼 시간이 느려지도록 적용
 void UGA_OverClock::ApplySlowToEnemies()
 {
 	AffectedEnemies.Empty();
@@ -92,13 +93,13 @@ void UGA_OverClock::ApplySlowToEnemies()
 	TArray<AActor*> FoundProjectiles;
 	UGameplayStatics::GetAllActorsOfClass(
 		GetWorld(),
-		AExplodingProjectile::StaticClass(),
+		ABazierProjectile::StaticClass(),
 		FoundProjectiles
 	);
 
 	for (AActor* Actor : FoundProjectiles)
 	{
-		if (auto* Projectile = Cast<AExplodingProjectile>(Actor))
+		if (auto* Projectile = Cast<ABazierProjectile>(Actor))
 		{
 			Projectile->CustomTimeDilation = TimeScale;
 			AffectedProjectiles.Add(Projectile);

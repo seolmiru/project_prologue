@@ -43,7 +43,7 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 		LOG_SCREEN_R("AttackSword : Reset Combo Count");
 	}
 
-	Comma->RotateToMouse();
+	Comma->RotateToMouseSmooth();
 	Comma->GetSwordWeaponMesh()->SetVisibility(true);
 	Comma->GetBowWeaponMesh()->SetVisibility(false);
 	
@@ -89,7 +89,13 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
 	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackSword::ResetComboCount, 1.2f, false);
+
+	if (AComma* Comma = CastChecked<AComma>(CurrentActorInfo->AvatarActor.Get()))
+	{
+		Comma->OnAttackEnded();
+	}
 	
+	// 마지막 콤보 실행 직후 교체 공격 Effect 부여
 	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
@@ -128,8 +134,10 @@ void UGA_CommaAttackSword::StartComboTimer()
 	int32 ComboIndex = CurrentCombo - 1;
 	ensure(CurrentComboData->EffectiveFrameCount.IsValidIndex(ComboIndex));
 
+	// 프레임 수를 시간으로 변환
 	const float ComboEffectiveTime = CurrentComboData->EffectiveFrameCount[ComboIndex] / CurrentComboData->FrameRate;
 
+	// 유효 시간이 있다면 타이머 설정, 없으면 즉시 콤보 입력 허용
 	if (ComboEffectiveTime > 0.f)
 	{
 		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &UGA_CommaAttackSword::CheckComboInput, ComboEffectiveTime, false);
@@ -145,11 +153,15 @@ void UGA_CommaAttackSword::CheckComboInput()
 	ComboTimerHandle.Invalidate();
 	if (HasNextComboInput)
 	{
+		// 최대 콤보 수 도달 시에는 콤보 진행 제어
 		if (CurrentCombo >= CurrentComboData->MaxComboCount)
 		{
 			HasNextComboInput = false;
 			return;
 		}
+
+		AComma* Comma = CastChecked<AComma>(CurrentActorInfo->AvatarActor.Get());
+		Comma->RotateToMouseSmooth();
 		
 		MontageJumpToSection(GetNextSection());
 		StartComboTimer();
@@ -179,6 +191,9 @@ void UGA_CommaAttackSword::ProcessNextCombo()
 		return;
 	}
 
+	AComma* Comma = CastChecked<AComma>(CurrentActorInfo->AvatarActor.Get());
+	Comma->RotateToMouseSmooth();
+	
 	MontageJumpToSection(GetNextSection());
 	StartComboTimer();
 	HasNextComboInput = false;

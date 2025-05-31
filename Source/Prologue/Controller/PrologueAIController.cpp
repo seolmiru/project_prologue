@@ -61,11 +61,13 @@ void APrologueAIController::ReceiveCombatAlert(AActor* TargetPlayer)
 		return;
 	}
 
+	// 전투 알림을 받았을 때, 즉시 플레이어를 TargetActor로 지정
 	Blackboard->SetValueAsObject(FName("TargetActor"), TargetPlayer);
 }
 
 void APrologueAIController::InitiateCombat(AActor* TargetPlayer)
 {
+	// 플레이어 발견 시 주변 AI들에게 전투 알림 전송
 	if (UPrologueAISubsystem* AISubsystem = GetWorld()->GetSubsystem<UPrologueAISubsystem>())
 	{
 		AISubsystem->TriggerCombatAlert(this, TargetPlayer, CombatAlertRadius);
