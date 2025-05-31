@@ -33,6 +33,12 @@ void UGA_CommaSwitchAttackSword::ActivateAbility(const FGameplayAbilitySpecHandl
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	// 교체 공격시에 무적을 위한 Effect 부여
+	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	InvincibleEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(InvincibleEffect, 0.f, InvincibleEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(InvincibleEffectSpecHandle);
+	
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
 
 	Comma->RotateToMouse();

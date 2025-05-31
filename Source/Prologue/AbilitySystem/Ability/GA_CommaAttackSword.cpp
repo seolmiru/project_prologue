@@ -89,7 +89,7 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
-	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackSword::ResetComboCount, 1.2f, false);
+	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackSword::ResetComboCount, 0.4f, false);
 
 	if (AComma* Comma = CastChecked<AComma>(CurrentActorInfo->AvatarActor.Get()))
 	{

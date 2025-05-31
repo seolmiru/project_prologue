@@ -10,7 +10,7 @@
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_CommaDash : public UGA_MontageAbility
+class PROLOGUE_API UGA_CommaDash : public UGameplayAbility
 {
 	GENERATED_BODY()
 
@@ -22,7 +22,14 @@ public:
 	void OnCurveTick(float Alpha);
 	
 protected:
-	virtual void OnComplete() override;
+	UFUNCTION()
+	void OnComplete();
+
+	UFUNCTION()
+	void OnInterrupted();
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> AnimMontage;
 
 	UFUNCTION(BlueprintCallable, Category = "Dash|GroundCheck")
 	bool IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const;
