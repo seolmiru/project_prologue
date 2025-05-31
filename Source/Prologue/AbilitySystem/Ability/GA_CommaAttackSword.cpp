@@ -50,6 +50,7 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetSwordComboMontage(), 1.0f, GetNextSection());
 	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaAttackSword::OnComplete);
 	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaAttackSword::OnInterrupted);
+	PlayAttackTask->OnBlendOut.AddDynamic(this, &UGA_CommaAttackSword::OnBlendOut);
 	PlayAttackTask->ReadyForActivation();
 	
 	GetWorld()->GetTimerManager().ClearTimer(CurrentComboTimerHandle);
@@ -110,9 +111,12 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 
 void UGA_CommaAttackSword::OnComplete()
 {
-	bool bReplicatedEndAbility = true;
-	bool bWasCancelled = false;
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+	if (!HasNextComboInput && !GetWorld()->GetTimerManager().IsTimerActive(ComboTimerHandle))
+	{
+		bool bReplicatedEndAbility = true;
+		bool bWasCancelled = false;
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+	}
 }
 
 void UGA_CommaAttackSword::OnInterrupted()
@@ -120,6 +124,16 @@ void UGA_CommaAttackSword::OnInterrupted()
 	bool bReplicatedEndAbility = true;
 	bool bWasCancelled = true;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+}
+
+void UGA_CommaAttackSword::OnBlendOut()
+{
+	if (!HasNextComboInput && !GetWorld()->GetTimerManager().IsTimerActive(ComboTimerHandle))
+	{
+		bool bReplicatedEndAbility = true;
+		bool bWasCancelled = false;
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+	}
 }
 
 FName UGA_CommaAttackSword::GetNextSection()
