@@ -24,7 +24,7 @@ UPrologueAttributeSet::UPrologueAttributeSet() :
 void UPrologueAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
-
+	
 	if (Attribute == GetDamageAttribute())
 	{
 		NewValue = NewValue < 0.0f ? 0.0f : NewValue;
@@ -50,8 +50,16 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 	{
 		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
 		{
+			return false;
+		}
+
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Dashing))
+		{
 			FGameplayEventData PlayData;
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.Target.GetAvatarActor(), PrologueGameplayTags::Comma_Event_JustDash, PlayData);
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.EffectSpec.GetContext().GetEffectCauser(), PrologueGameplayTags::Enemy_Event_Dashed, PlayData);
+			LOG_SCREEN("%s", *Data.EffectSpec.GetContext().GetEffectCauser()->GetName());
+
 			return false;
 		}
 	}
@@ -64,7 +72,7 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 	Super::PostGameplayEffectExecute(Data);
 
 	float MinimumHealth = 0.0f;
-	
+
 	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
 	{
 		LOG_SCREEN("Direct Health Access : %f", GetCurrentHealth());

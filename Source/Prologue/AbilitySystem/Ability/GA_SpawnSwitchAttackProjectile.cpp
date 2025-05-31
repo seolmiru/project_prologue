@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/Weapon/Projectile/PrologueProjectileBase.h"
 
+// 활 교체 공격 전용 SpawnProjectile
 UGA_SpawnSwitchAttackProjectile::UGA_SpawnSwitchAttackProjectile()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
