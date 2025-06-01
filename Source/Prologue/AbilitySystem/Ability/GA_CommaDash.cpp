@@ -65,6 +65,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 	TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
+	TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 
 	FVector ActorStartPos = Comma->GetActorLocation();
 	const float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();

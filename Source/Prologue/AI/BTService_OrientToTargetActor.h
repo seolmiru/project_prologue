@@ -6,6 +6,8 @@
 #include "BehaviorTree/BTService.h"
 #include "BTService_OrientToTargetActor.generated.h"
 
+// BTService로 Target을 향해 Rotate 시키는 클래스
+
 /**
  * 
  */
