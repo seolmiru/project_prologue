@@ -4,6 +4,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "NavigationSystem.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AT/AT_TickCurve.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -46,6 +47,11 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
 	
+	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayMontage"), AnimMontage, 1.0f);
+	PlayTask->OnCompleted.AddDynamic(this, &UGA_CommaDash::OnComplete);
+	PlayTask->OnInterrupted.AddDynamic(this, &UGA_CommaDash::OnInterrupted);
+	PlayTask->ReadyForActivation();
+	
 	if (!Nav)
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -59,7 +65,6 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 	TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
-	TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 
 	FVector ActorStartPos = Comma->GetActorLocation();
 	const float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
@@ -331,6 +336,13 @@ void UGA_CommaDash::OnComplete()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
+void UGA_CommaDash::OnInterrupted()
+{
+	bool bReplicatedEndAbility = true;
+	bool bWasCancelled = true;
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+}
+
 // 안전한 착지 위치인지 검증하는 함수
 bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const
 {
@@ -342,10 +354,10 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 	const float CheckRadius = CapsuleRadius * 1.5f;
 	
     const int32 MaxIterations = 2; // 위치 조정 최대 반복 횟수
-    const float StepOffset = 20.f; // 위치 조정 시 이동할 거리
+    const float StepOffset = 5.f; // 위치 조정 시 이동할 거리
     const FVector UpDownOffsetForCheck(0.f, 0.f, MaxPlatformHeightDiff);
     const int32 NumCheckPoints = 8; // 안전한 위치 후보군 주변으로 검사할 지점 수 
-    const float MinValidHitRatio = 0.6f; // 최소 유효 충돌 비율
+    const float MinValidHitRatio = 0.2f; // 최소 유효 충돌 비율
 
     FVector CurrentCandidate = CandidateLocation;
 
