@@ -16,6 +16,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "AbilitySystemComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/Player/ProloguePlayerState.h"
 #include "Prologue/UI/Comma/CommaWidget.h"
@@ -60,6 +61,21 @@ AComma::AComma()
 	BowWeaponMesh->SetupAttachment(GetMesh(),TEXT("BowSocket"));
 	
 	CommaCombatComponent = CreateDefaultSubobject<UCommaCombatComponent>(TEXT("CommaCombatComponent"));
+
+	UIAnchorComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("UIAnchorComponent"));
+	UIAnchorComponent->SetupAttachment(GetRootComponent());
+	UIAnchorComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	
+	SwitchAttackWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SwitchAttackWidgetComponent"));
+	SwitchAttackWidgetComponent->SetupAttachment(UIAnchorComponent);
+	SwitchAttackWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	SwitchAttackWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	SwitchAttackWidgetComponent->SetDrawSize(FVector2D(400.f, 384.f));
+	SwitchAttackWidgetComponent->SetVisibility(false);
+
+	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
+
+	SwitchAttackBowTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Bow"));
 	
 	SwordWeaponMesh->SetVisibility(false);
 }
@@ -98,6 +114,12 @@ void AComma::Tick(float DeltaSeconds)
 		FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaSeconds, RotationInterpSpeed);
 		SetActorRotation(NewRotation);
 	}
+
+	if (UIAnchorComponent)
+	{
+		FRotator FixedRotation = FRotator::ZeroRotator;
+		UIAnchorComponent->SetWorldRotation(FixedRotation);
+	}
 }
 
 void AComma::NotifyControllerChanged()
@@ -126,6 +148,16 @@ void AComma::PossessedBy(AController* NewController)
 	{
 		ASC = GASPS->GetAbilitySystemComponent();
 		ASC->InitAbilityActorInfo(GASPS, this);
+
+		if (ASC && SwitchAttackSwordTag.IsValid())
+		{
+			ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnSwitchAttackUI);
+		}
+
+		if (ASC && SwitchAttackBowTag.IsValid())
+		{
+			ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnSwitchAttackUI);
+		}
 	}
 
 	if (ASC)
@@ -176,6 +208,21 @@ void AComma::BeginPlay()
 
 		CommaController->SetInputMode(InputMode);
 	}
+}
+
+void AComma::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (ASC && SwitchAttackSwordTag.IsValid())
+	{
+		ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
+	}
+	
+	if (ASC && SwitchAttackBowTag.IsValid())
+	{
+		ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
+	}
+	
+	Super::EndPlay(EndPlayReason);
 }
 
 void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -314,4 +361,31 @@ void AComma::OnAttackEnded()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bIsUsingSmoothRotation = false;
 	TargetRotation = FRotator::ZeroRotator;
+}
+
+void AComma::OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const
+{
+	if (CallbackTag == SwitchAttackSwordTag && SwitchAttackWidgetComponent)
+	{
+		if (NewCount > 0)
+		{
+			SwitchAttackWidgetComponent->SetVisibility(true);
+		}
+		else
+		{
+			SwitchAttackWidgetComponent->SetVisibility(false);
+		}
+	}
+
+	if (CallbackTag == SwitchAttackBowTag && SwitchAttackWidgetComponent)
+	{
+		if (NewCount > 0)
+		{
+			SwitchAttackWidgetComponent->SetVisibility(true);
+		}
+		else
+		{
+			SwitchAttackWidgetComponent->SetVisibility(false);
+		}
+	}
 }

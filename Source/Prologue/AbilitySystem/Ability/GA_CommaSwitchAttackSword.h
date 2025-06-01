@@ -28,4 +28,7 @@ protected:
 
 	UFUNCTION()
 	void OnInterrupted();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TSubclassOf<UGameplayEffect> InvincibleEffect;
 };
