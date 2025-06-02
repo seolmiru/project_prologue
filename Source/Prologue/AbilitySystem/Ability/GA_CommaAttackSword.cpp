@@ -96,15 +96,6 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 		Comma->OnAttackEnded();
 	}
 	
-	// 마지막 콤보 실행 직후 교체 공격 Effect 부여
-	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
-	{
-		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-		EffectContextHandle.AddSourceObject(this);
-		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
-		GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
-	}
-	
 	CurrentComboData = nullptr;
 	HasNextComboInput = false;
 }
