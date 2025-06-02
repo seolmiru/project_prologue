@@ -41,8 +41,7 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 
 	if (CurrentComboData && CurrentCombo >= CurrentComboData->MaxComboCount)
 	{
-		CurrentCombo = 0;
-		LOG_SCREEN_R("AttackBow : Reset Combo Count");
+		ResetComboCount();
 	}
 
 	// SphereRadius 범위 내의 모든 적 감지
@@ -106,14 +105,13 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaAttackBow::OnInterrupted);
 	PlayAttackTask->OnBlendOut.AddDynamic(this, &UGA_CommaAttackBow::OnBlendOut);
 	PlayAttackTask->ReadyForActivation();
-
+	
+	
 	GetWorld()->GetTimerManager().ClearTimer(CurrentComboTimerHandle);
 
 	StartComboTimer();
 	
 	InitializePerfectShotTimer();
-
-	StartDebugTimer();
 }
 
 void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
@@ -154,7 +152,7 @@ void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
 		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
-		GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
+		GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
 	}
 
 	CurrentComboData = nullptr;
@@ -239,6 +237,8 @@ void UGA_CommaAttackBow::SyncPerfectShotTag()
 
 FName UGA_CommaAttackBow::GetNextSection()
 {
+	LOG_SCREEN_R("GetNextSection - Before : %d", CurrentCombo);
+	
 	CurrentCombo = FMath::Clamp(CurrentCombo + 1, 1, CurrentComboData->MaxComboCount);
 	FName NextSection = *FString::Printf(TEXT("%s%d"), *CurrentComboData->MontageSectionNamePrefix, CurrentCombo);
 	return NextSection;
@@ -284,6 +284,7 @@ void UGA_CommaAttackBow::CheckComboInput()
 void UGA_CommaAttackBow::ResetComboCount()
 {
 	CurrentCombo = 0;
+	LOG_SCREEN_R("AttackBow : Reset Combo Count");
 }
 
 void UGA_CommaAttackBow::EnableComboInput()
@@ -298,6 +299,8 @@ void UGA_CommaAttackBow::EnableComboInput()
 
 void UGA_CommaAttackBow::ProcessNextCombo()
 {
+	LOG_SCREEN_R("ProcessNextCombo - Current : %d", CurrentCombo);
+	
 	if (CurrentCombo >= CurrentComboData->MaxComboCount)
 	{
 		return;

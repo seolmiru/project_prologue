@@ -36,13 +36,13 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	FGameplayEffectContextHandle JustDashEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 	JustDashEffectContextHandle.AddSourceObject(this);
 	FGameplayEffectSpecHandle JustDashEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(JustDashTimingEffect, 0.f, JustDashEffectContextHandle);
-	GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(JustDashEffectSpecHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*JustDashEffectSpecHandle.Data.Get());
 
 	// Invincible Effect 부여
 	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 	InvincibleEffectContextHandle.AddSourceObject(this);
 	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(InvincibleEffect, 0.f, InvincibleEffectContextHandle);
-	GetAbilitySystemComponentFromActorInfo()->BP_ApplyGameplayEffectSpecToSelf(InvincibleEffectSpecHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
 	
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
