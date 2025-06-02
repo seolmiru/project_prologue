@@ -11,8 +11,8 @@
 UPrologueAttributeSet::UPrologueAttributeSet() :
 	SwordSwitchAttackDamage(80.f),
 	MaxSwordSwitchAttackDamage(300.f),
-	SwordSwitchAttackRange(300.f),
-	MaxSwordSwitchAttackRange(500.f)
+	SwordSwitchAttackRange(500.f),
+	MaxSwordSwitchAttackRange(800.f)
 {
 	InitCurrentHealth(1.f);
 	InitMaxHealth(1.f);
