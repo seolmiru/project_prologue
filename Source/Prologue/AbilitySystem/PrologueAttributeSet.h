@@ -14,6 +14,7 @@
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOutOfHealthDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOutOfToughnessDelegate);
 
 /**
  * 
@@ -36,12 +37,15 @@ public:
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, BowSwitchAttackDamage);
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentGauge);
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxGauge);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentToughness);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxToughness);
 	
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual bool PreGameplayEffectExecute(struct FGameplayEffectModCallbackData& Data) override;
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
 
 	mutable FOutOfHealthDelegate OnOutOfHealth;
+	mutable FOutOfToughnessDelegate OnOutOfToughness;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = true))
@@ -67,12 +71,20 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData BowSwitchAttackDamage;
-	
+
 	UPROPERTY(BlueprintReadOnly, Category = "OverClock", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData CurrentGauge;
-
+	
 	UPROPERTY(BlueprintReadOnly, Category = "OverClock", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData MaxGauge;
 
-	bool bOufOfHealth = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData CurrentToughness;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData MaxToughness;
+	
+	bool bOutOfHealth = false;
+
+	bool bOutOfToughness = false;
 };

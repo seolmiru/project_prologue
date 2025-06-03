@@ -10,6 +10,7 @@
 #include "Prologue/Interface/PawnCombatInterface.h"
 #include "PrologueCharacter.generated.h"
 
+class UGameplayEffect;
 class UPawnCombatComponent;
 class UDataAsset_StartUpDataBase;
 class UPrologueAttributeSet;
@@ -30,8 +31,23 @@ public:
 protected:
 	virtual void PossessedBy(AController* NewController) override;
 
+	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	void OnToughnessTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+
+	void RecoverToughness();
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> ASC;
+
+	FDelegateHandle ToughnessTagHandle;
+
+	FTimerHandle ToughnessRecoveryTimerHandle;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS")
+	TSubclassOf<UGameplayEffect> HitReactEffectClass;
 
 protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;

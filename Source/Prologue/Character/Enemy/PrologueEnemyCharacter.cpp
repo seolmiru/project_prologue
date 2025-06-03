@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 #include "Prologue/UI/Enemy/EnemyWidget.h"
 
