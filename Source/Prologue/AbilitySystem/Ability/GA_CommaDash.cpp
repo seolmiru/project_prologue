@@ -1,6 +1,7 @@
 ﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "GA_CommaDash.h"
+
 #include "AbilitySystemComponent.h"
 #include "NavigationSystem.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
@@ -10,535 +11,422 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/Controller/CommaController.h"
-#include "DrawDebugHelpers.h"
 
-UGA_CommaDash::UGA_CommaDash()
+struct FPotentialDashTarget
 {
-    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerExecution;
-    NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
-}
+    FVector FeetLocation;
+    float DistanceSqToStart;
+
+    FPotentialDashTarget(const FVector& InFeetLocation, const FVector& StartActorPos)
+        : FeetLocation(InFeetLocation), DistanceSqToStart(FVector::DistSquared(StartActorPos, InFeetLocation)) {}
+
+    bool operator<(const FPotentialDashTarget& Other) const
+    {
+        return DistanceSqToStart < Other.DistanceSqToStart;
+    }
+};
+
 
 void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-    const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+                                    const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-    Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-    CachedCommaCharacter = CastChecked<AComma>(GetAvatarActorFromActorInfo());
-    CachedNavSystem = UNavigationSystemV1::GetCurrent(GetWorld());
+	// Just Dash Effect 부여
+	FGameplayEffectContextHandle JustDashEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	JustDashEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle JustDashEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(JustDashTimingEffect, 0.f, JustDashEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*JustDashEffectSpecHandle.Data.Get());
 
-    if (!CachedCommaCharacter || !CachedNavSystem)
-    {
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-        return;
-    }
+	// Invincible Effect 부여
+	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	InvincibleEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(InvincibleEffect, 0.f, InvincibleEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
+	
+	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
+	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
+	
+	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayMontage"), AnimMontage, 1.0f);
+	PlayTask->OnCompleted.AddDynamic(this, &UGA_CommaDash::OnComplete);
+	PlayTask->OnInterrupted.AddDynamic(this, &UGA_CommaDash::OnInterrupted);
+	PlayTask->ReadyForActivation();
+	
+	if (!Nav)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	
+	UAT_TickCurve* TickCurveTask = UAT_TickCurve::CreateTask(this, Curve);
+	if (!TickCurveTask)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
+	TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 
-    ApplyDashEffects();
+	FVector ActorStartPos = Comma->GetActorLocation();
+	const float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+	// 플레이어의 입력 방향 계산
+	ACommaController* Controller = Cast<ACommaController>(Comma->GetController());
+	FVector DesiredDirection = FVector::ZeroVector;
+
+	if (Controller)
+	{
+		FVector2D CachedMovementInput = Comma->GetCachedMovementInput();
+		if (!CachedMovementInput.IsNearlyZero())
+		{
+			// 카메라 회전을 기준으로 월드 좌표계 방향 계산
+			const FRotator ControlRotation = Controller->GetControlRotation();
+			const FRotator YawRotation(0, ControlRotation.Yaw, 0);
+			const FVector ForwardDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			const FVector RightDir   = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+			DesiredDirection = (ForwardDir * CachedMovementInput.Y + RightDir * CachedMovementInput.X).GetSafeNormal();
+		}
+	}
+
+	// 입력이 없을 때는 정면 방향으로 대시
+	if (DesiredDirection.IsNearlyZero())
+	{
+		DesiredDirection = Comma->GetActorForwardVector().GetSafeNormal();
+	}
+
+	BasePos = ActorStartPos;
+	TargetPos = ActorStartPos;
+	bool bSuccessfullyFoundTarget = false;
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(Comma);
+
+	// 경로 검사 단계 수
+	const int32 EffectivePathCheckSteps = FMath::Max(1, PathCheckSteps);
+	// SphereTrace 시작 지점 수직 Offset
+	const float SphereTraceStartUpOffset = MaxPlatformHeightDiff + 50.f;
+	// SphereTrace 종료 지점 수직 Offset
+	const float SphereTraceEndDownOffset = MaxPlatformHeightDiff * 2.f + 50.f;
+
+	// 지정된 방향의 지형 추적 후, 안전한 착지 지점을 검사하는 람다 함수
+	auto PerformTraceInDirection = [&](const FVector& TraceDirection, FVector& OutValidatedFeetPos, EDrawDebugTrace::Type DebugTraceType, UNavigationSystemV1* NavSystem) -> bool
+	{
+		// 대시 최종 도착 지점 계산
+		FVector CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * MoveLength;
+		FVector BestValidFeetPosInDirection = ActorStartPos;
+		float FarthestValidDistance = 0.f;
+		bool bFoundAnyGroundSpotInThisDirection = false;
+
+		// 안전한 위치들 배열에 저장
+		TArray<FVector> ConsecutiveSafePositions;
+		bool bLastPositionWasSafe = false;
+		
+		// MoveLength를 PathCheckSteps로 나누어 단계 별로 검사
+		for (int32 StepIndex = 1; StepIndex <= EffectivePathCheckSteps; ++StepIndex)
+		{
+			const float Alpha = static_cast<float>(StepIndex) / EffectivePathCheckSteps;
+			const FVector SamplePosForTrace = FMath::Lerp(ActorStartPos, CurrentDashAttemptEndPos, Alpha);
+
+			// SphereTrace로 바닥 감지
+			FHitResult GroundHitResult;
+			const bool bHitGround = UKismetSystemLibrary::SphereTraceSingle(
+				GetWorld(),
+				SamplePosForTrace + FVector(0.f, 0.f, SphereTraceStartUpOffset),
+				SamplePosForTrace - FVector(0.f, 0.f, SphereTraceEndDownOffset),
+				GroundTraceRadius,
+				UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
+				false,
+				ActorsToIgnore,
+				DebugTraceType,
+				GroundHitResult,
+				true,
+				FLinearColor::Red, FLinearColor::Green, 1.0f
+			);
+			
+			if (!bHitGround) 
+			{
+				bLastPositionWasSafe = false;
+				continue;
+			}
+
+			FVector GroundImpactPoint = GroundHitResult.ImpactPoint;
+			FVector AdjustedSafeFeetPosOnGround;
+
+			if (!IsSafeLandingZone(GroundImpactPoint, ActorsToIgnore, AdjustedSafeFeetPosOnGround)) 
+			{
+				bLastPositionWasSafe = false;
+				continue;
+			}
+
+			// NavMesh 검증
+			FNavLocation NavMeshLocation;
+			const FVector ProjectionExtent(GroundTraceRadius, GroundTraceRadius, MaxPlatformHeightDiff + 100.f);
+			
+			if (!NavSystem->ProjectPointToNavigation(AdjustedSafeFeetPosOnGround, NavMeshLocation, ProjectionExtent))
+			{
+				bLastPositionWasSafe = false;
+				continue;
+			}
+
+			AdjustedSafeFeetPosOnGround = NavMeshLocation.Location;
+        
+			// 연속된 안전한 위치 추적
+			if (bLastPositionWasSafe)
+			{
+				ConsecutiveSafePositions.Add(AdjustedSafeFeetPosOnGround);
+			}
+			else
+			{
+				ConsecutiveSafePositions.Empty();
+				ConsecutiveSafePositions.Add(AdjustedSafeFeetPosOnGround);
+			}
+        
+			bLastPositionWasSafe = true;
+        
+			// 현재 위치까지의 거리 계산
+			float CurrentDistance = FVector::Dist(ActorStartPos, AdjustedSafeFeetPosOnGround);
+        
+			// 더 먼 안전한 위치를 발견했을 때만 업데이트
+			if (CurrentDistance > FarthestValidDistance)
+			{
+				FarthestValidDistance = CurrentDistance;
+				BestValidFeetPosInDirection = AdjustedSafeFeetPosOnGround;
+				bFoundAnyGroundSpotInThisDirection = true;
+			}
+		}
+
+		if (bFoundAnyGroundSpotInThisDirection)
+		{
+			// 부분 대시 허용 시 거리 체크
+			if (bAllowPartialDash)
+			{
+				float AchievedDistance = FVector::Dist(ActorStartPos, BestValidFeetPosInDirection);
+				float DesiredDistance = MoveLength;
+				float AchievedPercentage = AchievedDistance / DesiredDistance;
+        
+				if (AchievedPercentage >= PartialDashMinPercentage)
+				{
+					OutValidatedFeetPos = BestValidFeetPosInDirection;
+					return true;
+				}
+			}
+			else
+			{
+				// 부분 대시를 허용하지 않을 때는 발견한 위치 그대로 사용
+				OutValidatedFeetPos = BestValidFeetPosInDirection;
+				return true;
+			}
+		}
+
+		return false;
+	};
+
+	// 플레이어가 원하는 방향으로 대시 시도
+	FVector ForwardDashTargetFeetLocation;
+	EDrawDebugTrace::Type PrimaryTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+
+	if (PerformTraceInDirection(DesiredDirection, ForwardDashTargetFeetLocation, PrimaryTraceDebugType, Nav))
+	{
+		TargetPos = ForwardDashTargetFeetLocation;
+		bSuccessfullyFoundTarget = true;
+	}
+
+	// 직선 방향에 땅이 없거나 막혔다면 FOV 범위 내에서 대체 경로 탐색
+	if (!bSuccessfullyFoundTarget && NumFOVTracesPerSide > 0 && FOVAngleDegrees > 0.f)
+	{
+		TArray<FPotentialDashTarget> PotentialTargetsInFOV;
+		FVector CharacterActualForwardDir = Comma->GetActorForwardVector().GetSafeNormal();
+
+		float HalfFOV_Rads = FMath::DegreesToRadians(FOVAngleDegrees / 2.0f);
+        float AngleIncrementPerTrace = (FOVAngleDegrees / 2.0f) / FMath::Max(1, NumFOVTracesPerSide);
+
+
+		for (int32 Side = -1; Side <= 1; Side += 2)
+		{
+			for (int32 TraceIndex = 1; TraceIndex <= NumFOVTracesPerSide; ++TraceIndex)
+			{
+				float CurrentSampleAngleDegrees = AngleIncrementPerTrace * TraceIndex * Side;
+				
+				FRotator AngleOffsetRotator(0, CurrentSampleAngleDegrees, 0);
+				FVector SampleDirectionForFOV = AngleOffsetRotator.RotateVector(CharacterActualForwardDir);
+				
+				FVector FOVTargetFeetLocation;
+				EDrawDebugTrace::Type FOVTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+
+				if (PerformTraceInDirection(SampleDirectionForFOV, FOVTargetFeetLocation, FOVTraceDebugType, Nav))
+				{
+					PotentialTargetsInFOV.Emplace(FOVTargetFeetLocation, ActorStartPos);
+				}
+			}
+		}
+
+		// FOV 내에 안전한 위치가 존재한다면, 그중 가장 가까운 곳을 최종 목표로 설정
+		if (PotentialTargetsInFOV.Num() > 0)
+		{
+			PotentialTargetsInFOV.Sort();
+			TargetPos = PotentialTargetsInFOV[0].FeetLocation;
+			bSuccessfullyFoundTarget = true;
+		}
+	}
+
+	if (bSuccessfullyFoundTarget)
+	{
+		TargetPos.Z += CapsuleHalfHeight + TargetZOffset;
     
-    UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("DashMontage"), AnimMontage, 1.0f);
-    PlayTask->OnCompleted.AddDynamic(this, &UGA_CommaDash::OnComplete);
-    PlayTask->OnInterrupted.AddDynamic(this, &UGA_CommaDash::OnInterrupted);
-    PlayTask->ReadyForActivation();
-
-    StartPosition = CachedCommaCharacter->GetActorLocation();
-
-    FVector DesiredDirection = CalculateDesiredDirection();
-
-    FDashTargetInfo TargetInfo;
-    bool bFoundTarget = FindBestDashTarget(DesiredDirection, TargetInfo);
-
-    if (!bFoundTarget)
-    {
-        bFoundTarget = ScanForAlternativeTargets(DesiredDirection, TargetInfo);
-    }
-
-    if (bFoundTarget && TargetInfo.bIsValid)
-    {
-        TargetPosition = TargetInfo.TargetLocation;
-        ActualTargetPosition = TargetPosition;
-
-        // 캡슐 높이 보정
-        const float CapsuleHalfHeight = CachedCommaCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-        ActualTargetPosition.Z += CapsuleHalfHeight + TargetZOffset;
-
-        // 최소 거리 검증
-        if (FVector::Dist(StartPosition, ActualTargetPosition) < MinDashDistance)
-        {
-            EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-            return;
-        }
-
-        if (MovementCurve)
-        {
-            UAT_TickCurve* TickCurveTask = UAT_TickCurve::CreateTask(this, MovementCurve);
-            if (TickCurveTask)
-            {
-                TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
-                TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
-                TickCurveTask->ReadyForActivation();
-            }
-        }
-
-        if (bEnableDebugVisualization)
-        {
-            DrawDebugVisualization(StartPosition, ActualTargetPosition, true);
-        }
-    }
-    else
-    {
-        if (bEnableDebugVisualization)
-        {
-            DrawDebugVisualization(StartPosition, StartPosition + DesiredDirection * MoveLength, false);
-        }
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-    }
+		// 최종 검증
+		if (FVector::DistSquared(BasePos, TargetPos) < FMath::Square(MinDashDistance))
+		{
+			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+			return;
+		}
+    
+		TickCurveTask->ReadyForActivation();
+	}
+	// 모든 검사를 실패했다면 대시 취소
+	else
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	}
 }
 
 void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-    const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-    Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-    
-    CachedCommaCharacter = nullptr;
-    CachedNavSystem = nullptr;
-}
-
-FVector UGA_CommaDash::CalculateDesiredDirection() const
-{
-    if (!CachedCommaCharacter)
-        return FVector::ForwardVector;
-
-    ACommaController* Controller = Cast<ACommaController>(CachedCommaCharacter->GetController());
-    if (!Controller)
-        return CachedCommaCharacter->GetActorForwardVector();
-
-    FVector2D MovementInput = CachedCommaCharacter->GetCachedMovementInput();
-    
-    if (MovementInput.IsNearlyZero())
-    {
-        // 입력이 없으면 캐릭터 전방 방향
-        return CachedCommaCharacter->GetActorForwardVector();
-    }
-
-    // 카메라 기준 월드 방향 계산
-    const FRotator ControlRotation = Controller->GetControlRotation();
-    const FRotator YawRotation(0, ControlRotation.Yaw, 0);
-    const FVector ForwardDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-    const FVector RightDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-    return (ForwardDir * MovementInput.Y + RightDir * MovementInput.X).GetSafeNormal();
-}
-
-bool UGA_CommaDash::FindBestDashTarget(const FVector& DesiredDirection, FDashTargetInfo& OutTargetInfo)
-{
-    TArray<FVector> SafePositions;
-    FVector TargetPos = StartPosition + DesiredDirection * MoveLength;
-    
-    // 전체 경로 검증
-    if (!ValidateDashPath(StartPosition, TargetPos, SafePositions))
-    {
-        return false;
-    }
-
-    // 안전한 위치 중 가장 먼 곳 선택
-    float MaxDistance = 0.f;
-    FVector BestPosition = StartPosition;
-    bool bFoundValidTarget = false;
-
-    for (const FVector& SafePos : SafePositions)
-    {
-        float Distance = FVector::Dist(StartPosition, SafePos);
-        
-        if (bAllowPartialDash)
-        {
-            float PercentageAchieved = Distance / MoveLength;
-            if (PercentageAchieved < PartialDashMinPercentage)
-                continue;
-        }
-
-        if (Distance > MaxDistance && Distance >= MinDashDistance)
-        {
-            MaxDistance = Distance;
-            BestPosition = SafePos;
-            bFoundValidTarget = true;
-        }
-    }
-
-    if (bFoundValidTarget)
-    {
-        OutTargetInfo.TargetLocation = BestPosition;
-        OutTargetInfo.Distance = MaxDistance;
-        OutTargetInfo.SafetyScore = CalculatePlatformSafetyScore(BestPosition);
-        OutTargetInfo.bIsValid = true;
-        return true;
-    }
-
-    return false;
-}
-
-bool UGA_CommaDash::ValidateDashPath(const FVector& StartPos, const FVector& EndPos, TArray<FVector>& OutSafePositions)
-{
-    OutSafePositions.Empty();
-    
-    const int32 NumSteps = FMath::Max(1, PathCheckSteps);
-    const float StepSize = 1.0f / NumSteps;
-    
-    for (int32 Step = 1; Step <= NumSteps; ++Step)
-    {
-        float Alpha = Step * StepSize;
-        FVector TestLocation = FMath::Lerp(StartPos, EndPos, Alpha);
-        
-        FVector AdjustedLocation;
-        if (IsValidPlatform(TestLocation, AdjustedLocation))
-        {
-            OutSafePositions.Add(AdjustedLocation);
-        }
-    }
-    
-    return OutSafePositions.Num() > 0;
-}
-
-bool UGA_CommaDash::ScanForAlternativeTargets(const FVector& DesiredDirection, FDashTargetInfo& OutTargetInfo)
-{
-    if (NumFOVTracesPerSide <= 0 || FOVAngleDegrees <= 0.f)
-        return false;
-
-    TArray<FDashTargetInfo> PotentialTargets;
-    const FVector ForwardDir = CachedCommaCharacter->GetActorForwardVector();
-    const float AngleIncrement = (FOVAngleDegrees * 0.5f) / NumFOVTracesPerSide;
-
-    for (int32 Side = -1; Side <= 1; Side += 2)
-    {
-        for (int32 TraceIndex = 1; TraceIndex <= NumFOVTracesPerSide; ++TraceIndex)
-        {
-            float CurrentAngle = AngleIncrement * TraceIndex * Side;
-            FRotator Rotation(0, CurrentAngle, 0);
-            FVector ScanDirection = Rotation.RotateVector(DesiredDirection);
-            
-            FDashTargetInfo TargetInfo;
-            if (FindBestDashTarget(ScanDirection, TargetInfo))
-            {
-                PotentialTargets.Add(TargetInfo);
-            }
-        }
-    }
-
-    // 가장 가까운 안전한 타겟 선택
-    if (PotentialTargets.Num() > 0)
-    {
-        PotentialTargets.Sort([this](const FDashTargetInfo& A, const FDashTargetInfo& B)
-        {
-            if (FMath::Abs(A.SafetyScore - B.SafetyScore) > 0.1f)
-                return A.SafetyScore > B.SafetyScore;
-            
-            return A.Distance < B.Distance;
-        });
-
-        OutTargetInfo = PotentialTargets[0];
-        return true;
-    }
-
-    return false;
-}
-
-bool UGA_CommaDash::IsValidPlatform(const FVector& TestLocation, FVector& OutAdjustedLocation) const
-{
-    FHitResult HitResult;
-    if (!PerformPlatformTrace(TestLocation, HitResult))
-        return false;
-
-    // 착지 지점 조정
-    OutAdjustedLocation = HitResult.ImpactPoint;
-    
-    FNavLocation NavLocation;
-    const FVector QueryExtent(PlatformDetectionRadius, PlatformDetectionRadius, MaxPlatformHeightDiff);
-    
-    if (!CachedNavSystem->ProjectPointToNavigation(OutAdjustedLocation, NavLocation, QueryExtent))
-        return false;
-    
-    OutAdjustedLocation = NavLocation.Location;
-    
-    FVector SafeCenter;
-    if (GetPlatformSafeCenter(OutAdjustedLocation, SafeCenter))
-    {
-        // 현재 위치에서 안전한 중심점 방향으로 SafetyMargin만큼 이동
-        FVector ToCenterDir = (SafeCenter - OutAdjustedLocation).GetSafeNormal2D();
-        if (!ToCenterDir.IsNearlyZero())
-        {
-            OutAdjustedLocation += ToCenterDir * SafetyMargin;
-            
-            // 조정된 위치가 여전히 플랫폼 위에 있는지 재검증
-            FHitResult ValidationHit;
-            FVector ValidationStart = OutAdjustedLocation + FVector(0, 0, 50.0f);
-            FVector ValidationEnd = OutAdjustedLocation - FVector(0, 0, 10.0f);
-            
-            TArray<AActor*> ActorsToIgnore;
-            ActorsToIgnore.Add(CachedCommaCharacter);
-            
-            if (!UKismetSystemLibrary::LineTraceSingle(
-                GetWorld(),
-                ValidationStart,
-                ValidationEnd,
-                UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-                false,
-                ActorsToIgnore,
-                EDrawDebugTrace::None,
-                ValidationHit,
-                true))
-            {
-                OutAdjustedLocation = HitResult.ImpactPoint;
-            }
-        }
-    }
-    
-    // 최종 착지 지점이 캐릭터가 안전하게 설 수 있는지 확인
-    const float CapsuleRadius = CachedCommaCharacter->GetCapsuleComponent()->GetScaledCapsuleRadius();
-    
-    FHitResult CenterHit;
-    FVector CenterTraceStart = OutAdjustedLocation + FVector(0, 0, 50.0f);
-    FVector CenterTraceEnd = OutAdjustedLocation - FVector(0, 0, 10.0f);
-    
-    TArray<AActor*> ActorsToIgnore;
-    ActorsToIgnore.Add(CachedCommaCharacter);
-    
-    bool bCenterValid = UKismetSystemLibrary::SphereTraceSingle(
-        GetWorld(),
-        CenterTraceStart,
-        CenterTraceEnd,
-        CapsuleRadius,
-        UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-        false,
-        ActorsToIgnore,
-        EDrawDebugTrace::None,
-        CenterHit,
-        true
-    );
-    
-    return bCenterValid;
-}
-
-bool UGA_CommaDash::PerformPlatformTrace(const FVector& TestLocation, FHitResult& OutHit) const
-{
-    const float TraceStartZ = TestLocation.Z + MaxPlatformHeightDiff;
-    const float TraceEndZ = TestLocation.Z - MaxPlatformHeightDiff;
-    
-    FVector TraceStart(TestLocation.X, TestLocation.Y, TraceStartZ);
-    FVector TraceEnd(TestLocation.X, TestLocation.Y, TraceEndZ);
-    
-    TArray<AActor*> ActorsToIgnore;
-    ActorsToIgnore.Add(CachedCommaCharacter);
-    
-    return UKismetSystemLibrary::SphereTraceSingle(
-        GetWorld(),
-        TraceStart,
-        TraceEnd,
-        PlatformDetectionRadius,
-        UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-        false,
-        ActorsToIgnore,
-        bEnableDebugVisualization ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
-        OutHit,
-        true,
-        FLinearColor::Red,
-        FLinearColor::Green,
-        DebugDrawDuration
-    );
-}
-
-float UGA_CommaDash::CalculatePlatformSafetyScore(const FVector& PlatformLocation) const
-{
-    float SafetyScore = 1.0f;
-    
-    float HeightDiff = FMath::Abs(PlatformLocation.Z - StartPosition.Z);
-    float HeightPreference = 1.0f - FMath::Clamp(HeightDiff / (MaxPlatformHeightDiff * 2.0f), 0.0f, 0.3f);
-    SafetyScore *= HeightPreference;
-    
-    FNavLocation NavLocation;
-    if (CachedNavSystem->ProjectPointToNavigation(PlatformLocation, NavLocation))
-    {
-        float NavDistance = FVector::Dist(PlatformLocation, NavLocation.Location);
-        if (NavDistance < 5.0f)
-        {
-            SafetyScore *= 1.1f;
-        }
-    }
-    
-    return FMath::Clamp(SafetyScore, 0.1f, 1.0f);
-}
-
-void UGA_CommaDash::ApplyDashEffects()
-{
-    UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-    if (!ASC) return;
-
-    if (JustDashTimingEffect)
-    {
-        FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
-        ContextHandle.AddSourceObject(this);
-        FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(JustDashTimingEffect, 0.f, ContextHandle);
-        ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-    }
-
-    if (InvincibleEffect)
-    {
-        FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
-        ContextHandle.AddSourceObject(this);
-        FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(InvincibleEffect, 0.f, ContextHandle);
-        ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-    }
-}
-
-void UGA_CommaDash::DrawDebugVisualization(const FVector& StartPos, const FVector& EndPos, bool bSuccess) const
-{
-    if (!bEnableDebugVisualization) return;
-
-    FColor PathColor = bSuccess ? FColor::Green : FColor::Red;
-    
-    DrawDebugLine(GetWorld(), StartPos, EndPos, PathColor, false, DebugDrawDuration, 0, 5.0f);
-    
-    DrawDebugSphere(GetWorld(), StartPos, 20.0f, 12, FColor::Blue, false, DebugDrawDuration);
-    DrawDebugSphere(GetWorld(), EndPos, 20.0f, 12, PathColor, false, DebugDrawDuration);
-    
-    if (FOVAngleDegrees > 0 && NumFOVTracesPerSide > 0)
-    {
-        FVector ForwardDir = CachedCommaCharacter->GetActorForwardVector();
-        float HalfFOVRad = FMath::DegreesToRadians(FOVAngleDegrees * 0.5f);
-        
-        FVector LeftBound = ForwardDir.RotateAngleAxis(-FOVAngleDegrees * 0.5f, FVector::UpVector) * MoveLength;
-        FVector RightBound = ForwardDir.RotateAngleAxis(FOVAngleDegrees * 0.5f, FVector::UpVector) * MoveLength;
-        
-        DrawDebugLine(GetWorld(), StartPos, StartPos + LeftBound, FColor::Yellow, false, DebugDrawDuration, 0, 2.0f);
-        DrawDebugLine(GetWorld(), StartPos, StartPos + RightBound, FColor::Yellow, false, DebugDrawDuration, 0, 2.0f);
-    }
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void UGA_CommaDash::OnCurveTick(float Alpha)
 {
-    if (!CachedCommaCharacter) return;
-    
-    FVector InterpolatedLocation = FMath::Lerp(StartPosition, ActualTargetPosition, Alpha);
-    CachedCommaCharacter->SetActorLocation(InterpolatedLocation);
-}
-
-bool UGA_CommaDash::GetPlatformSafeCenter(const FVector& PlatformLocation, FVector& OutSafeCenter) const
-{
-    const float ScanRadius = 100.0f;
-    const int32 NumScans = 8;
-    
-    TArray<FVector> ValidPoints;
-    TArray<AActor*> ActorsToIgnore;
-    ActorsToIgnore.Add(CachedCommaCharacter);
-    
-    // 8방향으로 스캔하여 플랫폼의 대략적인 중심 찾기
-    for (int32 i = 0; i < NumScans; ++i)
-    {
-        float Angle = (2.0f * PI * i) / NumScans;
-        FVector ScanDirection(FMath::Cos(Angle), FMath::Sin(Angle), 0);
-        FVector ScanLocation = PlatformLocation + ScanDirection * ScanRadius;
-        
-        FHitResult ScanHit;
-        if (PerformPlatformTrace(ScanLocation, ScanHit))
-        {
-            ValidPoints.Add(ScanHit.ImpactPoint);
-        }
-    }
-    
-    if (ValidPoints.Num() < 3)
-    {
-        OutSafeCenter = PlatformLocation;
-        return false;
-    }
-    
-    // 유효한 점들의 평균 위치를 안전한 중심으로 계산
-    FVector CenterSum = FVector::ZeroVector;
-    for (const FVector& Point : ValidPoints)
-    {
-        CenterSum += Point;
-    }
-    
-    OutSafeCenter = CenterSum / ValidPoints.Num();
-    OutSafeCenter.Z = PlatformLocation.Z;
-    
-    return true;
+	AActor* AvatarActor = GetAvatarActorFromActorInfo();
+	if (AvatarActor)
+	{
+		FVector InterpolatedLocation = FMath::Lerp(BasePos, TargetPos, Alpha);
+		AvatarActor->SetActorLocation(InterpolatedLocation);
+	}
 }
 
 void UGA_CommaDash::OnComplete()
 {
-    if (CachedCommaCharacter)
-    {
-        // 최종 위치 안전성 검증
-        UCharacterMovementComponent* MovementComp = CachedCommaCharacter->GetCharacterMovement();
-        if (MovementComp)
-        {
-            MovementComp->Velocity = FVector::ZeroVector;
-            MovementComp->UpdateFloorFromAdjustment();
+	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
+	if (Comma)
+	{
+		// 캐릭터가 플랫폼 위에 있는지만 확인
+		UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement();
+		if (MovementComp)
+		{
+			// 바닥 업데이트를 통해 낙사 방지 시스템 재활성화
+			MovementComp->UpdateFloorFromAdjustment();
             
-            // 바닥이 없거나 불안정한 경우 추가 조정
-            if (!MovementComp->IsMovingOnGround() || MovementComp->IsFalling())
-            {
-                FVector CurrentLocation = CachedCommaCharacter->GetActorLocation();
-                FVector SafeLocation;
+			// 바닥이 없으면 가장 가까운 안전한 위치로 조정
+			if (!MovementComp->IsMovingOnGround())
+			{
+				FVector CurrentLocation = Comma->GetActorLocation();
+				TArray<AActor*> IgnoreActors;
+				IgnoreActors.Add(Comma);
                 
-                // 현재 위치에서 가장 가까운 안전한 플랫폼 찾기
-                bool bFoundSafety = false;
-                const float SearchRadius = 150.0f;
-                const int32 SearchSteps = 8;
-                
-                for (int32 i = 0; i < SearchSteps && !bFoundSafety; ++i)
-                {
-                    float Angle = (2.0f * PI * i) / SearchSteps;
-                    FVector SearchDir(FMath::Cos(Angle), FMath::Sin(Angle), 0);
-                    FVector SearchLocation = CurrentLocation + SearchDir * (SafetyMargin + 20.0f);
-                    
-                    if (IsValidPlatform(SearchLocation, SafeLocation))
-                    {
-                        // 캡슐 높이 보정
-                        const float CapsuleHalfHeight = CachedCommaCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-                        SafeLocation.Z += CapsuleHalfHeight;
-                        
-                        CachedCommaCharacter->SetActorLocation(SafeLocation);
-                        MovementComp->Velocity = FVector::ZeroVector;
-                        bFoundSafety = true;
-                    }
-                }
-                
-                /*if (!bFoundSafety)
-                {
-                    CachedCommaCharacter->SetActorLocation(StartPosition);
-                    MovementComp->Velocity = FVector::ZeroVector;
-                }*/
-            }
-            
-            // 착지 후 추가적인 위치 미세 조정
-            FVector FinalLocation = CachedCommaCharacter->GetActorLocation();
-            FVector AdjustedFinalLocation;
-            if (IsValidPlatform(FinalLocation, AdjustedFinalLocation))
-            {
-                // 플랫폼 중심 방향으로 약간 더 이동
-                FVector SafeCenter;
-                if (GetPlatformSafeCenter(AdjustedFinalLocation, SafeCenter))
-                {
-                    FVector ToCenterDir = (SafeCenter - FinalLocation).GetSafeNormal2D();
-                    if (!ToCenterDir.IsNearlyZero())
-                    {
-                        FVector ExtraAdjustment = FinalLocation + ToCenterDir * (SafetyMargin * 0.5f);
-                        
-                        FHitResult ValidationHit;
-                        if (PerformPlatformTrace(ExtraAdjustment, ValidationHit))
-                        {
-                            const float CapsuleHalfHeight = CachedCommaCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-                            ExtraAdjustment.Z = ValidationHit.ImpactPoint.Z + CapsuleHalfHeight;
-                            CachedCommaCharacter->SetActorLocation(ExtraAdjustment);
-                        }
-                    }
-                }
-            }
-        }
-    }
+				FVector AdjustedLocation;
+				if (IsSafeLandingZone(CurrentLocation, IgnoreActors, AdjustedLocation))
+				{
+					Comma->SetActorLocation(AdjustedLocation);
+				}
+			}
+		}
+	}
     
-    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void UGA_CommaDash::OnInterrupted()
 {
-    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+	bool bReplicatedEndAbility = true;
+	bool bWasCancelled = true;
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+}
+
+// 안전한 착지 위치인지 검증하는 함수
+bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const
+{
+	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
+	if (!Comma) return false;
+
+	// 검증을 위한 변수들
+	const float CapsuleRadius = Comma->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	const float CheckRadius = CapsuleRadius * 1.2f;
+	
+    const int32 MaxIterations = 2; // 위치 조정 최대 반복 횟수
+    const float StepOffset = 5.f; // 위치 조정 시 이동할 거리
+    const FVector UpDownOffsetForCheck(0.f, 0.f, MaxPlatformHeightDiff);
+    const int32 NumCheckPoints = 6; // 안전한 위치 후보군 주변으로 검사할 지점 수 
+    const float MinValidHitRatio = 0.1f; // 최소 유효 충돌 비율
+
+    FVector CurrentCandidate = CandidateLocation;
+
+    for (int32 Iter = 0; Iter < MaxIterations; ++Iter)
+    {
+        int32 HitCount = 0;
+        FVector AccumulatedNonHitOffset = FVector::ZeroVector;
+
+    	// 후보 위치 주변 지점 검사
+        for (int32 i = 0; i < NumCheckPoints; ++i)
+        {
+            float Angle = 2 * PI * (static_cast<float>(i) / NumCheckPoints);
+            FVector OffsetFromCandidate = FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * CheckRadius;
+
+            FVector TraceStart = CurrentCandidate + OffsetFromCandidate + UpDownOffsetForCheck;
+            FVector TraceEnd   = CurrentCandidate + OffsetFromCandidate - UpDownOffsetForCheck;
+
+            FHitResult Hit;
+            bool bHit = UKismetSystemLibrary::LineTraceSingle(
+                GetWorld(),
+                TraceStart,
+                TraceEnd,
+                UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
+                false,
+                IgnoreActors,
+                bDebugFOVTraces ? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None,
+                Hit,
+                true
+            );
+
+            if (bHit)
+            {
+                HitCount++;
+            }
+            else
+            {
+                AccumulatedNonHitOffset += OffsetFromCandidate;
+            }
+        }
+
+        float HitRatio = static_cast<float>(HitCount) / static_cast<float>(NumCheckPoints);
+        if (HitRatio >= MinValidHitRatio)
+        {
+            OutAdjustedLocation = CurrentCandidate;
+            return true;
+        }
+
+        if (HitCount < 2 && Iter > 0)
+        {
+            break;
+        }
+
+    	// Hit에 감지되지 않은 지점들이 있을 때
+        if (!AccumulatedNonHitOffset.IsNearlyZero())
+        {
+        	// 반대 방향으로 후보 위치를 이동 시켜서 안전한 위치로 가게끔 조정
+            FVector AdjustmentDirection = -AccumulatedNonHitOffset.GetSafeNormal();
+            CurrentCandidate += AdjustmentDirection * StepOffset;
+        }
+        else if (HitCount > 0 && HitCount < NumCheckPoints)
+        {
+            break;
+        }
+        else
+        {
+            break;
+        }
+    }
+	
+    return false;
 }
