@@ -48,3 +48,15 @@ bool UPrologueFunctionLibrary::IsTargetPawnHostile(APawn* QueryPawn, APawn* Targ
 
 	return false;
 }
+
+bool UPrologueFunctionLibrary::NativeDoesActorHaveTag(AActor* InActor, FGameplayTag TagToCheck)
+{
+	UAbilitySystemComponent* ASC = NativeGetASCFromActor(InActor);
+
+	return ASC->HasMatchingGameplayTag(TagToCheck);
+}
+
+void UPrologueFunctionLibrary::BP_DoesActorHaveTag(AActor* InActor, FGameplayTag TagToCheck, EConfirmType& OutConfirmType)
+{
+	OutConfirmType = NativeDoesActorHaveTag(InActor, TagToCheck) ? EConfirmType::Yes : EConfirmType::No;
+}
