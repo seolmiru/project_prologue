@@ -11,6 +11,7 @@
 
 bool UGA_OverClock::bIsOverClockActive = false;
 float UGA_OverClock::OverClockTimeScale = 1.0f;
+FOnTimeScale UGA_OverClock::OnTimeScale;
 
 UGA_OverClock::UGA_OverClock()
 {
