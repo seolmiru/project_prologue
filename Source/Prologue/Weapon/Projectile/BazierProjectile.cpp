@@ -31,7 +31,7 @@ ABazierProjectile::ABazierProjectile()
 
 	ExplosionRadius = 400.f;
 	TimeToExplode = 3.f;
-
+	
 	bFire = false;
 	FireSpeed = 1000.f;
 	BazierWeight = 1.f;
