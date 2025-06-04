@@ -146,15 +146,6 @@ void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackBow::ResetComboCount, 1.2f, false);
 
-	// 마지막 콤보 실행 직후 교체 공격 Effect 부여
-	if (CurrentComboData && CurrentCombo == CurrentComboData->MaxComboCount)
-	{
-		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-		EffectContextHandle.AddSourceObject(this);
-		FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
-		GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
-	}
-
 	CurrentComboData = nullptr;
 	HasNextComboInput = false;
 }

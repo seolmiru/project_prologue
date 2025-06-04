@@ -39,6 +39,10 @@ namespace PrologueGameplayTags
 
 	/** Comma State Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_JustDash);
+
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_SwitchAttackSword);
+
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_SwitchAttackBow);
 	
 	/** Effect Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_Damaging);
@@ -82,4 +86,5 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_State_IsDead);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_State_IsAttacking);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_State_IsMoving);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_State_IsOutOfToughness);
 }

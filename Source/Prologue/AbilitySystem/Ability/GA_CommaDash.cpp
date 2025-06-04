@@ -352,13 +352,13 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 
 	// 검증을 위한 변수들
 	const float CapsuleRadius = Comma->GetCapsuleComponent()->GetScaledCapsuleRadius();
-	const float CheckRadius = CapsuleRadius * 1.5f;
+	const float CheckRadius = CapsuleRadius * 1.2f;
 	
     const int32 MaxIterations = 2; // 위치 조정 최대 반복 횟수
     const float StepOffset = 5.f; // 위치 조정 시 이동할 거리
     const FVector UpDownOffsetForCheck(0.f, 0.f, MaxPlatformHeightDiff);
-    const int32 NumCheckPoints = 8; // 안전한 위치 후보군 주변으로 검사할 지점 수 
-    const float MinValidHitRatio = 0.2f; // 최소 유효 충돌 비율
+    const int32 NumCheckPoints = 6; // 안전한 위치 후보군 주변으로 검사할 지점 수 
+    const float MinValidHitRatio = 0.1f; // 최소 유효 충돌 비율
 
     FVector CurrentCandidate = CandidateLocation;
 
@@ -406,7 +406,7 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
             return true;
         }
 
-        if (HitCount < NumCheckPoints / 2 && Iter > 0)
+        if (HitCount < 2 && Iter > 0)
         {
             break;
         }
@@ -427,5 +427,6 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
             break;
         }
     }
+	
     return false;
 }

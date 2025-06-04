@@ -11,14 +11,16 @@
 UPrologueAttributeSet::UPrologueAttributeSet() :
 	SwordSwitchAttackDamage(80.f),
 	MaxSwordSwitchAttackDamage(300.f),
-	SwordSwitchAttackRange(300.f),
-	MaxSwordSwitchAttackRange(500.f)
+	SwordSwitchAttackRange(500.f),
+	MaxSwordSwitchAttackRange(800.f)
 {
 	InitCurrentHealth(1.f);
 	InitMaxHealth(1.f);
 	InitCurrentGauge(1.f);
 	InitMaxGauge(1.f);
 	InitDamage(1.f);
+	InitCurrentToughness(1.f);
+	InitMaxToughness(1.f);
 }
 
 void UPrologueAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -63,6 +65,14 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 			return false;
 		}
 	}
+
+	if (Data.EvaluatedData.Attribute == GetCurrentToughnessAttribute())
+	{
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
+		{
+			return false;
+		}
+	}
 	
 	return true;
 }
@@ -72,7 +82,7 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 	Super::PostGameplayEffectExecute(Data);
 
 	float MinimumHealth = 0.0f;
-
+	
 	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
 	{
 		LOG_SCREEN("Direct Health Access : %f", GetCurrentHealth());
@@ -85,11 +95,28 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 		SetDamage(0.0f);
 	}
 
-	if ((GetCurrentHealth() <= 0.0f) && !bOufOfHealth)
+	if (Data.EvaluatedData.Attribute == GetCurrentToughnessAttribute())
+	{
+		LOG_SCREEN("Direct Toughness Access : %f", GetCurrentToughness());
+		
+		const float NewCurrentToughness = FMath::Clamp(GetCurrentToughness(), 0.f, GetMaxToughness());
+
+		SetCurrentToughness(NewCurrentToughness);
+	}
+	
+	if ((GetCurrentHealth() <= 0.0f) && !bOutOfHealth)
 	{
 		Data.Target.AddLooseGameplayTag(PrologueGameplayTags::Shared_State_IsDead);
 		OnOutOfHealth.Broadcast();
 	}
 
-	bOufOfHealth = (GetCurrentHealth() <= 0.0f);
+	if ((GetCurrentToughness() <= 0.0f) && !bOutOfToughness)
+	{
+		Data.Target.AddLooseGameplayTag(PrologueGameplayTags::Shared_State_IsOutOfToughness);
+		OnOutOfToughness.Broadcast();
+	}
+
+	bOutOfHealth = (GetCurrentHealth() <= 0.0f);
+
+	bOutOfToughness = (GetCurrentToughness() <= 0.0f);
 }

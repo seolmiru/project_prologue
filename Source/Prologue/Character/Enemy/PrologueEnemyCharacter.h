@@ -19,7 +19,7 @@ public:
 
 protected:
 	virtual void PossessedBy(AController* NewController) override;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "StartUpData", meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
 

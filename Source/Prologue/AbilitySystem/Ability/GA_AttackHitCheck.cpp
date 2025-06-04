@@ -34,9 +34,9 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
 	{
 		FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, 0);
 		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
-		FGameplayEffectSpecHandle HitReactEffectSpecHandle = MakeOutgoingGameplayEffectSpec(HitReactEffect);
+		FGameplayEffectSpecHandle HitReactEffectSpecHandle = MakeOutgoingGameplayEffectSpec(ToughnessDamageEffect);
 
-		// HiReact 호출을 위해 Target에게 Effect 부여
+		// 강인도 감소 적용
 		if (HitReactEffectSpecHandle.IsValid())
 		{
 			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, HitReactEffectSpecHandle, TargetDataHandle);
@@ -68,7 +68,7 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
 		UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo_Checked();
 
 		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
-		FGameplayEffectSpecHandle HitReactEffectSpecHandle = MakeOutgoingGameplayEffectSpec(HitReactEffect);
+		FGameplayEffectSpecHandle HitReactEffectSpecHandle = MakeOutgoingGameplayEffectSpec(ToughnessDamageEffect);
 
 		if (HitReactEffectSpecHandle.IsValid())
 		{
