@@ -36,6 +36,58 @@ void APrologueCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 }
 
+void APrologueCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (ASC && IsValid(this))
+	{
+		// 태그 수신 대기
+		ToughnessTagHandle = ASC->RegisterGameplayTagEvent(PrologueGameplayTags::Shared_State_IsOutOfToughness, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &APrologueCharacter::OnToughnessTagChanged);
+	}
+}
+
+void APrologueCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (ASC && ToughnessTagHandle.IsValid())
+	{
+		ASC->UnregisterGameplayTagEvent(ToughnessTagHandle, PrologueGameplayTags::Shared_State_IsOutOfToughness, EGameplayTagEventType::NewOrRemoved);
+		ToughnessTagHandle.Reset();
+	}
+	
+	Super::EndPlay(EndPlayReason);
+}
+
+// 강인도가 0이 되었을 때 실행되는 함수
+void APrologueCharacter::OnToughnessTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	if (NewCount > 0)
+	{
+		LOG_SCREEN_R("Toughness Broken, Applying HitReact");
+
+		if (HitReactEffectClass && ASC)
+		{
+			// HitReactEffectClass를 통해서 HitReact Ability를 Trigger시킴
+			FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
+			ContextHandle.AddSourceObject(this);
+
+			FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(HitReactEffectClass, 1.0f, ContextHandle);
+			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+
+		// 1초의 딜레이를 주고 Shared_State_IsOutOfToughness 태그 제거
+		GetWorld()->GetTimerManager().SetTimer(ToughnessRecoveryTimerHandle, this, &APrologueCharacter::RecoverToughness, 1.0f, false);
+	}
+}
+
+void APrologueCharacter::RecoverToughness()
+{
+	if (ASC)
+	{
+		ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Shared_State_IsOutOfToughness);
+	}
+}
+
 void APrologueCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);

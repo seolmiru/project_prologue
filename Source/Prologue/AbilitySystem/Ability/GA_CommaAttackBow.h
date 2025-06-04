@@ -32,10 +32,7 @@ protected:
 	void OnInterrupted();
 
 	UFUNCTION()
-	void HandleEnableComboInputEvent(FGameplayEventData Payload);
-
-	UFUNCTION()
-	void HandleDisableComboInputEvent(FGameplayEventData Payload);
+	void OnBlendOut();
 	
 	UFUNCTION()
 	void StartDebugTimer();
@@ -43,51 +40,46 @@ protected:
 	UFUNCTION()
 	void DebugTimerInfo();
 
+	UFUNCTION()
+	void SyncPerfectShotTag();
+
 	UPROPERTY()
 	FTimerHandle DebugTimerHandle;
 
 	UPROPERTY()
 	float PerfectShotStartWorldTime = 0.f;
 
+	FName GetNextSection();
+	void StartComboTimer();
+	void CheckComboInput();
+
+	void ResetComboCount();
+
+	void EnableComboInput();
+
+	void ProcessNextCombo();
+
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = true))
-	TMap<int32, UAnimMontage*> ComboMontageMap;
+	UPROPERTY()
+	TObjectPtr<class UComboBowData> CurrentComboData;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TSubclassOf<UGameplayEffect> SwitchAttackEffectClass;
- 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combo")
+	uint8 CurrentCombo = 0;
+	
 	UPROPERTY()
 	AActor* TargetActor = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
 	float SphereRadius;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combo")
-	int32 CurrentComboCount;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combo")
+	
 	FTimerHandle ComboTimerHandle;
-
-	UPROPERTY(EditAnywhere, Category = "Combo")
-	FGameplayTag EnableComboInputTag;
-
-	UPROPERTY(EditAnywhere, Category = "Combo")
-	FGameplayTag DisableComboInputTag;
-	
-	UPROPERTY()
-	TObjectPtr<UAbilityTask_WaitGameplayEvent> EnableComboInputEventTask;
-
-	UPROPERTY()
-	TObjectPtr<UAbilityTask_WaitGameplayEvent> DisableComboInputEventTask;
-	
-	UPROPERTY()
-	bool bComboInputActivate = false;
-
-	UPROPERTY(BlueprintReadWrite)
-	uint8 EffectCount = 0;
-
 	bool HasNextComboInput = false;
 
+	FTimerHandle CurrentComboTimerHandle;
+	
 protected:
 	UFUNCTION()
 	void InitializePerfectShotTimer();

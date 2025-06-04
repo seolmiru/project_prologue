@@ -62,7 +62,7 @@ FGameplayAbilityTargetDataHandle ATA_MultiTrace::MakeTargetData() const
 		DrawDebugSphere(
 			GetWorld(),
 			Origin,
-			300.f,
+			SwitchAttackRadius,
 			16,
 			DrawColor,
 			false,

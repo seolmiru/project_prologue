@@ -7,7 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
-#include "Prologue/Weapon/Projectile/ExplodingProjectile.h"
+#include "Prologue/Weapon/Projectile/BazierProjectile.h"
 
 bool UGA_OverClock::bIsOverClockActive = false;
 float UGA_OverClock::OverClockTimeScale = 1.0f;
@@ -25,19 +25,21 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	const UPrologueAttributeSet* AttributeSet = ASC->GetSet<UPrologueAttributeSet>();
 
+	// 오버클락 게이지가 100이 아닐 때에는 시전 불가
 	if (AttributeSet->GetCurrentGauge() < AttributeSet->GetMaxGauge())
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
 
-	const_cast<UPrologueAttributeSet*>(AttributeSet)->SetCurrentGauge(0.0f);
-
+	// 게이지 초기화
+	ASC->SetNumericAttributeBase(UPrologueAttributeSet::GetCurrentGaugeAttribute(), 0.0f);
+	
 	bIsOverClockActive = true;
 	OverClockTimeScale = TimeScale;
 	
 	ApplySlowToEnemies();
-	
+
 	GetWorld()->GetTimerManager().SetTimer(
 		OverClockTimerHandle,
 		this,
@@ -68,11 +70,13 @@ void UGA_OverClock::OnOverClockFinished()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
+// 월드 내에 존재하는 모든 적과 적이 발사한 투사체에 TimeScale만큼 시간이 느려지도록 적용
 void UGA_OverClock::ApplySlowToEnemies()
 {
 	AffectedEnemies.Empty();
 	AffectedProjectiles.Empty();
 
+	// EnemyCharacter를 상속 받은 모든 액터 찾기
 	TArray<AActor*> Found;
 	UGameplayStatics::GetAllActorsOfClass(
 		GetWorld(),
@@ -84,28 +88,32 @@ void UGA_OverClock::ApplySlowToEnemies()
 	{
 		if (auto* Enemy = Cast<APrologueEnemyCharacter>(Actor))
 		{
+			// 시간 배율 적용, AffectedEnemies 목록에 추가
 			Enemy->CustomTimeDilation = TimeScale;
 			AffectedEnemies.Add(Enemy);
 		}
 	}
 
+	// BazierProjectile을 상속 받은 모든 액터 찾기
 	TArray<AActor*> FoundProjectiles;
 	UGameplayStatics::GetAllActorsOfClass(
 		GetWorld(),
-		AExplodingProjectile::StaticClass(),
+		ABazierProjectile::StaticClass(),
 		FoundProjectiles
 	);
 
 	for (AActor* Actor : FoundProjectiles)
 	{
-		if (auto* Projectile = Cast<AExplodingProjectile>(Actor))
+		if (auto* Projectile = Cast<ABazierProjectile>(Actor))
 		{
+			// 시간 배율 적용, AffectedProjectiles 목록에 추가
 			Projectile->CustomTimeDilation = TimeScale;
 			AffectedProjectiles.Add(Projectile);
 		}
 	}
 }
 
+// 원래 속도로 복구
 void UGA_OverClock::RestoreEnemyTime()
 {
 	for (auto* Enemy : AffectedEnemies)

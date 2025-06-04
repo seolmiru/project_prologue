@@ -61,11 +61,13 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 		return;
 	}
 
+	// 투사체를 발사한 Actor 충돌 무시
 	if (OtherActor == GetInstigator())
 	{
 		return;
 	}
 
+	// 투사체끼리의 충돌 무시
 	if (Cast<APrologueProjectileBase>(OtherActor))
 	{
 		return;
@@ -82,8 +84,9 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 			EffectContext.AddSourceObject(this);
 			EffectContext.AddHitResult(Hit);
 
+			// 체력과 강인도를 감소시키는 Effect 적용
 			FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(AttackDamageEffect, 1.f, EffectContext);
-			FGameplayEffectSpecHandle HitReactSpecHandle = SourceASC->MakeOutgoingSpec(HitReactEffect, 1.f, EffectContext);
+			FGameplayEffectSpecHandle HitReactSpecHandle = SourceASC->MakeOutgoingSpec(ToughnessDamageEffect, 1.f, EffectContext);
 			
 			if (SpecHandle.IsValid())
 			{
@@ -94,7 +97,8 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 				CueParams.EffectContext = EffectContext;
 				TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParams);
 			}
-			
+
+			// BP에서 IncreaseGaugeEffect가 할당이 되어있다면 OverClockGauge를 증가시키는 Effect 적용
 			if (IncreaseGaugeEffect)
 			{
 				FGameplayEffectSpecHandle GaugeEffectSpecHandle = SourceASC->MakeOutgoingSpec(IncreaseGaugeEffect, 1.f, EffectContext);

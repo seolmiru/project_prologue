@@ -10,7 +10,7 @@
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_CommaDash : public UGA_MontageAbility
+class PROLOGUE_API UGA_CommaDash : public UGameplayAbility
 {
 	GENERATED_BODY()
 
@@ -22,7 +22,14 @@ public:
 	void OnCurveTick(float Alpha);
 	
 protected:
-	virtual void OnComplete() override;
+	UFUNCTION()
+	void OnComplete();
+
+	UFUNCTION()
+	void OnInterrupted();
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> AnimMontage;
 
 	UFUNCTION(BlueprintCallable, Category = "Dash|GroundCheck")
 	bool IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const;
@@ -52,11 +59,23 @@ protected:
 	int32 NumFOVTracesPerSide = 2;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|FOV")
-	bool bDebugFOVTraces = false;	
+	bool bDebugFOVTraces = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
+	bool bAllowPartialDash = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
+	float PartialDashMinPercentage = 0.7f;	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	TObjectPtr<class UCurveFloat> Curve;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TSubclassOf<UGameplayEffect> JustDashTimingEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TSubclassOf<UGameplayEffect> InvincibleEffect;
+	
 	FVector TargetPos;
 	FVector BasePos;
 };

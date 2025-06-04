@@ -41,6 +41,8 @@ protected:
 	
 	virtual void BeginPlay() override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 protected:
 	FVector2D Direction;
 
@@ -94,12 +96,19 @@ private:
 	TSubclassOf<UUserWidget> BP_CommaWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCommaWidget> CommaWidget;	
-
+	TObjectPtr<UCommaWidget> CommaWidget;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* UIAnchorComponent;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* SwitchAttackWidgetComponent;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_SwitchAttackWidget;
+	
 	void Input_Move(const FInputActionValue& InputActionValue);
-
-	bool HasTag_FocusedAttack() const;
-
+	
 public:
 	FORCEINLINE UCommaCombatComponent* GetCommaCombatComponent() const { return CommaCombatComponent; }
 	
@@ -122,11 +131,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	UStaticMeshComponent* GetBowWeaponMesh() const;
 
-	UFUNCTION(BlueprintCallable)
 	void RotateToMouse();
 
-	UFUNCTION(BlueprintCallable)
+	void RotateToMouseSmooth();
+	
 	void RotateToTarget(AActor* Target);
+
+	void OnAttackEnded();
+
+	void OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -140,4 +153,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<class UAnimMontage> BowSwitchAttackMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FGameplayTag SwitchAttackSwordTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FGameplayTag SwitchAttackBowTag;
+	
+private:
+	FRotator TargetRotation = FRotator::ZeroRotator;
+	float RotationInterpSpeed = 12.f;
+	bool bIsUsingSmoothRotation = false;
 };

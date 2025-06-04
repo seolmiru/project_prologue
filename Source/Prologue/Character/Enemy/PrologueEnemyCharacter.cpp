@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 #include "Prologue/UI/Enemy/EnemyWidget.h"
 
@@ -27,13 +28,6 @@ APrologueEnemyCharacter::APrologueEnemyCharacter()
 
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	Attributes = CreateDefaultSubobject<UPrologueAttributeSet>(TEXT("Attributes"));
-
-	/*EnemyWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("EnemyWidgetComponent"));
-	EnemyWidgetComponent->SetupAttachment(GetMesh());
-	EnemyWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
-	EnemyWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	EnemyWidgetComponent->SetDrawSize(FVector2D(200.f, 50.f));
-	EnemyWidgetComponent->SetWidgetClass(BP_EnemyWidget);*/
 }
 
 void APrologueEnemyCharacter::PossessedBy(AController* NewController)
@@ -61,4 +55,28 @@ void APrologueEnemyCharacter::PossessedBy(AController* NewController)
 			);
 		}
 	}
+}
+
+bool APrologueEnemyCharacter::TryActivateAbilityByTag(FGameplayTag AbilityTagToActivate)
+{
+	check(AbilityTagToActivate.IsValid());
+
+	TArray<FGameplayAbilitySpec*> FoundAbilitySpecs;
+
+	ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(AbilityTagToActivate.GetSingleTagContainer(), FoundAbilitySpecs);
+
+	if (!FoundAbilitySpecs.IsEmpty())
+	{
+		const int32 RandomAbilityIndex = FMath::RandRange(0, FoundAbilitySpecs.Num() - 1);
+		FGameplayAbilitySpec* SpecToActivate = FoundAbilitySpecs[RandomAbilityIndex];
+
+		check(SpecToActivate);
+
+		if (!SpecToActivate->IsActive())
+		{
+			return ASC->TryActivateAbility(SpecToActivate->Handle);
+		}
+	}
+
+	return false;
 }

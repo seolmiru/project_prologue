@@ -54,7 +54,7 @@ protected:
 	TSubclassOf<UGameplayEffect> AttackDamageEffect;
 	
 	UPROPERTY(EditAnywhere, Category = "GAS")
-	TSubclassOf<UGameplayEffect> HitReactEffect;
+	TSubclassOf<UGameplayEffect> ToughnessDamageEffect;
 
 	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<UGameplayEffect> IncreaseGaugeEffect;

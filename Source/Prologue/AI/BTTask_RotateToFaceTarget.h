@@ -6,6 +6,8 @@
 #include "BehaviorTree/BTTaskNode.h"
 #include "BTTask_RotateToFaceTarget.generated.h"
 
+// BTTask로 Target을 향해 Rotate 시키는 클래스
+
 struct FRotateToFaceTargetTaskMemory
 {
 	TWeakObjectPtr<APawn> OwningPawn;
@@ -43,9 +45,11 @@ public:
 
 	bool HasReachedAnglePrecision(APawn* QueryPawn, AActor* TargetActor) const;
 
+	// AnglePrecision 내에 Target이 들어올 때까지 회전
 	UPROPERTY(EditAnywhere, Category = "Face Target");
 	float AnglePrecision;
 
+	// 회전 속도
 	UPROPERTY(EditAnywhere, Category = "Face Target");
 	float RotationInterpSpeed;
 
