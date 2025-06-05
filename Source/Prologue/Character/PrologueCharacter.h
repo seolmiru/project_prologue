@@ -15,6 +15,7 @@ class UPawnCombatComponent;
 class UDataAsset_StartUpDataBase;
 class UPrologueAttributeSet;
 class UPrologueAbilitySystemComponent;
+class UMotionWarpingComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -41,6 +42,9 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> ASC;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MotionWarping")
+	UMotionWarpingComponent* MotionWarpingComponent;
 
 	FDelegateHandle ToughnessTagHandle;
 
