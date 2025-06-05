@@ -13,7 +13,7 @@ class PROLOGUE_API ABazierProjectile : public AActor
 	
 public:	
 	ABazierProjectile();
-	virtual ~ABazierProjectile() override;
+	//virtual ~ABazierProjectile() override;
 
 	void FireInDirection(const FVector& ShootDirection);
 	
@@ -81,6 +81,7 @@ protected:
 	float CurrentFlyTime;
 
 	// Niagara Section
-protected:
-	void SyncNiagaraSpeed(float NewTimeScale);	
+/*protected:
+	UFUNCTION()
+	void SyncNiagaraSpeed(float NewTimeScale);	*/
 };
