@@ -7,6 +7,13 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "PrologueFunctionLibrary.generated.h"
 
+UENUM()
+enum class EConfirmType : uint8
+{
+	Yes,
+	No
+};
+
 class UAbilitySystemComponent;
 /**
  * 
@@ -27,4 +34,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Prologue|FunctionLibrary")
 	static bool IsTargetPawnHostile(APawn* QueryPawn, APawn* TargetPawn);
+
+	static bool NativeDoesActorHaveTag(AActor* InActor, FGameplayTag TagToCheck);
+
+	UFUNCTION(BlueprintCallable, Category = "Prologue|FunctionLibrary", meta = (DisplayName = "Does Actor Have Tag", ExpandEnumAsExecs = "OutConfirmType"))
+	static void BP_DoesActorHaveTag(AActor* InActor, FGameplayTag TagToCheck, EConfirmType& OutConfirmType);
 };

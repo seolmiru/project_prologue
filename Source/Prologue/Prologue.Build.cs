@@ -19,7 +19,8 @@ public class Prologue : ModuleRules
 			"Niagara",
 			"NavigationSystem",
 			"AIModule", 
-			"MoviePlayer"
+			"MoviePlayer",
+			"MotionWarping"
 		});
 	}
 }

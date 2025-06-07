@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/AbilitySystem/Ability/GA_OverClock.h"
+#include "Prologue/Character/Player/Comma.h"
 
 // Sets default values
 ABazierProjectile::ABazierProjectile()
@@ -26,17 +27,25 @@ ABazierProjectile::ABazierProjectile()
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	ProjectileCollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnProjectileHit);
 
+
 	ProjectileNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ProjectileNiagaraComponent"));
 	ProjectileNiagaraComponent->SetupAttachment(GetRootComponent());
+	//SyncNiagaraSpeed(UGA_OverClock::OverClockTimeScale);
+	//UGA_OverClock::OnTimeScale.AddDynamic(this, &ABazierProjectile::SyncNiagaraSpeed);
 
 	ExplosionRadius = 400.f;
 	TimeToExplode = 3.f;
-
+	
 	bFire = false;
 	FireSpeed = 1000.f;
 	BazierWeight = 1.f;
 	GroundOffset = 100.0f;
 }
+
+/*ABazierProjectile::~ABazierProjectile()
+{
+	UGA_OverClock::OnTimeScale.RemoveDynamic(this, &ABazierProjectile::SyncNiagaraSpeed);
+}*/
 
 void ABazierProjectile::FireInDirection(const FVector& ShootDirection)
 {
@@ -108,7 +117,7 @@ void ABazierProjectile::Tick(float DeltaTime)
 }
 
 void ABazierProjectile::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+                                        UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (OtherComp && OtherComp->GetCollisionObjectType() == ECC_WorldStatic)
 	{
@@ -126,7 +135,7 @@ void ABazierProjectile::StickAndExplosion(const FHitResult& Hit)
 	bIsStuck = true;
 	ElapsedTime = 0.f;
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ABazierProjectile::Explode, TimeToExplode, false);
 }
 
@@ -143,7 +152,7 @@ void ABazierProjectile::Explode()
 		0.f,
 		2.f
 	);
-	
+
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	if (PlayerPawn == nullptr)
 	{
@@ -162,7 +171,7 @@ void ABazierProjectile::Explode()
 	{
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PlayerPawn);
 		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
-		
+
 		if (TargetASC && SourceASC)
 		{
 			FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
@@ -203,7 +212,7 @@ void ABazierProjectile::SetBazierPoint(FVector MyLocation, FVector TargetLocatio
 	float TotalDistance = Distance + (HalfDistance * Root3 * BazierWeight);
 	FlyTime = TotalDistance / FireSpeed;
 	CurrentFlyTime = 0.0f;
-	
+
 	bFire = true;
 }
 
@@ -222,3 +231,10 @@ FVector ABazierProjectile::GetBazierPoint(float weight)
 
 	return DummyPoints[0];
 }
+
+/*
+void ABazierProjectile::SyncNiagaraSpeed(float NewTimeScale)
+{
+	ProjectileNiagaraComponent->SetFloatParameter(FName("User.PlayRate"), UGA_OverClock::OverClockTimeScale);
+}
+*/

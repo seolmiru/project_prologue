@@ -6,6 +6,8 @@
 #include "Abilities/GameplayAbility.h"
 #include "GA_OverClock.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTimeScale, float, NewScale);
+
  class ABazierProjectile;
 class APrologueEnemyCharacter;
 /**
@@ -24,7 +26,8 @@ public:
 
 	static bool bIsOverClockActive;
 	static float OverClockTimeScale;
-	
+	static FOnTimeScale OnTimeScale;
+
 protected:
 	UFUNCTION()
 	void OnOverClockFinished();

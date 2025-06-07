@@ -11,6 +11,7 @@
 
 bool UGA_OverClock::bIsOverClockActive = false;
 float UGA_OverClock::OverClockTimeScale = 1.0f;
+FOnTimeScale UGA_OverClock::OnTimeScale;
 
 UGA_OverClock::UGA_OverClock()
 {
@@ -25,19 +26,21 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	const UPrologueAttributeSet* AttributeSet = ASC->GetSet<UPrologueAttributeSet>();
 
+	// 오버클락 게이지가 100이 아닐 때에는 시전 불가
 	if (AttributeSet->GetCurrentGauge() < AttributeSet->GetMaxGauge())
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
 
-	const_cast<UPrologueAttributeSet*>(AttributeSet)->SetCurrentGauge(0.0f);
+	// 게이지 초기화
+	ASC->SetNumericAttributeBase(UPrologueAttributeSet::GetCurrentGaugeAttribute(), 0.0f);
 	
 	bIsOverClockActive = true;
 	OverClockTimeScale = TimeScale;
 	
 	ApplySlowToEnemies();
-	
+
 	GetWorld()->GetTimerManager().SetTimer(
 		OverClockTimerHandle,
 		this,
@@ -74,6 +77,7 @@ void UGA_OverClock::ApplySlowToEnemies()
 	AffectedEnemies.Empty();
 	AffectedProjectiles.Empty();
 
+	// EnemyCharacter를 상속 받은 모든 액터 찾기
 	TArray<AActor*> Found;
 	UGameplayStatics::GetAllActorsOfClass(
 		GetWorld(),
@@ -85,11 +89,13 @@ void UGA_OverClock::ApplySlowToEnemies()
 	{
 		if (auto* Enemy = Cast<APrologueEnemyCharacter>(Actor))
 		{
+			// 시간 배율 적용, AffectedEnemies 목록에 추가
 			Enemy->CustomTimeDilation = TimeScale;
 			AffectedEnemies.Add(Enemy);
 		}
 	}
 
+	// BazierProjectile을 상속 받은 모든 액터 찾기
 	TArray<AActor*> FoundProjectiles;
 	UGameplayStatics::GetAllActorsOfClass(
 		GetWorld(),
@@ -101,12 +107,14 @@ void UGA_OverClock::ApplySlowToEnemies()
 	{
 		if (auto* Projectile = Cast<ABazierProjectile>(Actor))
 		{
+			// 시간 배율 적용, AffectedProjectiles 목록에 추가
 			Projectile->CustomTimeDilation = TimeScale;
 			AffectedProjectiles.Add(Projectile);
 		}
 	}
 }
 
+// 원래 속도로 복구
 void UGA_OverClock::RestoreEnemyTime()
 {
 	for (auto* Enemy : AffectedEnemies)

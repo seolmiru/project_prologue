@@ -38,6 +38,10 @@ namespace PrologueGameplayTags
 
 	/** State Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_JustDash, "Comma.Event.JustDash");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_SwitchAttackSword, "Comma.Event.SwitchAttackSword");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_SwitchAttackBow, "Comma.Event.SwitchAttackBow");
 	
 	/** Effect Tags */
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Damaging, "GameplayCue.Effect.Damaging");
@@ -49,6 +53,9 @@ namespace PrologueGameplayTags
 	/** Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AttackHitCheck, "Event.Character.AttackHitCheck");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SwitchAttackHitCheck, "Event.Character.SwitchAttackHitCheck");
+
+	UE_DEFINE_GAMEPLAY_TAG(Event_Character_TraceStart, "Event.Character.TraceStart");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Character_TraceStop, "Event.Character.TraceStop");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AddSword, "Event.Character.AddSword"); 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AddBow, "Event.Character.AddBow");
@@ -81,4 +88,5 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Shared_State_IsDead, "Shared.State.IsDead");
 	UE_DEFINE_GAMEPLAY_TAG(Shared_State_IsAttacking, "Shared.State.IsAttacking");
 	UE_DEFINE_GAMEPLAY_TAG(Shared_State_IsMoving, "Shared.State.IsMoving");
+	UE_DEFINE_GAMEPLAY_TAG(Shared_State_IsOutOfToughness, "Shared.State.IsOutOfToughness");
 }
