@@ -30,22 +30,22 @@ ABazierProjectile::ABazierProjectile()
 
 	ProjectileNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ProjectileNiagaraComponent"));
 	ProjectileNiagaraComponent->SetupAttachment(GetRootComponent());
-	SyncNiagaraSpeed(UGA_OverClock::OverClockTimeScale);
-	UGA_OverClock::OnTimeScale.AddDynamic(this, &ABazierProjectile::SyncNiagaraSpeed);
+	//SyncNiagaraSpeed(UGA_OverClock::OverClockTimeScale);
+	//UGA_OverClock::OnTimeScale.AddDynamic(this, &ABazierProjectile::SyncNiagaraSpeed);
 
 	ExplosionRadius = 400.f;
 	TimeToExplode = 3.f;
-
+	
 	bFire = false;
 	FireSpeed = 1000.f;
 	BazierWeight = 1.f;
 	GroundOffset = 100.0f;
 }
 
-ABazierProjectile::~ABazierProjectile()
+/*ABazierProjectile::~ABazierProjectile()
 {
 	UGA_OverClock::OnTimeScale.RemoveDynamic(this, &ABazierProjectile::SyncNiagaraSpeed);
-}
+}*/
 
 void ABazierProjectile::FireInDirection(const FVector& ShootDirection)
 {
@@ -232,7 +232,9 @@ FVector ABazierProjectile::GetBazierPoint(float weight)
 	return DummyPoints[0];
 }
 
+/*
 void ABazierProjectile::SyncNiagaraSpeed(float NewTimeScale)
 {
 	ProjectileNiagaraComponent->SetFloatParameter(FName("User.PlayRate"), UGA_OverClock::OverClockTimeScale);
 }
+*/

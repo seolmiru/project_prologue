@@ -6,6 +6,7 @@
 UAT_TickCurve::UAT_TickCurve()
 {
 	bTickingTask = true;
+	ElapsedTime = 0.f;
 }
 
 UAT_TickCurve* UAT_TickCurve::CreateTask(UGameplayAbility* OwningAbility, UCurveFloat* CurveFloat)
@@ -18,7 +19,6 @@ UAT_TickCurve* UAT_TickCurve::CreateTask(UGameplayAbility* OwningAbility, UCurve
 void UAT_TickCurve::Activate()
 {
 	Super::Activate();
-	ElapsedTime = 0.f;
 }
 
 void UAT_TickCurve::TickTask(float DeltaTime)

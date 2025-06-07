@@ -7,7 +7,9 @@
 #include "GameFramework/Controller.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "AbilitySystemComponent.h"
+#include "Player/Comma.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "MotionWarpingComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -19,10 +21,12 @@ APrologueCharacter::APrologueCharacter()
 	PrimaryActorTick.bCanEverTick = false;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+
 	GetMesh()->bReceivesDecals = false;
 
 	GetCharacterMovement()->bCanWalkOffLedges = false;
-	GetCharacterMovement()->PerchRadiusThreshold = 70.f;
+	GetCharacterMovement()->PerchRadiusThreshold = 100.f;
 	GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
 }
 
