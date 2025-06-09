@@ -80,6 +80,7 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_State_Charge);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Event_Dashed);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Event_LastCombo);
 	
 	/** Shared Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_Ability_Death);
