@@ -1,9 +1,14 @@
-﻿#pragma once
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/GameplayAbility.h"
+#include "GA_MontageAbility.h"
 #include "GA_CommaDash.generated.h"
 
+/**
+ * 
+ */
 UCLASS()
 class PROLOGUE_API UGA_CommaDash : public UGameplayAbility
 {
@@ -23,20 +28,17 @@ protected:
 	UFUNCTION()
 	void OnInterrupted();
 	
-	UPROPERTY(EditAnywhere, Category = "Montage")
+	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAnimMontage> AnimMontage;
 
 	UFUNCTION(BlueprintCallable, Category = "Dash|GroundCheck")
-	bool IsSafeLandingZone(const FVector& CandidateFeetLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedFeetLocation) const;
+	bool IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
-	float MoveLength = 570.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
-	float MaxPlatformHeightDiff = 200.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MoveLength = 500.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
-	float TargetZOffset = 2.f;
+	float MaxPlatformHeightDiff = 800.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
 	int32 PathCheckSteps = 10;
@@ -44,8 +46,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	float MinDashDistance = 100.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
-	float GroundTraceRadius = 30.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float GroundTraceRadius = 200.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|FOV")
 	float FOVAngleDegrees = 90.f;
@@ -53,17 +55,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|FOV")
 	int32 NumFOVTracesPerSide = 2;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Debug")
-	bool bDebugTrace = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|FOV")
+	bool bDebugFOVTraces = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
 	bool bAllowPartialDash = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety", meta = (EditCondition = "bAllowPartialDash"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
 	float PartialDashMinPercentage = 0.7f;	
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck", AdvancedDisplay)
-    float MaxStepHeightForValidGround = 20.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	TObjectPtr<class UCurveFloat> Curve;
