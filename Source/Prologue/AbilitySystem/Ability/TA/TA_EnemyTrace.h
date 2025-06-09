@@ -20,4 +20,13 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
 	float TraceRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
+	bool bUseFanShapeTrace = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace|FanShape")
+	float Angle = 90.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace|FanShape")
+	int32 NumTraces = 5;
 };

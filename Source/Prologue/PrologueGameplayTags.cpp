@@ -79,6 +79,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_Charge, "Enemy.State.Charge");
 
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_Dashed, "Enemy.Event.Dashed");
+	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_LastCombo, "Enemy.Event.LastCombo");
 	
 	/** Shared Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Ability_Death, "Shared.Ability.Death");

@@ -16,6 +16,7 @@ class UCommaCombatComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UDataAsset_InputConfig;
+class UFallPreventionComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -59,7 +60,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCommaCombatComponent* CommaCombatComponent;
-
+	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UDataAsset_InputConfig> InputConfigDataAsset;

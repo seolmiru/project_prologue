@@ -33,4 +33,6 @@ public:
 	FTickCurveDelegate_OneParam OnCurveTick;
 
 	float ElapsedTime;
+	float MaxTime;
+	float MinTime;
 };
