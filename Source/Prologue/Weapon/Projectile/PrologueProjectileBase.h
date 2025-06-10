@@ -41,7 +41,7 @@ protected:
 	UNiagaraComponent* ProjectileNiagaraComponent;
 	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	EProjectileDamagePolicy ProjectileDamagePolicy = EProjectileDamagePolicy::OnHit;
+	EProjectileDamagePolicy ProjectileDamagePolicy = EProjectileDamagePolicy::OnBeginOverlap;  // 기본값을 OnBeginOverlap으로 변경
 
 	UFUNCTION()
 	virtual void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
