@@ -34,6 +34,9 @@ public:
 	virtual void NotifyControllerChanged() override;
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combo")
+	int32 CurrentSwordCombo = 0;
 	
 protected:
 	virtual void PostInitializeComponents() override;
