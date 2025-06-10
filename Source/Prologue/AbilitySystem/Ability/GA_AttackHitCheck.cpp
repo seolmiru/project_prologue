@@ -6,9 +6,11 @@
 #include "Prologue/Prologue.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "GA_CommaAttackSword.h"
 #include "AT/AT_WaitForTrace.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Player/Comma.h"
+#include "TA/TA_Trace.h"
 
 UGA_AttackHitCheck::UGA_AttackHitCheck()
 {
@@ -23,17 +25,46 @@ void UGA_AttackHitCheck::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 
 	LOG_SCREEN("%s", *LOG_CALLINFO);
 
-	UAT_WaitForTrace* AttackTraceTask = UAT_WaitForTrace::CreateTask(this, TargetActorClass);
+	CurrentComboIndex = 0;
+	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
+	{
+		CurrentComboIndex = Comma->CurrentSwordCombo - 1;
+		CurrentComboIndex = FMath::Max(0, CurrentComboIndex);
+		LOG_SCREEN_R("Current Combo Index : %d", CurrentComboIndex);
+	}
+
+	TSubclassOf<ATA_Trace> SelectedTargetActorClass = TargetActorClass;
+	if (ComboTargetActorClasses.IsValidIndex(CurrentComboIndex) && ComboTargetActorClasses[CurrentComboIndex])
+	{
+		SelectedTargetActorClass = ComboTargetActorClasses[CurrentComboIndex];
+		LOG_SCREEN_R("Using Combo TargetActor for index : %d", CurrentComboIndex);
+	}
+
+	if (!SelectedTargetActorClass)
+	{
+		LOG_SCREEN_R("No valid TargetActorClass");
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	UAT_WaitForTrace* AttackTraceTask = UAT_WaitForTrace::CreateTask(this, SelectedTargetActorClass);
 	AttackTraceTask->OnComplete.AddDynamic(this, &UGA_AttackHitCheck::OnTraceResultCallback);
 	AttackTraceTask->ReadyForActivation();
 }
 
 void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
+	TSubclassOf<UGameplayEffect> SelectedDamageEffect = AttackDamageEffect;
+	if (ComboAttackDamageEffects.IsValidIndex(CurrentComboIndex) && ComboAttackDamageEffects[CurrentComboIndex])
+	{
+		SelectedDamageEffect = ComboAttackDamageEffects[CurrentComboIndex];
+		LOG_SCREEN_R("Using Combo DamageEffect for index : %d", CurrentComboIndex);
+	}
+	
 	if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, 0))
 	{
 		FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, 0);
-		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
+		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(SelectedDamageEffect);
 		FGameplayEffectSpecHandle HitReactEffectSpecHandle = MakeOutgoingGameplayEffectSpec(ToughnessDamageEffect);
 
 		// 강인도 감소 적용

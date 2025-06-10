@@ -42,6 +42,8 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 		CurrentCombo = 0;
 		LOG_SCREEN_R("AttackSword : Reset Combo Count");
 	}
+
+	Comma->CurrentSwordCombo = CurrentCombo;
 	
 	Comma->RotateToMouseSmooth();
 	Comma->GetSwordWeaponMesh()->SetVisibility(true);
@@ -132,6 +134,12 @@ FName UGA_CommaAttackSword::GetNextSection()
 	LOG_SCREEN_R("GetNextSection - Before : %d", CurrentCombo);
 	
 	CurrentCombo = FMath::Clamp(CurrentCombo + 1, 1, CurrentComboData->MaxComboCount);
+
+	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
+	{
+		Comma->CurrentSwordCombo = CurrentCombo;
+	}
+	
 	FName NextSection = *FString::Printf(TEXT("%s%d"), *CurrentComboData->MontageSectionNamePrefix, CurrentCombo);
 	return NextSection;
 }
