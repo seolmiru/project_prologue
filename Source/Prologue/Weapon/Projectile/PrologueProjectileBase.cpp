@@ -9,7 +9,6 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "NiagaraComponent.h"
-#include "Prologue/Prologue.h"
 #include "Prologue/PrologueGameplayTags.h"
 
 APrologueProjectileBase::APrologueProjectileBase()
@@ -19,7 +18,7 @@ APrologueProjectileBase::APrologueProjectileBase()
 	ProjectileCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ProjectileCollisionBox"));
 	SetRootComponent(ProjectileCollisionBox);
 	ProjectileCollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	ProjectileCollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnProjectileHit);
@@ -55,9 +54,18 @@ void APrologueProjectileBase::BeginPlay()
 void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (!OtherActor || OtherActor == this || !AttackDamageEffect)
+	// 벽이나 바닥에 부딪혔을 때만 파괴
+	if (OtherActor && !OtherActor->GetClass()->IsChildOf(APawn::StaticClass()))
 	{
 		Destroy();
+	}
+}
+
+void APrologueProjectileBase::OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!OtherActor || OtherActor == this || !AttackDamageEffect)
+	{
 		return;
 	}
 
@@ -82,7 +90,7 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 		{
 			FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
 			EffectContext.AddSourceObject(this);
-			EffectContext.AddHitResult(Hit);
+			EffectContext.AddHitResult(SweepResult);
 
 			// 체력과 강인도를 감소시키는 Effect 적용
 			FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(AttackDamageEffect, 1.f, EffectContext);
@@ -109,12 +117,7 @@ void APrologueProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent,
 				}
 			}
 		}
+
+		Destroy();
 	}
-
-	Destroy();
-}
-
-void APrologueProjectileBase::OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
 }
