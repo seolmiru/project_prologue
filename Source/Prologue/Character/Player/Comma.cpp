@@ -17,6 +17,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Prologue/AbilitySystem/Ability/GA_CommaAttackSword.h"
 #include "Prologue/Player/ProloguePlayerState.h"
 #include "Prologue/UI/Comma/CommaWidget.h"
 

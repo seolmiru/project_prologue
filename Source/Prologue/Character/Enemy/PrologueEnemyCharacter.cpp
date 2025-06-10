@@ -80,3 +80,44 @@ bool APrologueEnemyCharacter::TryActivateAbilityByTag(FGameplayTag AbilityTagToA
 
 	return false;
 }
+
+bool APrologueEnemyCharacter::TryActivateRandomAbilityWithWeights(const TArray<FWeightedAbilityInfo>& WeightedAbilities)
+{
+	if (WeightedAbilities.Num() == 0)
+	{
+		return false;
+	}
+
+	float TotalWeight = 0.f;
+	for (const FWeightedAbilityInfo& Info : WeightedAbilities)
+	{
+		if (Info.AbilityTag.IsValid())
+		{
+			TotalWeight += Info.Weight;
+		}
+	}
+
+	if (TotalWeight <= 0.f)
+	{
+		return false;
+	}
+
+	float RandomValue = FMath::RandRange(0.f, TotalWeight);
+
+	float CurrentWeight = 0.f;
+	for (const FWeightedAbilityInfo& Info : WeightedAbilities)
+	{
+		if (!Info.AbilityTag.IsValid())
+		{
+			continue;
+		}
+
+		CurrentWeight += Info.Weight;
+		if (RandomValue <= CurrentWeight)
+		{
+			return TryActivateAbilityByTag(Info.AbilityTag);
+		}
+	}
+
+	return false;
+}
