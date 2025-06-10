@@ -6,6 +6,18 @@
 #include "Prologue/Character/PrologueCharacter.h"
 #include "PrologueEnemyCharacter.generated.h"
 
+USTRUCT(BlueprintType)
+struct FWeightedAbilityInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FGameplayTag AbilityTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.1"))
+	float Weight = 1.f;	
+};
+
 class UEnemyWidget;
 class UGameplayAbility;
 
@@ -36,4 +48,7 @@ protected:
 protected:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	bool TryActivateAbilityByTag(FGameplayTag AbilityTagToActivate);
+
+	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	bool TryActivateRandomAbilityWithWeights(const TArray<FWeightedAbilityInfo>& WeightedAbilities);
 };
