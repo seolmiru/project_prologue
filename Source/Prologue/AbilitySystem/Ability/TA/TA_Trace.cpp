@@ -36,33 +36,87 @@ FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(Character);
 
-	TArray<FHitResult> HitResults;
-	const FVector Forward = Character->GetActorForwardVector();
-	const FVector Start = Character->GetActorLocation() + Forward * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
-	const FVector End = Start + Forward * 270.0f;
-
-	bool bResult = UKismetSystemLibrary::SphereTraceMulti(
-		GetWorld(),
-		Start,
-		End,
-		120.0f,
-		UEngineTypes::ConvertToTraceType(TraceChannel),
-		false,
-		IgnoreActors,
-		bShowDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
-		HitResults,
-		false);
-	
 	FGameplayAbilityTargetDataHandle DataHandle;
-	if (bResult)
+
+	if (bUseFanShapeTrace)
 	{
-		for (const FHitResult& HitResult : HitResults)
+		TSet<AActor*> HitActors;
+		
+		const FVector Forward = Character->GetActorForwardVector();
+		const FVector StartBase = Character->GetActorLocation() + Forward * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
+
+		const float HalfFanAngle = Angle * 0.5f;
+		const float AngleStep = (NumTraces > 1) ? Angle / (NumTraces - 1) : 0.0f;
+
+		for (int32 i = 0; i < NumTraces; ++i)
 		{
-			FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
-			DataHandle.Add(TargetData);
-			LOG_SCREEN("Trace Check");
+			float CurrentAngle = -HalfFanAngle + (AngleStep * i);
+			
+			FRotator Rotation(0.0f, CurrentAngle, 0.0f);
+			FVector TraceDirection = Rotation.RotateVector(Forward);
+			
+			FVector Start = StartBase;
+			FVector End = Start + TraceDirection * TraceLength;
+
+			FHitResult HitResult;
+			bool bTraceResult = UKismetSystemLibrary::SphereTraceSingle(
+				GetWorld(),
+				Start,
+				End,
+				TraceRadius,
+				UEngineTypes::ConvertToTraceType(TraceChannel),
+				false,
+				IgnoreActors,
+				bShowDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+				HitResult,
+				false,
+				FLinearColor::Red,
+				FLinearColor::Green,
+				1.0f
+			);
+
+			if (bTraceResult && HitResult.GetActor())
+			{
+				AActor* HitActor = HitResult.GetActor();
+
+				if (!HitActors.Contains(HitActor))
+				{
+					HitActors.Add(HitActor);
+					FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
+					DataHandle.Add(TargetData);
+				}
+			}
 		}
 	}
+	else
+	{
+		TArray<FHitResult> HitResults;
+		const FVector Forward = Character->GetActorForwardVector();
+		const FVector Start = Character->GetActorLocation() + Forward * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
+		const FVector End = Start + Forward * TraceLength;
 
+		bool bTraceResult = UKismetSystemLibrary::SphereTraceMulti(
+			GetWorld(),
+			Start,
+			End,
+			TraceRadius,
+			UEngineTypes::ConvertToTraceType(TraceChannel),
+			false,
+			IgnoreActors,
+			bShowDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+			HitResults,
+			false
+		);
+
+		if (bTraceResult)
+		{
+			for (const FHitResult& HitResult : HitResults)
+			{
+				FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
+				DataHandle.Add(TargetData);
+			}
+		}
+	}
+	
 	return DataHandle;
 }
