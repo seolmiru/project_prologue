@@ -88,8 +88,14 @@ void UBTTask_RotateToFaceTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uin
 	}
 	else
 	{
+		FVector TargetLocation = Memory->TargetActor->GetActorLocation();
+		TargetLocation.Z = Memory->OwningPawn->GetActorLocation().Z;
+		
 		const FRotator LooAtRot = UKismetMathLibrary::FindLookAtRotation(Memory->OwningPawn->GetActorLocation(), Memory->TargetActor->GetActorLocation());
-		const FRotator TargetRot = FMath::RInterpTo(Memory->OwningPawn->GetActorRotation(), LooAtRot, DeltaSeconds, RotationInterpSpeed);
+
+		FRotator HorizontalLookAtRot = FRotator(0.f, LooAtRot.Yaw, 0.f);
+		
+		const FRotator TargetRot = FMath::RInterpTo(Memory->OwningPawn->GetActorRotation(), HorizontalLookAtRot, DeltaSeconds, RotationInterpSpeed);
 
 		Memory->OwningPawn->SetActorRotation(TargetRot);
 	}
@@ -97,8 +103,13 @@ void UBTTask_RotateToFaceTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uin
 
 bool UBTTask_RotateToFaceTarget::HasReachedAnglePrecision(APawn* QueryPawn, AActor* TargetActor) const
 {
+	FVector OwnerLocation = QueryPawn->GetActorLocation();
+	FVector TargetLocation = TargetActor->GetActorLocation();
+
+	TargetLocation.Z = OwnerLocation.Z;
+	
 	const FVector OwnerForward = QueryPawn->GetActorForwardVector();
-	const FVector OwnerToTargetNormalized = (TargetActor->GetActorLocation() - QueryPawn->GetActorLocation()).GetSafeNormal();
+	const FVector OwnerToTargetNormalized = (TargetLocation - OwnerLocation).GetSafeNormal();
 
 	const float DotResult = FVector::DotProduct(OwnerForward, OwnerToTargetNormalized);
 	const float AngleDiff = UKismetMathLibrary::DegAcos(DotResult);
