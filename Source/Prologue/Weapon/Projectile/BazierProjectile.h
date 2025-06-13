@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "BazierProjectile.generated.h"
 
+class UNiagaraSystem;
+
 UCLASS()
 class PROLOGUE_API ABazierProjectile : public AActor
 {
@@ -42,6 +44,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> AttackDamageEffect;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UNiagaraSystem* ExplosionEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bShowDebug = true;
+	
 protected:
 	UFUNCTION()
 	virtual void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
