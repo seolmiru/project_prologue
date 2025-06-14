@@ -105,7 +105,7 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 		ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
 	}
 	
-	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackSword::ResetComboCount, 1.4f, false);
+	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackSword::ResetComboCount, 0.6f, false);
 
 	if (AComma* Comma = CastChecked<AComma>(CurrentActorInfo->AvatarActor.Get()))
 	{
