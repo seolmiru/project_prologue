@@ -25,8 +25,8 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_SwitchAttack_Sword, "Comma.State.SwitchAttack.Sword");
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_SwitchAttack_Bow, "Comma.State.SwitchAttack.Bow");
 
-	UE_DEFINE_GAMEPLAY_TAG(Comma_State_Cancel, "Comma.State.Cancel");
-	UE_DEFINE_GAMEPLAY_TAG(Comma_State_CanCancel, "Comma.State.CanCancel");
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_CancelDisabled, "Comma.State.CancelDisabled");
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_CancelEnabled, "Comma.State.CancelEnabled");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_Invincible, "Comma.State.Invincible");
 	
