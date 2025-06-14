@@ -44,7 +44,7 @@ protected:
 	int32 PathCheckSteps = 10;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
-	float MinDashDistance = 100.f;
+	float MinDashDistance = 0.1f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|GroundCheck")
 	float LineTraceSpread = 100.f;
@@ -84,4 +84,6 @@ protected:
 	
 	FVector TargetPos;
 	FVector BasePos;
+
+	bool bCanMoveToDashTarget = false;
 };
