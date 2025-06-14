@@ -39,6 +39,13 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 
 	CurrentComboData = Comma->GetComboBowData();
 
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (ASC)
+	{
+		ASC->AddLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled);
+		ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
+	}
+
 	if (CurrentComboData && CurrentCombo >= CurrentComboData->MaxComboCount)
 	{
 		ResetComboCount();
@@ -144,6 +151,13 @@ void UGA_CommaAttackBow::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
+	UAbilitySystemComponent* ASC =GetAbilitySystemComponentFromActorInfo();
+	if (ASC)
+	{
+		ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled);
+		ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
+	}
+	
 	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackBow::ResetComboCount, 1.2f, false);
 
 	CurrentComboData = nullptr;
@@ -266,6 +280,13 @@ void UGA_CommaAttackBow::CheckComboInput()
 			return;
 		}
 
+		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+		if (ASC)
+		{
+			ASC->AddLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled);
+			ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
+		}
+		
 		MontageJumpToSection(GetNextSection());
 		StartComboTimer();
 		HasNextComboInput = false;
@@ -291,6 +312,13 @@ void UGA_CommaAttackBow::EnableComboInput()
 void UGA_CommaAttackBow::ProcessNextCombo()
 {
 	LOG_SCREEN_R("ProcessNextCombo - Current : %d", CurrentCombo);
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (ASC)
+	{
+		ASC->AddLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled);
+		ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
+	}
 	
 	if (CurrentCombo >= CurrentComboData->MaxComboCount)
 	{
