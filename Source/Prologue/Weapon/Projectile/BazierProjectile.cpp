@@ -13,7 +13,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/AbilitySystem/Ability/GA_OverClock.h"
-#include "Prologue/Character/Player/Comma.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Prologue/Prologue.h"
 
 // Sets default values
 ABazierProjectile::ABazierProjectile()
@@ -141,7 +142,27 @@ void ABazierProjectile::StickAndExplosion(const FHitResult& Hit)
 
 void ABazierProjectile::Explode()
 {
-	DrawDebugSphere(
+	FVector ExplosionLocation = GetActorLocation();
+
+	FRotator ExplosionRotation = GetActorRotation();
+
+	
+	if (ExplosionEffect)
+	{
+		UNiagaraComponent* ExplosionComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			ExplosionEffect,
+			ExplosionLocation,
+			ExplosionRotation,
+			FVector(1.f, 1.f, 1.f),
+			true,
+			true
+		);
+	}
+
+	if (bShowDebug)
+	{
+		DrawDebugSphere(
 		GetWorld(),
 		GetActorLocation(),
 		ExplosionRadius,
@@ -151,8 +172,9 @@ void ABazierProjectile::Explode()
 		2.f,
 		0.f,
 		2.f
-	);
-
+		);
+	}
+	
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	if (PlayerPawn == nullptr)
 	{

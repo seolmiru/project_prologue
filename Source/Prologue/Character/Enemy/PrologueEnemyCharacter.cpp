@@ -4,12 +4,15 @@
 #include "PrologueEnemyCharacter.h"
 
 #include "AbilitySystemComponent.h"
+#include "GameplayEffectExtension.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/Controller/PrologueAIController.h"
 #include "Prologue/UI/Enemy/EnemyWidget.h"
 
 APrologueEnemyCharacter::APrologueEnemyCharacter()
@@ -28,6 +31,40 @@ APrologueEnemyCharacter::APrologueEnemyCharacter()
 
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	Attributes = CreateDefaultSubobject<UPrologueAttributeSet>(TEXT("Attributes"));
+}
+
+void APrologueEnemyCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (ASC && Attributes)
+	{
+		DamageAttributeChangedHandle = ASC->GetGameplayAttributeValueChangeDelegate(Attributes->GetCurrentHealthAttribute()).AddUObject(this, &APrologueEnemyCharacter::OnDamageAttributeChanged);
+	}
+}
+
+void APrologueEnemyCharacter::OnDamageAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	if (Data.NewValue > 0.f)
+	{
+		if (const FGameplayEffectModCallbackData* ModData = Data.GEModData)
+		{
+			AActor* DamageCauser = ModData->EffectSpec.GetContext().GetEffectCauser();
+
+			if (DamageCauser)
+			{
+				if (APrologueAIController* AIController = Cast<APrologueAIController>(GetController()))
+				{
+					if (UBlackboardComponent* BB = AIController->GetBlackboardComponent())
+					{
+						BB->SetValueAsObject(FName("TargetActor"), DamageCauser);
+					}
+
+					AIController->InitiateCombat(DamageCauser);
+				}
+			}
+		}
+	}
 }
 
 void APrologueEnemyCharacter::PossessedBy(AController* NewController)

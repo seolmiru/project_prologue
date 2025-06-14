@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 #include "Prologue/Character/PrologueCharacter.h"
 #include "PrologueEnemyCharacter.generated.h"
 
@@ -30,7 +31,10 @@ public:
 	APrologueEnemyCharacter();
 
 protected:
+	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
+	
+	void OnDamageAttributeChanged(const FOnAttributeChangeData& Data);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "StartUpData", meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
@@ -51,4 +55,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	bool TryActivateRandomAbilityWithWeights(const TArray<FWeightedAbilityInfo>& WeightedAbilities);
+
+private:
+	FDelegateHandle DamageAttributeChangedHandle;
 };
