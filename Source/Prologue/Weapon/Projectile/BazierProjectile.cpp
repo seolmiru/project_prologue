@@ -143,9 +143,6 @@ void ABazierProjectile::StickAndExplosion(const FHitResult& Hit)
 void ABazierProjectile::Explode()
 {
 	FVector ExplosionLocation = GetActorLocation();
-
-	FRotator ExplosionRotation = GetActorRotation();
-
 	
 	if (ExplosionEffect)
 	{
@@ -153,7 +150,7 @@ void ABazierProjectile::Explode()
 			GetWorld(),
 			ExplosionEffect,
 			ExplosionLocation,
-			ExplosionRotation,
+			FRotator::ZeroRotator,
 			FVector(1.f, 1.f, 1.f),
 			true,
 			true

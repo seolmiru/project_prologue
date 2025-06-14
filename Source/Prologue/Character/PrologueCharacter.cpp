@@ -106,13 +106,6 @@ void APrologueCharacter::InputGAS(const FGameplayTag Tag)
 	GameplayTags.AddTag(Tag);
 	if (ASC)
 	{
-		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_CanCancel))
-		{
-			FGameplayEventData PlayData;
-			ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CanCancel);
-			InputGAS(PrologueGameplayTags::Comma_State_Cancel);
-		}
-		
 		TArray<FGameplayAbilitySpec*> AbilitiesToActivatePtrs;
 		ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(GameplayTags, AbilitiesToActivatePtrs);
 		if (AbilitiesToActivatePtrs.Num() < 1)

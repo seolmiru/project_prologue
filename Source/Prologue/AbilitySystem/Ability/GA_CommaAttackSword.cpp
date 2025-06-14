@@ -37,6 +37,13 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 	
 	CurrentComboData = Comma->GetComboSwordData();
 
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (ASC)
+	{
+		ASC->AddLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled);
+		ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
+	}
+	
 	if (CurrentComboData && CurrentCombo >= CurrentComboData->MaxComboCount)
 	{
 		CurrentCombo = 0;
@@ -91,7 +98,14 @@ void UGA_CommaAttackSword::EndAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
-	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackSword::ResetComboCount, 0.4f, false);
+	UAbilitySystemComponent* ASC =GetAbilitySystemComponentFromActorInfo();
+	if (ASC)
+	{
+		ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled);
+		ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
+	}
+	
+	GetWorld()->GetTimerManager().SetTimer(CurrentComboTimerHandle, this, &UGA_CommaAttackSword::ResetComboCount, 1.4f, false);
 
 	if (AComma* Comma = CastChecked<AComma>(CurrentActorInfo->AvatarActor.Get()))
 	{
@@ -174,6 +188,13 @@ void UGA_CommaAttackSword::CheckComboInput()
 			HasNextComboInput = false;
 			return;
 		}
+		
+		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+		if (ASC)
+		{
+			ASC->AddLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled);
+			ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
+		}
 
 		AComma* Comma = CastChecked<AComma>(CurrentActorInfo->AvatarActor.Get());
 		Comma->RotateToMouseSmooth();
@@ -203,6 +224,13 @@ void UGA_CommaAttackSword::EnableComboInput()
 void UGA_CommaAttackSword::ProcessNextCombo()
 {
 	LOG_SCREEN_R("ProcessNextCombo - Current : %d", CurrentCombo);
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (ASC)
+	{
+		ASC->AddLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled);
+		ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
+	}
 	
 	if (CurrentCombo >= CurrentComboData->MaxComboCount)
 	{
