@@ -22,5 +22,5 @@ public:
 	
 protected:
 	UPROPERTY(EditAnywhere, Blueprintable, Category = "GAS")
-	TSubclassOf<UGameplayEffect> SwitchAttackEffectClass;
+	TSubclassOf<UGameplayEffect> TagEffectClass;
 };
