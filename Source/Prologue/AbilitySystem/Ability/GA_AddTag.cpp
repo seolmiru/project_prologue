@@ -17,7 +17,7 @@ void UGA_AddTag::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const 
 
 	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 	EffectContextHandle.AddSourceObject(this);
-	FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SwitchAttackEffectClass, 0.0f, EffectContextHandle);
+	FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(TagEffectClass, 0.0f, EffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
