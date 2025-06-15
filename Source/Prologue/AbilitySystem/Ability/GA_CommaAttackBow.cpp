@@ -117,8 +117,6 @@ void UGA_CommaAttackBow::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	GetWorld()->GetTimerManager().ClearTimer(CurrentComboTimerHandle);
 
 	StartComboTimer();
-	
-	InitializePerfectShotTimer();
 }
 
 void UGA_CommaAttackBow::InputPressed(const FGameplayAbilitySpecHandle Handle,
@@ -188,55 +186,6 @@ void UGA_CommaAttackBow::OnBlendOut()
 		bool bReplicatedEndAbility = true;
 		bool bWasCancelled = false;
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
-	}
-}
-
-void UGA_CommaAttackBow::StartDebugTimer()
-{
-	GetWorld()->GetTimerManager().SetTimer(DebugTimerHandle, this, &UGA_CommaAttackBow::DebugTimerInfo, 0.1f, true);
-}
-
-void UGA_CommaAttackBow::DebugTimerInfo()
-{
-	float CurrentTime = GetWorld()->GetTimeSeconds();
-	float ElapsedTime = CurrentTime - PerfectShotStartWorldTime;
-
-	float TimeToTagAdd = FMath::Max(0.f, PerfectShotStartTime - ElapsedTime);
-	float TimeToTagRemove = FMath::Max(0.f, PerfectShotDuration - ElapsedTime);
-
-	bool bHasPerfectShotTag = false;
-	if (GetAbilitySystemComponentFromActorInfo() && PerfectShotRequiredTag.IsValid())
-	{
-		bHasPerfectShotTag = GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(PerfectShotRequiredTag);
-	}
-
-	LOG_SCREEN("Perfect Shot Debug : \n Elapsed : %.1fs \n Time To Tag Add : %1.fs \n Time To Tag Remove : %1.fs \n Tag Active : %s \n PerfectShot Active : %s",
-		ElapsedTime,
-		TimeToTagAdd,
-		TimeToTagRemove,
-		bHasPerfectShotTag ? TEXT("YES") : TEXT("NO"),
-		bIsPerfectShotActive ? TEXT("YES") : TEXT("NO")
-	);
-
-	if (ElapsedTime >= PerfectShotDuration)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(DebugTimerHandle);
-	}
-}
-
-void UGA_CommaAttackBow::SyncPerfectShotTag()
-{
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-
-	bool bHasTag = ASC->HasMatchingGameplayTag(PerfectShotRequiredTag);
-
-	if (bIsPerfectShotActive && !bHasTag)
-	{
-		ASC->AddLooseGameplayTag(PerfectShotRequiredTag);
-	}
-	else if (!bIsPerfectShotActive && bHasTag)
-	{
-		ASC->RemoveLooseGameplayTag(PerfectShotRequiredTag);
 	}
 }
 
@@ -328,81 +277,4 @@ void UGA_CommaAttackBow::ProcessNextCombo()
 	MontageJumpToSection(GetNextSection());
 	StartComboTimer();
 	HasNextComboInput = false;
-}
-
-void UGA_CommaAttackBow::InitializePerfectShotTimer()
-{
-	ClearPerfectShotTimers();
-
-	SyncPerfectShotTag();
-
-	PerfectShotStartWorldTime = GetWorld()->GetTimeSeconds();
-
-	// 활 강공격 활성화 타이머
-	GetWorld()->GetTimerManager().SetTimer(AddPerfectShotTagTimerHandle, this, &UGA_CommaAttackBow::HandleAddPerfectShotTag, PerfectShotStartTime, false);
-
-	// 비활성화 타이머
-	GetWorld()->GetTimerManager().SetTimer(RemovePerfectShotTagTimerHandle, this, &UGA_CommaAttackBow::HandleRemovePerfectShotTag, PerfectShotDuration, false);
-
-	LOG_SCREEN("PerfectShot Timer Start Time : %.1fs, Duration : %.1fs", PerfectShotStartTime, PerfectShotDuration);
-}
-
-void UGA_CommaAttackBow::ClearPerfectShotTimers()
-{
-	GetWorld()->GetTimerManager().ClearTimer(AddPerfectShotTagTimerHandle);
-
-	GetWorld()->GetTimerManager().ClearTimer(RemovePerfectShotTagTimerHandle);
-
-	if (GetAbilitySystemComponentFromActorInfo() && PerfectShotRequiredTag.IsValid())
-	{
-		GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(PerfectShotRequiredTag);
-	}
-
-	bIsPerfectShotActive = false;
-}
-
-void UGA_CommaAttackBow::HandleAddPerfectShotTag()
-{
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	
-	if (!ASC || !PerfectShotRequiredTag.IsValid())
-	{
-		LOG_SCREEN_R("CommaAttackBow : ASC or Tag invalid");
-		bIsPerfectShotActive = false;
-		return;
-	}
-
-	bool bHasTagBefore = ASC->HasMatchingGameplayTag(PerfectShotRequiredTag);
-
-	if (!bHasTagBefore)
-	{
-		ASC->AddLooseGameplayTag(PerfectShotRequiredTag);
-		bIsPerfectShotActive = true;
-	}
-	else
-	{
-		bIsPerfectShotActive = true;
-	}
-}
-
-void UGA_CommaAttackBow::HandleRemovePerfectShotTag()
-{
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	
-	if (!ASC || !PerfectShotRequiredTag.IsValid())
-	{
-		LOG_SCREEN_R("CommaAttackBow : ASC or Tag invalid");
-		bIsPerfectShotActive = false;
-		return;
-	}
-
-
-	bool bHadTagBefore = ASC->HasMatchingGameplayTag(PerfectShotRequiredTag);
-
-	if (bHadTagBefore)
-	{
-		ASC->RemoveLooseGameplayTag(PerfectShotRequiredTag);
-	}
-	
-	bIsPerfectShotActive = false;
 }

@@ -159,7 +159,7 @@ void AComma::PossessedBy(AController* NewController)
 			ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnSwitchAttackUI);
 		}
 	}
-
+	
 	if (ASC)
 	{
 		//ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Comma.Weapon.Hammer")));
@@ -168,6 +168,14 @@ void AComma::PossessedBy(AController* NewController)
 		{
 			FGameplayAbilitySpec GameplayAbilitySpec(Ability);
 			ASC->GiveAbility(GameplayAbilitySpec);
+		}
+
+		for (auto& Ability : OnGiveAbilities)
+		{
+			FGameplayAbilitySpec GameplayAbilitySpec(Ability);
+			FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(GameplayAbilitySpec);
+
+			ASC->TryActivateAbility(SpecHandle);
 		}
 	}
 
