@@ -68,7 +68,16 @@ protected:
 	bool bAllowPartialDash = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
-	float PartialDashMinPercentage = 0.7f;	
+	float PartialDashMinPercentage = 0.7f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
+	bool bExtendDashOverActors = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
+	float MaxDashExtensionDistance = 200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
+	float DashExtensionMultiplier = 1.5f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	TObjectPtr<class UCurveFloat> Curve;
@@ -78,6 +87,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	TSubclassOf<UGameplayEffect> InvincibleEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TEnumAsByte<ECollisionChannel> TraceChannel;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIgnoreCancelRestriction = false;
