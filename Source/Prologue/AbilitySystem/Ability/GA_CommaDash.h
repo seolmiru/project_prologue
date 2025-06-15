@@ -79,6 +79,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
 	float DashExtensionMultiplier = 1.5f;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
+	float PlatformEdgeSearchRadius = 150.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
+	float MinPlatformSafetyScore;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	TObjectPtr<class UCurveFloat> Curve;
 

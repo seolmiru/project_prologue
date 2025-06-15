@@ -270,6 +270,50 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			}
 		}
 
+		if (!bFoundAnyGroundSpotInThisDirection)
+		{
+			const int32 SearchSteps = 8;
+			TArray<FVector> PotentialPositions;
+
+			for (int32 i = 0; i < SearchSteps; ++i)
+			{
+				float Angle = (360.f / SearchSteps) * i;
+				FVector SearchOffset = FVector(FMath::Cos(FMath::DegreesToRadians(Angle)) * PlatformEdgeSearchRadius, FMath::Sin(FMath::DegreesToRadians(Angle)) * PlatformEdgeSearchRadius, 0);
+
+				FVector SearchPos = CurrentDashAttemptEndPos + SearchOffset;
+				FVector ValidatedPos;
+
+				if (IsSafeLandingZone(SearchPos, ActorsToIgnore, ValidatedPos))
+				{
+					float Distance = FVector::Dist(ActorStartPos, ValidatedPos);
+
+					if (Distance >= MinDashDistance * 0.5f)
+					{
+						PotentialPositions.Add(ValidatedPos);
+					}
+				}
+			}
+
+			if (PotentialPositions.Num() > 0)
+			{
+				float BestDistance = FLT_MAX;
+				FVector BestPosition = ActorStartPos;
+        
+				for (const FVector& Pos : PotentialPositions)
+				{
+					float DistToTarget = FVector::Dist(Pos, CurrentDashAttemptEndPos);
+					if (DistToTarget < BestDistance)
+					{
+						BestDistance = DistToTarget;
+						BestPosition = Pos;
+					}
+				}
+        
+				OutValidatedFeetPos = BestPosition;
+				return true;
+			}
+		}
+
 		return false;
 	};
 
@@ -346,6 +390,25 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
 			TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 			TickCurveTask->ReadyForActivation();
+		}
+	}
+
+	if (!bSuccessfullyFoundTarget)
+	{
+		const float FallbackDistances[] = { MoveLength * 0.7f, MoveLength * 0.5f, MoveLength * 0.3f };
+    
+		for (float FallbackDist : FallbackDistances)
+		{
+			FVector FallbackDirection = DesiredDirection;
+			FVector FallbackTarget = ActorStartPos + FallbackDirection * FallbackDist;
+			FVector ValidatedPos;
+        
+			if (IsSafeLandingZone(FallbackTarget, ActorsToIgnore, ValidatedPos))
+			{
+				TargetPos = ValidatedPos;
+				bSuccessfullyFoundTarget = true;
+				break;
+			}
 		}
 	}
 }
