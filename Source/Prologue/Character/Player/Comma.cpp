@@ -15,6 +15,7 @@
 #include "EnhancedInputComponent.h"
 #include "AbilitySystemComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/PostProcessComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/AbilitySystem/Ability/GA_CommaAttackSword.h"
@@ -50,7 +51,7 @@ AComma::AComma()
 	FollowCamera->bUsePawnControlRotation = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.f, 0.f);
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
@@ -72,6 +73,10 @@ AComma::AComma()
 	SwitchAttackWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	SwitchAttackWidgetComponent->SetDrawSize(FVector2D(400.f, 384.f));
 	SwitchAttackWidgetComponent->SetVisibility(false);
+
+	OverClockPostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("OverClockPostProcessComponent"));
+	OverClockPostProcessComponent->SetupAttachment(FollowCamera);
+	OverClockPostProcessComponent->bEnabled = false;
 
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
 
@@ -159,7 +164,7 @@ void AComma::PossessedBy(AController* NewController)
 			ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnSwitchAttackUI);
 		}
 	}
-
+	
 	if (ASC)
 	{
 		//ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Comma.Weapon.Hammer")));
@@ -168,6 +173,14 @@ void AComma::PossessedBy(AController* NewController)
 		{
 			FGameplayAbilitySpec GameplayAbilitySpec(Ability);
 			ASC->GiveAbility(GameplayAbilitySpec);
+		}
+
+		for (auto& Ability : OnGiveAbilities)
+		{
+			FGameplayAbilitySpec GameplayAbilitySpec(Ability);
+			FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(GameplayAbilitySpec);
+
+			ASC->TryActivateAbility(SpecHandle);
 		}
 	}
 
@@ -386,6 +399,20 @@ void AComma::OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) co
 		else
 		{
 			SwitchAttackWidgetComponent->SetVisibility(false);
+		}
+	}
+}
+
+void AComma::SetOverClockEffectActive(bool bActive)
+{
+	if (OverClockPostProcessComponent && OverClockPostProcessMaterial)
+	{
+		OverClockPostProcessComponent->bEnabled = bActive;
+
+		if (bActive)
+		{
+			OverClockPostProcessComponent->Settings.WeightedBlendables.Array.Empty();
+			OverClockPostProcessComponent->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.f, OverClockPostProcessMaterial));
 		}
 	}
 }

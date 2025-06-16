@@ -33,21 +33,6 @@ protected:
 
 	UFUNCTION()
 	void OnBlendOut();
-	
-	UFUNCTION()
-	void StartDebugTimer();
-
-	UFUNCTION()
-	void DebugTimerInfo();
-
-	UFUNCTION()
-	void SyncPerfectShotTag();
-
-	UPROPERTY()
-	FTimerHandle DebugTimerHandle;
-
-	UPROPERTY()
-	float PerfectShotStartWorldTime = 0.f;
 
 	FName GetNextSection();
 	void StartComboTimer();
@@ -81,36 +66,6 @@ protected:
 	FTimerHandle CurrentComboTimerHandle;
 	
 protected:
-	UFUNCTION()
-	void InitializePerfectShotTimer();
-
-	UFUNCTION()
-	void ClearPerfectShotTimers();
-
-	UFUNCTION()
-	void HandleAddPerfectShotTag();
-
-	UFUNCTION()
-	void HandleRemovePerfectShotTag();
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
 	bool bIsPerfectShotActive = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
-	FTimerHandle PerfectShotTimerHandle;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
-	FTimerHandle AddPerfectShotTagTimerHandle;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
-	FTimerHandle RemovePerfectShotTagTimerHandle;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
-	float PerfectShotDuration = 1.1f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
-	float PerfectShotStartTime = 0.5f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfectShot")
-	FGameplayTag PerfectShotRequiredTag;
 };

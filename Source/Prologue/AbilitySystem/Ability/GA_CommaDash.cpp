@@ -127,6 +127,54 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	auto PerformTraceInDirection = [&](const FVector& TraceDirection, FVector& OutValidatedFeetPos, EDrawDebugTrace::Type DebugTraceType, UNavigationSystemV1* NavSystem) -> bool
 	{
 		FVector CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * MoveLength;
+
+		if (bExtendDashOverActors)
+		{
+			TArray<FHitResult> HitResults;
+			FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(DashActorDetection), false);
+			QueryParams.AddIgnoredActor(Comma);
+
+			bool bHitActors = GetWorld()->SweepMultiByChannel(
+				HitResults,
+				ActorStartPos,
+				CurrentDashAttemptEndPos,
+				FQuat::Identity,
+				TraceChannel,
+				FCollisionShape::MakeCapsule(CapsuleRadius * 1.5f, CapsuleHalfHeight),
+				QueryParams
+			);
+
+			if (bHitActors)
+			{
+				float MaxActorSize = 0.f;
+
+				for (const FHitResult& Hit : HitResults)
+				{
+					if (APawn* HitPawn = Cast<APawn>(Hit.GetActor()))
+					{
+						if (UCapsuleComponent* HitCapsule = HitPawn->FindComponentByClass<UCapsuleComponent>())
+						{
+							float ActorCapsuleRadius = HitCapsule->GetScaledCapsuleRadius();
+							MaxActorSize = FMath::Max(MaxActorSize, ActorCapsuleRadius);
+						}
+					}
+				}
+
+				if (MaxActorSize > 0.f)
+				{
+					float ExtensionDistance = FMath::Min(MaxActorSize * DashExtensionMultiplier, MaxDashExtensionDistance);
+					float NewMoveLength = MoveLength + ExtensionDistance;
+
+					CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * NewMoveLength;
+
+					if (bDebugFOVTraces)
+					{
+						DrawDebugSphere(GetWorld(), CurrentDashAttemptEndPos, 30.f, 12, FColor::Yellow, false, 2.f);
+					}
+				}
+			}
+		}
+		
 		FVector BestValidFeetPosInDirection = ActorStartPos;
 		float FarthestValidDistance = 0.f;
 		bool bFoundAnyGroundSpotInThisDirection = false;
@@ -222,6 +270,50 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			}
 		}
 
+		if (!bFoundAnyGroundSpotInThisDirection)
+		{
+			const int32 SearchSteps = 8;
+			TArray<FVector> PotentialPositions;
+
+			for (int32 i = 0; i < SearchSteps; ++i)
+			{
+				float Angle = (360.f / SearchSteps) * i;
+				FVector SearchOffset = FVector(FMath::Cos(FMath::DegreesToRadians(Angle)) * PlatformEdgeSearchRadius, FMath::Sin(FMath::DegreesToRadians(Angle)) * PlatformEdgeSearchRadius, 0);
+
+				FVector SearchPos = CurrentDashAttemptEndPos + SearchOffset;
+				FVector ValidatedPos;
+
+				if (IsSafeLandingZone(SearchPos, ActorsToIgnore, ValidatedPos))
+				{
+					float Distance = FVector::Dist(ActorStartPos, ValidatedPos);
+
+					if (Distance >= MinDashDistance * 0.5f)
+					{
+						PotentialPositions.Add(ValidatedPos);
+					}
+				}
+			}
+
+			if (PotentialPositions.Num() > 0)
+			{
+				float BestDistance = FLT_MAX;
+				FVector BestPosition = ActorStartPos;
+        
+				for (const FVector& Pos : PotentialPositions)
+				{
+					float DistToTarget = FVector::Dist(Pos, CurrentDashAttemptEndPos);
+					if (DistToTarget < BestDistance)
+					{
+						BestDistance = DistToTarget;
+						BestPosition = Pos;
+					}
+				}
+        
+				OutValidatedFeetPos = BestPosition;
+				return true;
+			}
+		}
+
 		return false;
 	};
 
@@ -298,6 +390,25 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
 			TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 			TickCurveTask->ReadyForActivation();
+		}
+	}
+
+	if (!bSuccessfullyFoundTarget)
+	{
+		const float FallbackDistances[] = { MoveLength * 0.7f, MoveLength * 0.5f, MoveLength * 0.3f };
+    
+		for (float FallbackDist : FallbackDistances)
+		{
+			FVector FallbackDirection = DesiredDirection;
+			FVector FallbackTarget = ActorStartPos + FallbackDirection * FallbackDist;
+			FVector ValidatedPos;
+        
+			if (IsSafeLandingZone(FallbackTarget, ActorsToIgnore, ValidatedPos))
+			{
+				TargetPos = ValidatedPos;
+				bSuccessfullyFoundTarget = true;
+				break;
+			}
 		}
 	}
 }
@@ -416,6 +527,17 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 		return false;
 	}
 
+	UNavigationSystemV1* NavSystem = UNavigationSystemV1::GetCurrent(GetWorld());
+	if (NavSystem)
+	{
+		FNavLocation NavLocation;
+		const FVector ProjectionExtent(CapsuleRadius * 2.f, CapsuleRadius * 2.f, MaxPlatformHeightDiff);
+		if (!NavSystem->ProjectPointToNavigation(FinalFeetLocation, NavLocation, ProjectionExtent))
+		{
+			return false;
+		}
+	}
+	
 	OutAdjustedLocation = FinalFeetLocation;
 	return true;
 }

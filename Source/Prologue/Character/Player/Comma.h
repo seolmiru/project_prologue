@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Comma.generated.h"
 
+class UPostProcessComponent;
 class UCommaWidget;
 class UComboSwordData;
 class UComboBowData;
@@ -63,6 +64,12 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCommaCombatComponent* CommaCombatComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPostProcessComponent* OverClockPostProcessComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMaterialInterface> OverClockPostProcessMaterial;	
 	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
@@ -82,6 +89,9 @@ private:
 	UInputAction* MoveAction;
 
 	/** GAS */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StartUpData", meta = (AllowPrivateAccess = "true"))
+	TArray<TSubclassOf<class UGameplayAbility>> OnGiveAbilities;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StartUpData", meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
 
@@ -145,6 +155,9 @@ public:
 
 	void OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;
 
+	UFUNCTION(BlueprintCallable)
+	void SetOverClockEffectActive(bool bActive);
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<class UAnimMontage> SwordComboMontage;
