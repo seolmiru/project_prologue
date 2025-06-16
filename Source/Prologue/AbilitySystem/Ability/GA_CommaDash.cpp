@@ -234,13 +234,13 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 				if (NavSystem->ProjectPointToNavigation(AverageHitLocation, NavMeshLocation, ProjectionExtent))
 				{
 					// 현재 위치까지의 거리 계산
-					float CurrentDistance = FVector::Dist(ActorStartPos, AverageHitLocation);
+					float CurrentDistance = FVector::Dist(ActorStartPos, NavMeshLocation.Location);
             
 					// 더 멀고 안전한 위치를 발견했을 때만 업데이트
 					if (CurrentDistance > FarthestValidDistance)
 					{
 						FarthestValidDistance = CurrentDistance;
-						BestValidFeetPosInDirection = AverageHitLocation;
+						BestValidFeetPosInDirection = NavMeshLocation.Location;
 						bFoundAnyGroundSpotInThisDirection = true;
 					}
 				}
@@ -532,12 +532,19 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 	{
 		FNavLocation NavLocation;
 		const FVector ProjectionExtent(CapsuleRadius * 2.f, CapsuleRadius * 2.f, MaxPlatformHeightDiff);
-		if (!NavSystem->ProjectPointToNavigation(FinalFeetLocation, NavLocation, ProjectionExtent))
+		if (NavSystem->ProjectPointToNavigation(FinalFeetLocation, NavLocation, ProjectionExtent))
+		{
+			OutAdjustedLocation = FinalFeetLocation;
+		}
+		else
 		{
 			return false;
 		}
 	}
+	else
+	{
+		OutAdjustedLocation = FinalFeetLocation;
+	}
 	
-	OutAdjustedLocation = FinalFeetLocation;
 	return true;
 }
