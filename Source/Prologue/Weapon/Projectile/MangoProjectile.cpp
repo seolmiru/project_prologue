@@ -38,7 +38,6 @@ void AMangoProjectile::OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedC
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	if (PlayerPawn == nullptr)
 	{
-		Destroy();
 		return;
 	}
 	
@@ -67,7 +66,5 @@ void AMangoProjectile::OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedC
 				TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_PlayerHit, CueParams);
 			}
 		}
-
-		Destroy();
 	}
 }

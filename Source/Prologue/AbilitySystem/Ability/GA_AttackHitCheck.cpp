@@ -79,11 +79,27 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
 
 			// 공격이 적중했을 때, 카메라 쉐이킹, VFX 연출을 위해 Effect 부여
 			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
+
+			FVector AttackerLocation = GetAvatarActorFromActorInfo()->GetActorLocation();
+			FVector HitLocation = HitResult.Location;
+			FVector HitDirection = (HitLocation - AttackerLocation).GetSafeNormal();
+
+			AActor* HitActor = HitResult.GetActor();		
+			FVector TargetCenter = HitActor->GetActorLocation();
 			
 			FGameplayEffectContextHandle CueContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(EffectSpecHandle);
 			CueContextHandle.AddHitResult(HitResult);
 			FGameplayCueParameters CueParam;
 			CueParam.EffectContext = CueContextHandle;
+
+			FVector EffectLocation = TargetCenter;
+			EffectLocation.Z += 50.f;
+			CueParam.Location = EffectLocation;
+
+			CueParam.Normal = HitDirection;
+			CueParam.Instigator = GetAvatarActorFromActorInfo();
+			CueParam.EffectCauser = HitActor;
+			
 			if (Cast<AComma>(GetAvatarActorFromActorInfo()))
 			{
 				UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor())->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
@@ -96,6 +112,8 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
 	}
 	else if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, 0))
 	{
+		FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, 0);
+		
 		UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo_Checked();
 
 		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
@@ -114,7 +132,7 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
 			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SwitchAttackDamaging);
 
 			FGameplayEffectContextHandle CueContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(EffectSpecHandle);
-			CueContextHandle.AddActors(TargetDataHandle.Data[0].Get()->GetActors(), false);
+			CueContextHandle.AddHitResult(HitResult);
 			FGameplayCueParameters CueParam;
 			CueParam.EffectContext = CueContextHandle;
 

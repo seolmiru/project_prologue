@@ -157,6 +157,17 @@ void ABazierProjectile::Explode()
 		);
 	}
 
+	if (ExplosionSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			GetWorld(),
+			ExplosionSound,
+			ExplosionLocation,
+			1.f,
+			1.f
+		);
+	}
+
 	if (bShowDebug)
 	{
 		DrawDebugSphere(

@@ -103,7 +103,7 @@ void APrologueProjectileBase::OnProjectileBeginOverlap(UPrimitiveComponent* Over
 
 				FGameplayCueParameters CueParams;
 				CueParams.EffectContext = EffectContext;
-				TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParams);
+				//TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParams);
 			}
 
 			// BP에서 IncreaseGaugeEffect가 할당이 되어있다면 OverClockGauge를 증가시키는 Effect 적용

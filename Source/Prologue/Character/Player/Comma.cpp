@@ -77,7 +77,7 @@ AComma::AComma()
 	OverClockPostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("OverClockPostProcessComponent"));
 	OverClockPostProcessComponent->SetupAttachment(FollowCamera);
 	OverClockPostProcessComponent->bEnabled = false;
-
+	
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
 
 	SwitchAttackBowTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Bow"));
@@ -220,6 +220,17 @@ void AComma::BeginPlay()
 		InputMode.SetHideCursorDuringCapture(false);
 
 		CommaController->SetInputMode(InputMode);
+	}
+
+	if (DamagePostProcessMaterial && FollowCamera)
+	{
+		DamagePostProcessMID = UMaterialInstanceDynamic::Create(DamagePostProcessMaterial, this);
+		if (DamagePostProcessMID)
+		{
+			DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), 0.f);
+
+			FollowCamera->PostProcessSettings.WeightedBlendables.Array.Add(FWeightedBlendable(1.f, DamagePostProcessMID));
+		}
 	}
 }
 
@@ -415,4 +426,37 @@ void AComma::SetOverClockEffectActive(bool bActive)
 			OverClockPostProcessComponent->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.f, OverClockPostProcessMaterial));
 		}
 	}
+}
+
+void AComma::TriggerDamageEffect(float DamageAmount)
+{
+	if (!DamagePostProcessMID)
+		return;
+
+	DamageEffectStartTime = GetWorld()->GetTimeSeconds();
+
+	DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), DamageEffectIntensity);
+
+	GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
+	GetWorld()->GetTimerManager().SetTimer(DamageEffectTimerHandle, this, &AComma::UpdateDamageEffect, 0.05f, true);
+}
+
+void AComma::UpdateDamageEffect()
+{
+	if (!DamagePostProcessMID)
+		return;
+
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+	float ElapsedTime = CurrentTime - DamageEffectStartTime;
+	float Alpha = ElapsedTime / DamageEffectDuration;
+
+	if (Alpha >= 1.f)
+	{
+		DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), 0.f);
+		GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
+		return;
+	}
+
+	float CurrentIntensity = DamageEffectIntensity * (1.f - Alpha);
+	DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), CurrentIntensity);
 }

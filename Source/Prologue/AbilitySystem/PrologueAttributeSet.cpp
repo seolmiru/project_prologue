@@ -7,6 +7,7 @@
 #include "GameplayEffectExtension.h"
 #include "../PrologueGameplayTags.h"
 #include "Prologue/Prologue.h"
+#include "Prologue/Character/Player/Comma.h"
 
 UPrologueAttributeSet::UPrologueAttributeSet() :
 	SwordSwitchAttackDamage(80.f),
@@ -87,6 +88,14 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 	{
 		LOG_SCREEN("Direct Health Access : %f", GetCurrentHealth());
 		SetCurrentHealth(FMath::Clamp(GetCurrentHealth(), MinimumHealth, GetMaxHealth()));
+
+		if (AActor* TargetActor = Data.Target.GetAvatarActor())
+		{
+			if (AComma* Comma = Cast<AComma>(TargetActor))
+			{
+				Comma->TriggerDamageEffect();
+			}
+		}
 	}
 	else if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
