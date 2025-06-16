@@ -122,6 +122,25 @@ private:
 	TSubclassOf<UUserWidget> BP_SwitchAttackWidget;
 	
 	void Input_Move(const FInputActionValue& InputActionValue);
+
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UMaterial> DamagePostProcessMaterial;
+    
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> DamagePostProcessMID;
+    
+	UPROPERTY()
+	FTimerHandle DamageEffectTimerHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
+	float DamageEffectStartTime = 0.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
+	float DamageEffectDuration = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
+	float DamageEffectIntensity = 0.5f;
 	
 public:
 	FORCEINLINE UCommaCombatComponent* GetCommaCombatComponent() const { return CommaCombatComponent; }
@@ -157,6 +176,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetOverClockEffectActive(bool bActive);
+
+	UFUNCTION(BlueprintCallable, Category = "VFX")
+	void TriggerDamageEffect(float DamageAmount = 1.f);
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -181,4 +203,6 @@ private:
 	FRotator TargetRotation = FRotator::ZeroRotator;
 	float RotationInterpSpeed = 12.f;
 	bool bIsUsingSmoothRotation = false;
+
+	void UpdateDamageEffect();
 };

@@ -79,11 +79,27 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
 
 			// 공격이 적중했을 때, 카메라 쉐이킹, VFX 연출을 위해 Effect 부여
 			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
+
+			FVector AttackerLocation = GetAvatarActorFromActorInfo()->GetActorLocation();
+			FVector HitLocation = HitResult.Location;
+			FVector HitDirection = (HitLocation - AttackerLocation).GetSafeNormal();
+
+			AActor* HitActor = HitResult.GetActor();
+			FVector TargetCenter = HitActor->GetActorLocation();
 			
 			FGameplayEffectContextHandle CueContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(EffectSpecHandle);
 			CueContextHandle.AddHitResult(HitResult);
 			FGameplayCueParameters CueParam;
 			CueParam.EffectContext = CueContextHandle;
+
+			FVector EffectLocation = TargetCenter;
+			EffectLocation.Z += 50.f;
+			CueParam.Location = EffectLocation;
+
+			CueParam.Normal = HitDirection;
+			CueParam.Instigator = GetAvatarActorFromActorInfo();
+			CueParam.EffectCauser = HitActor;
+			
 			if (Cast<AComma>(GetAvatarActorFromActorInfo()))
 			{
 				UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor())->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
