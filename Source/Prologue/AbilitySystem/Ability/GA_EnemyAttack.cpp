@@ -4,7 +4,13 @@
 #include "GA_EnemyAttack.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
+
+UGA_EnemyAttack::UGA_EnemyAttack()
+{
+	
+}
 
 void UGA_EnemyAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                       const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
@@ -12,6 +18,12 @@ void UGA_EnemyAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	if (!CommitAbilityCost(Handle, ActorInfo, ActivationInfo))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	
 	APrologueEnemyCharacter* Enemy = CastChecked<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
 
 	Enemy->GetCharacterMovement()->SetMovementMode(MOVE_None);
@@ -22,6 +34,11 @@ void UGA_EnemyAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, const 
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
+	if (!bWasCancelled)
+	{
+		CommitAbilityCooldown(Handle, ActorInfo, ActivationInfo, false);
+	}
+	
 	APrologueEnemyCharacter* Enemy = CastChecked<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
 
 	Enemy->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
