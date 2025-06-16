@@ -48,6 +48,9 @@ protected:
 	UNiagaraSystem* ExplosionEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<USoundBase> ExplosionSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bShowDebug = true;
 	
 protected:
