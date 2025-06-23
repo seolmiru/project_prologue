@@ -112,8 +112,6 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
 	}
 	else if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, 0))
 	{
-		FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, 0);
-		
 		UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo_Checked();
 
 		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
@@ -129,14 +127,39 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
 			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EffectSpecHandle, TargetDataHandle);
 
 			// 교체 공격 전용 카메라 쉐이킹 연출을 위한 Effect 부여
-			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SwitchAttackDamaging);
+			SourceASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SwitchAttackDamaging);
 
-			FGameplayEffectContextHandle CueContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(EffectSpecHandle);
-			CueContextHandle.AddHitResult(HitResult);
-			FGameplayCueParameters CueParam;
-			CueParam.EffectContext = CueContextHandle;
+			TArray<TWeakObjectPtr<AActor>> TargetActors = TargetDataHandle.Data[0]->GetActors();
+			for (const TWeakObjectPtr<AActor>& WeakTarget : TargetActors)
+			{
+				if (AActor* Target = WeakTarget.Get())
+				{
+					// 타겟의 중심점 계산
+					FVector TargetCenter = Target->GetActorLocation();
+					FVector AttackerLocation = GetAvatarActorFromActorInfo()->GetActorLocation();
+					FVector HitDirection = (TargetCenter - AttackerLocation).GetSafeNormal();
+					
+					FGameplayEffectContextHandle CueContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(EffectSpecHandle);
+					FGameplayCueParameters CueParam;
+					CueParam.EffectContext = CueContextHandle;
+					CueParam.Location = TargetCenter + FVector(0.f, 0.f, 50.f);
+					CueParam.Normal = HitDirection;
+					CueParam.Instigator = GetAvatarActorFromActorInfo();
+					CueParam.EffectCauser = Target;
 
-			SourceASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
+					if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Target))
+					{
+						if (Cast<AComma>(GetAvatarActorFromActorInfo()))
+						{
+							TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
+						}
+						else
+						{
+							TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_PlayerHit, CueParam);
+						}
+					}
+				}
+			}
 		}
 
 		// 오버클락 게이지 증가 이펙트 부여
