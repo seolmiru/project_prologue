@@ -82,6 +82,7 @@ void APlayerDashPoint::CheckNewDirecionPoint(FVector NewDirection)
 		FVector PlayerFloorEnd = PlayerLocation;
 		PlayerFloorEnd.Z -= 100.0f;
 
+		// 플레이어 지면 검사
 		bool bPlayerHit = GetWorld()->LineTraceSingleByChannel(
 			HitResult,
 			PlayerFloorStart,
@@ -90,7 +91,6 @@ void APlayerDashPoint::CheckNewDirecionPoint(FVector NewDirection)
 			Params
 		);
 
-		// 플레이어 지면 검사
 		if (bPlayerHit)
 		{
 			AActor* PlayerGround = HitResult.GetActor();
@@ -129,6 +129,7 @@ void APlayerDashPoint::CheckNewDirecionPoint(FVector NewDirection)
 					// 새로운 지면일 경우 해당 위치로 설정
 					else
 					{
+						GroundActor = HitGround;
 						SetActorLocation(HitResult.ImpactPoint);
 					}
 					
@@ -146,6 +147,7 @@ void APlayerDashPoint::CheckNewDirecionPoint(FVector NewDirection)
 					//현재 대쉬 위치가 시야각을 벗어나거나 최대 거리 이상일 경우 위치 재설정
 					if (DegreeAngle * 2.0f > FOVAngle || CurrentDistance > MaxDistance)
 					{
+						GroundActor = PlayerGround;
 						SetActorLocation(HitResult.ImpactPoint);
 						break;
 					}
@@ -156,7 +158,6 @@ void APlayerDashPoint::CheckNewDirecionPoint(FVector NewDirection)
 		// 검사 위치 땡기기
 		CurrentCheckLocation -= Direction * UnitDistance;
 	}
-
 	
 	// 위치 업데이트 재개
 	bTickFlag = true;
