@@ -23,24 +23,15 @@ protected:
 	UFUNCTION()
 	void OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS")
-	TArray<TSubclassOf<UGameplayEffect>> ComboAttackDamageEffects;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS")
+	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<UGameplayEffect> AttackDamageEffect;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS")
+	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<UGameplayEffect> ToughnessDamageEffect;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS")
-	TSubclassOf<class ATA_Trace> TargetActorClass;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS")
-	TArray<TSubclassOf<class ATA_Trace>> ComboTargetActorClasses;
+	UPROPERTY(EditAnywhere, Category = "GAS")
+	TSubclassOf<class ATA_Trace> TargetActorClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS")
+	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<UGameplayEffect> IncreaseGaugeEffect;
-
-private:
-	int32 CurrentComboIndex = 0;
 };
