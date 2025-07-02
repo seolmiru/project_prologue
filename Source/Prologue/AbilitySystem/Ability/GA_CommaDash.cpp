@@ -84,248 +84,252 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	const float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	const float CapsuleRadius = Comma->GetCapsuleComponent()->GetScaledCapsuleRadius();
 
-	// 플레이어의 입력 방향 계산
-	ACommaController* Controller = Cast<ACommaController>(Comma->GetController());
-	FVector DesiredDirection = FVector::ZeroVector;
 
-	if (Controller)
-	{
-		FVector2D CachedMovementInput = Comma->GetCachedMovementInput();
-		if (!CachedMovementInput.IsNearlyZero())
-		{
-			// 카메라 회전을 기준으로 월드 좌표계 방향 계산
-			const FRotator ControlRotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, ControlRotation.Yaw, 0);
-			const FVector ForwardDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-			const FVector RightDir   = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	// // 플레이어의 입력 방향 계산
+	// ACommaController* Controller = Cast<ACommaController>(Comma->GetController());
+	// FVector DesiredDirection = FVector::ZeroVector;
+	//
+	// if (Controller)
+	// {
+	// 	FVector2D CachedMovementInput = Comma->GetCachedMovementInput();
+	// 	if (!CachedMovementInput.IsNearlyZero())
+	// 	{
+	// 		// 카메라 회전을 기준으로 월드 좌표계 방향 계산
+	// 		const FRotator ControlRotation = Controller->GetControlRotation();
+	// 		const FRotator YawRotation(0, ControlRotation.Yaw, 0);
+	// 		const FVector ForwardDir = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	// 		const FVector RightDir   = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	//
+	// 		DesiredDirection = (ForwardDir * CachedMovementInput.Y + RightDir * CachedMovementInput.X).GetSafeNormal();
+	// 	}
+	// }
 
-			DesiredDirection = (ForwardDir * CachedMovementInput.Y + RightDir * CachedMovementInput.X).GetSafeNormal();
-		}
-	}
-
-	// 입력이 없을 때는 정면 방향으로 대시
-	if (DesiredDirection.IsNearlyZero())
-	{
-		DesiredDirection = Comma->GetActorForwardVector().GetSafeNormal();
-	}
+	// // 입력이 없을 때는 정면 방향으로 대시
+	// if (DesiredDirection.IsNearlyZero())
+	// {
+	// 	DesiredDirection = Comma->GetActorForwardVector().GetSafeNormal();
+	// }
 
 	BasePos = ActorStartPos;
-	TargetPos = ActorStartPos;
-	bool bSuccessfullyFoundTarget = false;
+	// TargetPos = ActorStartPos;
+	TargetPos = Comma->GetDashPoint();
+
+	float Distance2D = FVector2d::Distance((FVector2d)BasePos, (FVector2d)TargetPos);
+	bool bSuccessfullyFoundTarget = Distance2D >= MinDashDistance;
 
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(Comma);
 
-	// 경로 검사 단계 수
-	const int32 EffectivePathCheckSteps = FMath::Max(1, PathCheckSteps);
-	// LineTrace 시작 지점 수직 Offset
-	const float LineTraceStartUpOffset = MaxPlatformHeightDiff + 50.f;
-	// LineTrace 종료 지점 수직 Offset
-	const float LineTraceEndDownOffset = MaxPlatformHeightDiff * 2.f + 50.f;
+	// // 경로 검사 단계 수
+	// const int32 EffectivePathCheckSteps = FMath::Max(1, PathCheckSteps);
+	// // LineTrace 시작 지점 수직 Offset
+	// const float LineTraceStartUpOffset = MaxPlatformHeightDiff + 50.f;
+	// // LineTrace 종료 지점 수직 Offset
+	// const float LineTraceEndDownOffset = MaxPlatformHeightDiff * 2.f + 50.f;
 
-	// 지정된 방향의 지형 추적 후, 안전한 착지 지점을 검사하는 람다 함수
-	auto PerformTraceInDirection = [&](const FVector& TraceDirection, FVector& OutValidatedFeetPos, EDrawDebugTrace::Type DebugTraceType, UNavigationSystemV1* NavSystem) -> bool
-	{
-		FVector CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * MoveLength;
-
-		if (bExtendDashOverActors)
-		{
-			TArray<FHitResult> HitResults;
-			FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(DashActorDetection), false);
-			QueryParams.AddIgnoredActor(Comma);
-
-			bool bHitActors = GetWorld()->SweepMultiByChannel(
-				HitResults,
-				ActorStartPos,
-				CurrentDashAttemptEndPos,
-				FQuat::Identity,
-				TraceChannel,
-				FCollisionShape::MakeCapsule(CapsuleRadius * 1.5f, CapsuleHalfHeight),
-				QueryParams
-			);
-
-			if (bHitActors)
-			{
-				float MaxActorSize = 0.f;
-
-				for (const FHitResult& Hit : HitResults)
-				{
-					if (APawn* HitPawn = Cast<APawn>(Hit.GetActor()))
-					{
-						if (UCapsuleComponent* HitCapsule = HitPawn->FindComponentByClass<UCapsuleComponent>())
-						{
-							float ActorCapsuleRadius = HitCapsule->GetScaledCapsuleRadius();
-							MaxActorSize = FMath::Max(MaxActorSize, ActorCapsuleRadius);
-						}
-					}
-				}
-
-				if (MaxActorSize > 0.f)
-				{
-					float ExtensionDistance = FMath::Min(MaxActorSize * DashExtensionMultiplier, MaxDashExtensionDistance);
-					float NewMoveLength = MoveLength + ExtensionDistance;
-
-					CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * NewMoveLength;
-
-					if (bDebugFOVTraces)
-					{
-						DrawDebugSphere(GetWorld(), CurrentDashAttemptEndPos, 30.f, 12, FColor::Yellow, false, 2.f);
-					}
-				}
-			}
-		}
-		
-		FVector BestValidFeetPosInDirection = ActorStartPos;
-		float FarthestValidDistance = 0.f;
-		bool bFoundAnyGroundSpotInThisDirection = false;
-
-		// MoveLength를 PathCheckSteps로 나누어 단계 별로 검사
-		for (int32 StepIndex = 1; StepIndex <= EffectivePathCheckSteps; ++StepIndex)
-		{
-			const float Alpha = static_cast<float>(StepIndex) / EffectivePathCheckSteps;
-			const FVector SamplePosForTrace = FMath::Lerp(ActorStartPos, CurrentDashAttemptEndPos, Alpha);
-
-			int32 SuccessfulTraces = 0;
-			int32 TotalTraces = TracesPerSide * TracesPerSide;
-			FVector AccumulatedHitLocation = FVector::ZeroVector;
-
-			const int32 HalfGrid = TracesPerSide / 2;
-			
-			for(int32 x = -HalfGrid; x <= HalfGrid; ++x)
-			{
-				for(int32 y = -HalfGrid; y <= HalfGrid; ++y)
-				{
-					FVector TraceStart = SamplePosForTrace + FVector(x * LineTraceSpread, y * LineTraceSpread, LineTraceStartUpOffset);
-					FVector TraceEnd = TraceStart - FVector(0.f, 0.f, LineTraceStartUpOffset + LineTraceEndDownOffset);
-
-					FHitResult GroundHitResult;
-					bool bHitGround = UKismetSystemLibrary::LineTraceSingle(
-						GetWorld(),
-						TraceStart,
-						TraceEnd,
-						UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
-						false,
-						ActorsToIgnore,
-						DebugTraceType,
-						GroundHitResult,
-						true,
-						FLinearColor::Red, FLinearColor::Green, 1.0f
-					);
-
-					if(bHitGround)
-					{
-						FVector AdjustedPos;
-						if (IsSafeLandingZone(GroundHitResult.ImpactPoint, ActorsToIgnore, AdjustedPos))
-						{
-							SuccessfulTraces++;
-							AccumulatedHitLocation += AdjustedPos;
-						}
-					}
-				}
-			}
-
-			if (SuccessfulTraces > 0 && (static_cast<float>(SuccessfulTraces) / TotalTraces) >= MinSuccessTracePercentage)
-			{
-				FVector AverageHitLocation = AccumulatedHitLocation / SuccessfulTraces;
-
-				// NavMesh 검증
-				FNavLocation NavMeshLocation;
-				const FVector ProjectionExtent(LineTraceSpread * HalfGrid, LineTraceSpread * HalfGrid, MaxPlatformHeightDiff + 100.f);
-				if (NavSystem->ProjectPointToNavigation(AverageHitLocation, NavMeshLocation, ProjectionExtent))
-				{
-					// 현재 위치까지의 거리 계산
-					float CurrentDistance = FVector::Dist(ActorStartPos, NavMeshLocation.Location);
-            
-					// 더 멀고 안전한 위치를 발견했을 때만 업데이트
-					if (CurrentDistance > FarthestValidDistance)
-					{
-						FarthestValidDistance = CurrentDistance;
-						BestValidFeetPosInDirection = NavMeshLocation.Location;
-						bFoundAnyGroundSpotInThisDirection = true;
-					}
-				}
-			}
-		}
-
-		if (bFoundAnyGroundSpotInThisDirection)
-		{
-			if (bAllowPartialDash)
-			{
-				float AchievedDistance = FVector::Dist(ActorStartPos, BestValidFeetPosInDirection);
-				float DesiredDistance = MoveLength;
-				float AchievedPercentage = AchievedDistance / DesiredDistance;
-        
-				if (AchievedPercentage >= PartialDashMinPercentage)
-				{
-					FVector DirectionToStart = (ActorStartPos - BestValidFeetPosInDirection).GetSafeNormal();
-					OutValidatedFeetPos = BestValidFeetPosInDirection + DirectionToStart * CapsuleRadius;
-					return true;
-				}
-			}
-			else
-			{
-				FVector DirectionToStart = (ActorStartPos - BestValidFeetPosInDirection).GetSafeNormal();
-				OutValidatedFeetPos = BestValidFeetPosInDirection + DirectionToStart * CapsuleRadius;
-				return true;
-			}
-		}
-
-		if (!bFoundAnyGroundSpotInThisDirection)
-		{
-			const int32 SearchSteps = 8;
-			TArray<FVector> PotentialPositions;
-
-			for (int32 i = 0; i < SearchSteps; ++i)
-			{
-				float Angle = (360.f / SearchSteps) * i;
-				FVector SearchOffset = FVector(FMath::Cos(FMath::DegreesToRadians(Angle)) * PlatformEdgeSearchRadius, FMath::Sin(FMath::DegreesToRadians(Angle)) * PlatformEdgeSearchRadius, 0);
-
-				FVector SearchPos = CurrentDashAttemptEndPos + SearchOffset;
-				FVector ValidatedPos;
-
-				if (IsSafeLandingZone(SearchPos, ActorsToIgnore, ValidatedPos))
-				{
-					float Distance = FVector::Dist(ActorStartPos, ValidatedPos);
-
-					if (Distance >= MinDashDistance * 0.5f)
-					{
-						PotentialPositions.Add(ValidatedPos);
-					}
-				}
-			}
-
-			if (PotentialPositions.Num() > 0)
-			{
-				float BestDistance = FLT_MAX;
-				FVector BestPosition = ActorStartPos;
-        
-				for (const FVector& Pos : PotentialPositions)
-				{
-					float DistToTarget = FVector::Dist(Pos, CurrentDashAttemptEndPos);
-					if (DistToTarget < BestDistance)
-					{
-						BestDistance = DistToTarget;
-						BestPosition = Pos;
-					}
-				}
-        
-				OutValidatedFeetPos = BestPosition;
-				return true;
-			}
-		}
-
-		return false;
-	};
+	// // 지정된 방향의 지형 추적 후, 안전한 착지 지점을 검사하는 람다 함수
+	// auto PerformTraceInDirection = [&](const FVector& TraceDirection, FVector& OutValidatedFeetPos, EDrawDebugTrace::Type DebugTraceType, UNavigationSystemV1* NavSystem) -> bool
+	// {
+	// 	FVector CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * MoveLength;
+	//
+	// 	if (bExtendDashOverActors)
+	// 	{
+	// 		TArray<FHitResult> HitResults;
+	// 		FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(DashActorDetection), false);
+	// 		QueryParams.AddIgnoredActor(Comma);
+	//
+	// 		bool bHitActors = GetWorld()->SweepMultiByChannel(
+	// 			HitResults,
+	// 			ActorStartPos,
+	// 			CurrentDashAttemptEndPos,
+	// 			FQuat::Identity,
+	// 			TraceChannel,
+	// 			FCollisionShape::MakeCapsule(CapsuleRadius * 1.5f, CapsuleHalfHeight),
+	// 			QueryParams
+	// 		);
+	//
+	// 		if (bHitActors)
+	// 		{
+	// 			float MaxActorSize = 0.f;
+	//
+	// 			for (const FHitResult& Hit : HitResults)
+	// 			{
+	// 				if (APawn* HitPawn = Cast<APawn>(Hit.GetActor()))
+	// 				{
+	// 					if (UCapsuleComponent* HitCapsule = HitPawn->FindComponentByClass<UCapsuleComponent>())
+	// 					{
+	// 						float ActorCapsuleRadius = HitCapsule->GetScaledCapsuleRadius();
+	// 						MaxActorSize = FMath::Max(MaxActorSize, ActorCapsuleRadius);
+	// 					}
+	// 				}
+	// 			}
+	//
+	// 			if (MaxActorSize > 0.f)
+	// 			{
+	// 				float ExtensionDistance = FMath::Min(MaxActorSize * DashExtensionMultiplier, MaxDashExtensionDistance);
+	// 				float NewMoveLength = MoveLength + ExtensionDistance;
+	//
+	// 				CurrentDashAttemptEndPos = ActorStartPos + TraceDirection * NewMoveLength;
+	//
+	// 				if (bDebugFOVTraces)
+	// 				{
+	// 					DrawDebugSphere(GetWorld(), CurrentDashAttemptEndPos, 30.f, 12, FColor::Yellow, false, 2.f);
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	
+	// 	FVector BestValidFeetPosInDirection = ActorStartPos;
+	// 	float FarthestValidDistance = 0.f;
+	// 	bool bFoundAnyGroundSpotInThisDirection = false;
+	//
+	// 	// MoveLength를 PathCheckSteps로 나누어 단계 별로 검사
+	// 	for (int32 StepIndex = 1; StepIndex <= EffectivePathCheckSteps; ++StepIndex)
+	// 	{
+	// 		const float Alpha = static_cast<float>(StepIndex) / EffectivePathCheckSteps;
+	// 		const FVector SamplePosForTrace = FMath::Lerp(ActorStartPos, CurrentDashAttemptEndPos, Alpha);
+	//
+	// 		int32 SuccessfulTraces = 0;
+	// 		int32 TotalTraces = TracesPerSide * TracesPerSide;
+	// 		FVector AccumulatedHitLocation = FVector::ZeroVector;
+	//
+	// 		const int32 HalfGrid = TracesPerSide / 2;
+	// 		
+	// 		for(int32 x = -HalfGrid; x <= HalfGrid; ++x)
+	// 		{
+	// 			for(int32 y = -HalfGrid; y <= HalfGrid; ++y)
+	// 			{
+	// 				FVector TraceStart = SamplePosForTrace + FVector(x * LineTraceSpread, y * LineTraceSpread, LineTraceStartUpOffset);
+	// 				FVector TraceEnd = TraceStart - FVector(0.f, 0.f, LineTraceStartUpOffset + LineTraceEndDownOffset);
+	//
+	// 				FHitResult GroundHitResult;
+	// 				bool bHitGround = UKismetSystemLibrary::LineTraceSingle(
+	// 					GetWorld(),
+	// 					TraceStart,
+	// 					TraceEnd,
+	// 					UEngineTypes::ConvertToTraceType(ECC_WorldStatic),
+	// 					false,
+	// 					ActorsToIgnore,
+	// 					DebugTraceType,
+	// 					GroundHitResult,
+	// 					true,
+	// 					FLinearColor::Red, FLinearColor::Green, 1.0f
+	// 				);
+	//
+	// 				if(bHitGround)
+	// 				{
+	// 					FVector AdjustedPos;
+	// 					if (IsSafeLandingZone(GroundHitResult.ImpactPoint, ActorsToIgnore, AdjustedPos))
+	// 					{
+	// 						SuccessfulTraces++;
+	// 						AccumulatedHitLocation += AdjustedPos;
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	//
+	// 		if (SuccessfulTraces > 0 && (static_cast<float>(SuccessfulTraces) / TotalTraces) >= MinSuccessTracePercentage)
+	// 		{
+	// 			FVector AverageHitLocation = AccumulatedHitLocation / SuccessfulTraces;
+	//
+	// 			// NavMesh 검증
+	// 			FNavLocation NavMeshLocation;
+	// 			const FVector ProjectionExtent(LineTraceSpread * HalfGrid, LineTraceSpread * HalfGrid, MaxPlatformHeightDiff + 100.f);
+	// 			if (NavSystem->ProjectPointToNavigation(AverageHitLocation, NavMeshLocation, ProjectionExtent))
+	// 			{
+	// 				// 현재 위치까지의 거리 계산
+	// 				float CurrentDistance = FVector::Dist(ActorStartPos, NavMeshLocation.Location);
+ //            
+	// 				// 더 멀고 안전한 위치를 발견했을 때만 업데이트
+	// 				if (CurrentDistance > FarthestValidDistance)
+	// 				{
+	// 					FarthestValidDistance = CurrentDistance;
+	// 					BestValidFeetPosInDirection = NavMeshLocation.Location;
+	// 					bFoundAnyGroundSpotInThisDirection = true;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	//
+	// 	if (bFoundAnyGroundSpotInThisDirection)
+	// 	{
+	// 		if (bAllowPartialDash)
+	// 		{
+	// 			float AchievedDistance = FVector::Dist(ActorStartPos, BestValidFeetPosInDirection);
+	// 			float DesiredDistance = MoveLength;
+	// 			float AchievedPercentage = AchievedDistance / DesiredDistance;
+ //        
+	// 			if (AchievedPercentage >= PartialDashMinPercentage)
+	// 			{
+	// 				FVector DirectionToStart = (ActorStartPos - BestValidFeetPosInDirection).GetSafeNormal();
+	// 				OutValidatedFeetPos = BestValidFeetPosInDirection + DirectionToStart * CapsuleRadius;
+	// 				return true;
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			FVector DirectionToStart = (ActorStartPos - BestValidFeetPosInDirection).GetSafeNormal();
+	// 			OutValidatedFeetPos = BestValidFeetPosInDirection + DirectionToStart * CapsuleRadius;
+	// 			return true;
+	// 		}
+	// 	}
+	//
+	// 	if (!bFoundAnyGroundSpotInThisDirection)
+	// 	{
+	// 		const int32 SearchSteps = 8;
+	// 		TArray<FVector> PotentialPositions;
+	//
+	// 		for (int32 i = 0; i < SearchSteps; ++i)
+	// 		{
+	// 			float Angle = (360.f / SearchSteps) * i;
+	// 			FVector SearchOffset = FVector(FMath::Cos(FMath::DegreesToRadians(Angle)) * PlatformEdgeSearchRadius, FMath::Sin(FMath::DegreesToRadians(Angle)) * PlatformEdgeSearchRadius, 0);
+	//
+	// 			FVector SearchPos = CurrentDashAttemptEndPos + SearchOffset;
+	// 			FVector ValidatedPos;
+	//
+	// 			if (IsSafeLandingZone(SearchPos, ActorsToIgnore, ValidatedPos))
+	// 			{
+	// 				float Distance = FVector::Dist(ActorStartPos, ValidatedPos);
+	//
+	// 				if (Distance >= MinDashDistance * 0.5f)
+	// 				{
+	// 					PotentialPositions.Add(ValidatedPos);
+	// 				}
+	// 			}
+	// 		}
+	//
+	// 		if (PotentialPositions.Num() > 0)
+	// 		{
+	// 			float BestDistance = FLT_MAX;
+	// 			FVector BestPosition = ActorStartPos;
+ //        
+	// 			for (const FVector& Pos : PotentialPositions)
+	// 			{
+	// 				float DistToTarget = FVector::Dist(Pos, CurrentDashAttemptEndPos);
+	// 				if (DistToTarget < BestDistance)
+	// 				{
+	// 					BestDistance = DistToTarget;
+	// 					BestPosition = Pos;
+	// 				}
+	// 			}
+ //        
+	// 			OutValidatedFeetPos = BestPosition;
+	// 			return true;
+	// 		}
+	// 	}
+	//
+	// 	return false;
+	// };
 
 	// 플레이어가 원하는 방향으로 대시 시도
-	FVector ForwardDashTargetFeetLocation;
-	EDrawDebugTrace::Type PrimaryTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+	// FVector ForwardDashTargetFeetLocation;
+	// EDrawDebugTrace::Type PrimaryTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
 
-	if (PerformTraceInDirection(DesiredDirection, ForwardDashTargetFeetLocation, PrimaryTraceDebugType, Nav))
-	{
-		TargetPos = ForwardDashTargetFeetLocation;
-		bSuccessfullyFoundTarget = true;
-	}
+	// if (PerformTraceInDirection(DesiredDirection, ForwardDashTargetFeetLocation, PrimaryTraceDebugType, Nav))
+	// {
+	// 	TargetPos = ForwardDashTargetFeetLocation;
+	// 	bSuccessfullyFoundTarget = true;
+	// }
 
 	if (!bSuccessfullyFoundTarget && NumFOVTracesPerSide > 0 && FOVAngleDegrees > 0.f)
 	{
@@ -344,13 +348,13 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 				FRotator AngleOffsetRotator(0, CurrentSampleAngleDegrees, 0);
 				FVector SampleDirectionForFOV = AngleOffsetRotator.RotateVector(CharacterActualForwardDir);
 				
-				FVector FOVTargetFeetLocation;
-				EDrawDebugTrace::Type FOVTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
+				// FVector FOVTargetFeetLocation;
+				// EDrawDebugTrace::Type FOVTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
 
-				if (PerformTraceInDirection(SampleDirectionForFOV, FOVTargetFeetLocation, FOVTraceDebugType, Nav))
-				{
-					PotentialTargetsInFOV.Emplace(FOVTargetFeetLocation, ActorStartPos);
-				}
+				// if (PerformTraceInDirection(SampleDirectionForFOV, FOVTargetFeetLocation, FOVTraceDebugType, Nav))
+				// {
+				// 	PotentialTargetsInFOV.Emplace(FOVTargetFeetLocation, ActorStartPos);
+				// }
 			}
 		}
 
@@ -399,7 +403,11 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
     
 		for (float FallbackDist : FallbackDistances)
 		{
-			FVector FallbackDirection = DesiredDirection;
+			// FVector FallbackDirection = DesiredDirection;
+			FVector FallbackDirection = Comma->GetActorLocation() - Comma->GetDashPoint();
+			FallbackDirection.Z = 0.0f;
+			FallbackDirection.Normalize();
+			
 			FVector FallbackTarget = ActorStartPos + FallbackDirection * FallbackDist;
 			FVector ValidatedPos;
         

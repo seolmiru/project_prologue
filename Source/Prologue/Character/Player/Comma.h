@@ -205,4 +205,11 @@ private:
 	bool bIsUsingSmoothRotation = false;
 
 	void UpdateDamageEffect();
+
+	/** Sejin */
+public:
+	FVector GetDashPoint() const;
+	
+private:
+	TObjectPtr<class APlayerDashPoint> DashPoint;
 };
