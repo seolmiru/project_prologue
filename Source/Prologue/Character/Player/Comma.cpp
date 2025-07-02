@@ -14,6 +14,7 @@
 #include "Prologue/DataAsset/Input/DataAsset_InputConfig.h"
 #include "EnhancedInputComponent.h"
 #include "AbilitySystemComponent.h"
+#include "PlayerDashPoint.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/WidgetComponent.h"
@@ -83,6 +84,16 @@ AComma::AComma()
 	SwitchAttackBowTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Bow"));
 	
 	SwordWeaponMesh->SetVisibility(false);
+
+	/** Sejin */
+
+	// 대쉬 위치 오브젝트 소환
+	FActorSpawnParameters SpawnParams;
+	UWorld* World = GetWorld();
+	if (World != nullptr)
+	{
+		DashPoint = World->SpawnActor<APlayerDashPoint>(APlayerDashPoint::StaticClass(), GetActorLocation(), FRotator::ZeroRotator, SpawnParams);		
+	}
 }
 
 UPawnCombatComponent* AComma::GetPawnCombatComponent() const
@@ -298,6 +309,14 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
+
+	/** Sejin */
+
+	// 대쉬 위치 오브젝트에 입력 방향 전달
+	if (DashPoint != nullptr)
+	{
+		DashPoint->SetDirection(FVector(MovementVector.X, MovementVector.Y, 0.f).GetSafeNormal());
+	}
 }
 
 UStaticMeshComponent* AComma::GetSwordWeaponMesh() const
@@ -459,4 +478,17 @@ void AComma::UpdateDamageEffect()
 
 	float CurrentIntensity = DamageEffectIntensity * (1.f - Alpha);
 	DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), CurrentIntensity);
+}
+
+FVector AComma::GetDashPoint() const
+{
+	if (DashPoint != nullptr)
+	{
+		return DashPoint->GetPoint();
+	}
+	else
+	{
+		LOG_SCREEN("Dash Point is null");
+		return GetActorLocation();
+	}	
 }
