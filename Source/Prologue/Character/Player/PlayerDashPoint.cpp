@@ -102,6 +102,7 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	// 플레이어 지면 검사
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
 
 	FVector PlayerFloorStart = PlayerLocation;
 	FVector PlayerFloorEnd = PlayerLocation;
@@ -141,8 +142,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 			FVector End = CurrentCheckLocation;
 			End.Z -= VerticalOffset;
 
-			Params.AddIgnoredActor(this);
-
 			bool bHit = GetWorld()->LineTraceSingleByChannel(
 				HitResult,
 				Start,
@@ -166,7 +165,10 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 			// 충돌시 실행
 			if (bHit)
 			{
+				// 새 충돌 지점 지면
 				AActor* HitGround = HitResult.GetActor();
+
+				// 현재 이동 위치와 플레이어의 거리
 				float CurrentDistance = FVector2D::Distance((FVector2d)PlayerLocation,
 				                                            (FVector2d)Point);
 
@@ -201,16 +203,22 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 				// 플레이어가 서있는 지면과 충돌
 				else
 				{
-					FVector MyDirection = PlayerLocation - Point;
+					FVector MyDirection = Point - PlayerLocation;
 					MyDirection.Z = 0.0f;
+					MyDirection.Normalize();
 
-					float RadianAngle = FMath::Acos(
-						FVector::DotProduct(Player->GetActorForwardVector(), MyDirection.GetSafeNormal()));
-					float DegreeAngle = FMath::RadiansToDegrees(RadianAngle);
+					FVector PlayerForward = Player->GetActorForwardVector();
+					PlayerForward.Z = 0.0f;
+					PlayerForward.Normalize();
+
+					float Dot = FVector::DotProduct(PlayerForward, MyDirection);
+					float RadianAngle = FMath::Acos(FMath::Clamp(Dot, -1.0f, 1.0f));
+					float DegreeAngle = FMath::RadiansToDegrees(RadianAngle) * 2.0f;
 
 					//현재 대쉬 위치가 시야각을 벗어나거나 최대 거리 이상일 경우 위치 재설정
-					if (DegreeAngle * 2.0f > FOVAngle || CurrentDistance > MaxDistance)
+					if (DegreeAngle > FOVAngle * 2.0f || CurrentDistance > MaxDistance)
 					{
+						UE_LOG(LogTemp, Log, TEXT("Angle: %f"), DegreeAngle)
 						GroundActor = HitGround;
 						Point = HitResult.ImpactPoint;
 						break;
