@@ -112,7 +112,7 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 		HitResult,
 		PlayerFloorStart,
 		PlayerFloorEnd,
-		ECC_Visibility,
+		ECC_GameTraceChannel8,
 		Params
 	);
 	AActor* PlayerGround = HitResult.GetActor();
