@@ -370,20 +370,27 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	if (bSuccessfullyFoundTarget)
 	{
-		FVector FinalValidatedFeetPos;
+		// FVector FinalValidatedFeetPos;
 		TArray<AActor*> FinalCheckIgnoreActors;
 		FinalCheckIgnoreActors.Add(Comma);
 
-		if (IsSafeLandingZone(TargetPos, FinalCheckIgnoreActors, FinalValidatedFeetPos))
-		{
-			TargetPos = FinalValidatedFeetPos;
-			TargetPos.Z += Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		TargetPos.Z += Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
     
-			if (FVector::DistSquared(BasePos, TargetPos) >= FMath::Square(MinDashDistance))
-			{
-				bCanMoveToDashTarget = true;
-			}
+		if (FVector::DistSquared(BasePos, TargetPos) >= FMath::Square(MinDashDistance))
+		{
+			bCanMoveToDashTarget = true;
 		}
+		
+		// if (IsSafeLandingZone(TargetPos, FinalCheckIgnoreActors, FinalValidatedFeetPos))
+		// {
+		// 	TargetPos = FinalValidatedFeetPos;
+		// 	TargetPos.Z += Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+  //   
+		// 	if (FVector::DistSquared(BasePos, TargetPos) >= FMath::Square(MinDashDistance))
+		// 	{
+		// 		bCanMoveToDashTarget = true;
+		// 	}
+		// }
 	}
 
 	if (bCanMoveToDashTarget)
@@ -397,28 +404,32 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		}
 	}
 
-	if (!bSuccessfullyFoundTarget)
-	{
-		const float FallbackDistances[] = { MoveLength * 0.7f, MoveLength * 0.5f, MoveLength * 0.3f };
-    
-		for (float FallbackDist : FallbackDistances)
-		{
-			// FVector FallbackDirection = DesiredDirection;
-			FVector FallbackDirection = Comma->GetActorLocation() - Comma->GetDashPoint();
-			FallbackDirection.Z = 0.0f;
-			FallbackDirection.Normalize();
-			
-			FVector FallbackTarget = ActorStartPos + FallbackDirection * FallbackDist;
-			FVector ValidatedPos;
-        
-			if (IsSafeLandingZone(FallbackTarget, ActorsToIgnore, ValidatedPos))
-			{
-				TargetPos = ValidatedPos;
-				bSuccessfullyFoundTarget = true;
-				break;
-			}
-		}
-	}
+	// if (!bSuccessfullyFoundTarget)
+	// {
+	// 	const float FallbackDistances[] = { MoveLength * 0.7f, MoveLength * 0.5f, MoveLength * 0.3f };
+ //    
+	// 	for (float FallbackDist : FallbackDistances)
+	// 	{
+	// 		// FVector FallbackDirection = DesiredDirection;
+	// 		FVector FallbackDirection = Comma->GetActorLocation() - Comma->GetDashPoint();
+	// 		FallbackDirection.Z = 0.0f;
+	// 		FallbackDirection.Normalize();
+	// 		
+	// 		FVector FallbackTarget = ActorStartPos + FallbackDirection * FallbackDist;
+	// 		// FVector ValidatedPos;
+	//
+	// 		// TargetPos = ValidatedPos;
+	// 		bSuccessfullyFoundTarget = true;
+	// 		break;
+	// 		
+	// 		// if (IsSafeLandingZone(FallbackTarget, ActorsToIgnore, ValidatedPos))
+	// 		// {
+	// 		// 	TargetPos = ValidatedPos;
+	// 		// 	bSuccessfullyFoundTarget = true;
+	// 		// 	break;
+	// 		// }
+	// 	}
+	// }
 }
 
 

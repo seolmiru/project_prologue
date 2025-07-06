@@ -28,43 +28,48 @@ public:
 	void SetDirection(FVector NewDirection);
 
 	FVector GetPoint();
+
+protected:
+	// 최대 거리
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float MaxDistance = 1000.0f;
+
+	// 대쉬 허용 시야각
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float FOVAngle = 60.0f;
 	
+	// 회전 검사 최대 각
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float RotationMaxDegreeAngle = 15.0f;
+	
+	// 수직 오프셋
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float VerticalOffset = 500.0f;
+
+	// 검사 단위
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	int32 PartialUnitCount = 64;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category="Dash")
 	TObjectPtr<class AComma> Player;
 	
 	// 업데이트 플래그
-	UPROPERTY(VisibleAnywhere, Category="Dash")
 	bool bTickFlag;
 
-	// 회전 검사 최대 각
-	const float RotationMaxDegreeAngle = 15.0f;
-	
 	// 대쉬 방향
-	UPROPERTY(VisibleAnywhere, Category="Dash")	
+	UPROPERTY(VisibleAnywhere, Category = "Dash")
 	FVector TargetDirection;
-
+	
+	UPROPERTY(VisibleAnywhere, Category = "Dash")
 	FVector CurrentDirection;
 	
 	// 대쉬 위치
-	UPROPERTY(VisibleAnywhere, Category="Dash")	
 	FVector Point;
 
 	// 이전 대쉬 대상 지면 액터
-	UPROPERTY(VisibleAnywhere, Category="Dash")	
+	UPROPERTY(VisibleAnywhere, Category = "Dash")
 	AActor* GroundActor;
-	
-	// 최대 거리
-	const float MaxDistance = 1000.0f;
-
-	// 대쉬 허용 시야각
-	const float FOVAngle = 60.0f;
-	
-	// 수직 오프셋
-	const float VerticalOffset = 500.0f;
-
-	// 검사 단위
-	const int32 PartialUnitCount = 64;
 	
 	// 대쉬 탐색 함수
 	void CheckNewDirecionPoint();

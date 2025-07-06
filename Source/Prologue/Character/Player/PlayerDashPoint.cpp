@@ -59,11 +59,12 @@ void APlayerDashPoint::Tick(float DeltaTime)
 void APlayerDashPoint::SetDirection(FVector NewDirection)
 {
 	// 카메라 회전을 기준으로 월드 좌표계 방향 계산
+	FVector WorldDirection = FVector::ForwardVector;
 	FRotator ControlRot = Player->GetController()->GetControlRotation();
 	FRotator YawRotation(0, ControlRot.Yaw, 0);
 	FVector ForwardVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-	FVector WorldDirection = ForwardVector * NewDirection.Y + RightVector * NewDirection.X;
+	WorldDirection = ForwardVector * NewDirection.Y + RightVector * NewDirection.X;
 	WorldDirection.Normalize();
 
 	if (WorldDirection != TargetDirection)
@@ -102,7 +103,7 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	// 플레이어 지면 검사
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(Player);
 
 	FVector PlayerFloorStart = PlayerLocation;
 	FVector PlayerFloorEnd = PlayerLocation;
@@ -112,10 +113,9 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 		HitResult,
 		PlayerFloorStart,
 		PlayerFloorEnd,
-		ECC_Visibility,
+		ECC_GameTraceChannel8,
 		Params
 	);
-	AActor* PlayerGround = HitResult.GetActor();
 
 	// 디버깅
 	FColor DrawColor = bPlayerHit ? FColor::Green : FColor::Red;
@@ -134,6 +134,8 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	// 새로운 이동 위치 탐색
 	if (bPlayerHit)
 	{
+		AActor* PlayerGround = HitResult.GetActor();
+		
 		for (int i = 0; i < PartialUnitCount; i++)
 		{
 			FVector Start = CurrentCheckLocation;
@@ -146,7 +148,7 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 				HitResult,
 				Start,
 				End,
-				ECC_Visibility,
+				ECC_GameTraceChannel8,
 				Params
 			);
 
@@ -172,9 +174,27 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 				float CurrentDistance = FVector2D::Distance((FVector2d)PlayerLocation,
 				                                            (FVector2d)Point);
 
+				FVector MyDirection = Point - PlayerLocation;
+				MyDirection.Z = 0.0f;
+				MyDirection.Normalize();
+
+				FVector PlayerForward = Player->GetActorForwardVector();
+				PlayerForward.Z = 0.0f;
+				PlayerForward.Normalize();
+
+				// 현재 시야각
+				float OldRadianAngle = FMath::Atan2(
+					FVector::CrossProduct(PlayerForward, MyDirection).Z,
+					FVector::DotProduct(PlayerForward, MyDirection)
+					);
+				float OldDegreeAngle = FMath::RadiansToDegrees(OldRadianAngle);
+				OldDegreeAngle = FMath::Abs(OldDegreeAngle);
+
 				// 플레이어가 서있지 않은 지면과 충돌
 				if (GroundActor != nullptr && HitGround != PlayerGround)
 				{
+					UE_LOG(LogTemp, Log, TEXT("Another Player Ground Hit: %s / %s"), *HitGround->GetName(), *PlayerGround->GetName());
+					
 					// 현재 이동 대상 지면과 같은 위치일경우 더 먼 거리의 위치로 설정 
 					if (HitGround == GroundActor)
 					{
@@ -182,10 +202,11 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 						                                        (FVector2d)HitResult.ImpactPoint);
 
 						// 새로운 위치가 현재 위치보다 더 멀리 이동 가능할 때
-						if (NewDistance > CurrentDistance && NewDistance <= MaxDistance)
+						if ((NewDistance > CurrentDistance && NewDistance <= MaxDistance) || OldDegreeAngle > FOVAngle)
 						{
 							//위치 재설정
 							UE_LOG(LogTemp, Log, TEXT("Same Ground Hit: Far Distance"))
+							UE_LOG(LogTemp, Log, TEXT("Angle: %f"), OldDegreeAngle)
 							GroundActor = HitGround;
 							Point = HitResult.ImpactPoint;
 						}
@@ -194,6 +215,7 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 					else
 					{
 						UE_LOG(LogTemp, Log, TEXT("Another Ground Hit: Far Distance"))
+						UE_LOG(LogTemp, Log, TEXT("Angle: %f"), OldDegreeAngle)
 						GroundActor = HitGround;
 						Point = HitResult.ImpactPoint;
 					}
@@ -203,22 +225,10 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 				// 플레이어가 서있는 지면과 충돌
 				else
 				{
-					FVector MyDirection = Point - PlayerLocation;
-					MyDirection.Z = 0.0f;
-					MyDirection.Normalize();
-
-					FVector PlayerForward = Player->GetActorForwardVector();
-					PlayerForward.Z = 0.0f;
-					PlayerForward.Normalize();
-
-					float Dot = FVector::DotProduct(PlayerForward, MyDirection);
-					float RadianAngle = FMath::Acos(FMath::Clamp(Dot, -1.0f, 1.0f));
-					float DegreeAngle = FMath::RadiansToDegrees(RadianAngle) * 2.0f;
-
 					//현재 대쉬 위치가 시야각을 벗어나거나 최대 거리 이상일 경우 위치 재설정
-					if (DegreeAngle > FOVAngle * 2.0f || CurrentDistance > MaxDistance)
+					if (OldDegreeAngle > FOVAngle || CurrentDistance > MaxDistance)
 					{
-						UE_LOG(LogTemp, Log, TEXT("Angle: %f"), DegreeAngle)
+						UE_LOG(LogTemp, Log, TEXT("Angle: %f"), OldDegreeAngle)
 						GroundActor = HitGround;
 						Point = HitResult.ImpactPoint;
 						break;

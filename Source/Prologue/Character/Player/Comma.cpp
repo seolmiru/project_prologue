@@ -90,9 +90,12 @@ AComma::AComma()
 	// 대쉬 위치 오브젝트 소환
 	FActorSpawnParameters SpawnParams;
 	UWorld* World = GetWorld();
-	if (World != nullptr)
+	
+	static ConstructorHelpers::FClassFinder<APlayerDashPoint> DashRef(TEXT("/Script/Engine.Blueprint'/Game/Characters/Comma/Dash/DashPoint.DashPoint_C'"));
+	
+	if (World && DashRef.Class)
 	{
-		DashPoint = World->SpawnActor<APlayerDashPoint>(APlayerDashPoint::StaticClass(), GetActorLocation(), FRotator::ZeroRotator, SpawnParams);		
+		DashPoint = World->SpawnActor<APlayerDashPoint>(DashRef.Class, GetActorLocation(), FRotator::ZeroRotator, SpawnParams);		
 	}
 }
 
