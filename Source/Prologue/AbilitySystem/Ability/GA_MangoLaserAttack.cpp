@@ -34,8 +34,16 @@ void UGA_MangoLaserAttack::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 	BoxTraceTask = UAT_TickBoxTrace::TickBoxTrace(this);
 	if (BoxTraceTask)
 	{
+		BoxTraceTask->TotalDuration = LaserDuration;
+		BoxTraceTask->BoxHalfSize = LaserBoxHalfSize;
+		BoxTraceTask->TraceLength = LaserLength;
+		BoxTraceTask->DamageInterval = DamageTickInterval;
+		BoxTraceTask->bShowDebug = bShowDebugTrace;
+		
 		BoxTraceTask->OnTraceResultCallback.AddDynamic(this, &UGA_MangoLaserAttack::OnTraceResultCallback);
 		BoxTraceTask->ReadyForActivation();
+
+		GetWorld()->GetTimerManager().SetTimer(LaserTimerHandle, this, &UGA_MangoLaserAttack::OnTraceFinished, LaserDuration, false);
 	}
 }
 
@@ -61,4 +69,12 @@ void UGA_MangoLaserAttack::OnTraceFinished()
 
 void UGA_MangoLaserAttack::OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
+	if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, 0))
+	{
+		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffectClass);
+		if (EffectSpecHandle.IsValid())
+		{
+			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EffectSpecHandle, TargetDataHandle);
+		}
+	}
 }

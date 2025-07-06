@@ -35,4 +35,23 @@ private:
 	UAT_TickBoxTrace* BoxTraceTask = nullptr;
     
 	FTimerHandle LaserTimerHandle;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
+	float LaserDuration = 3.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
+	FVector LaserBoxHalfSize = FVector(50.f, 50.f, 50.f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
+	float LaserLength = 800.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
+	float DamageTickInterval = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
+	bool bShowDebugTrace = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
+	TSubclassOf<UGameplayEffect> DamageEffectClass;
 };

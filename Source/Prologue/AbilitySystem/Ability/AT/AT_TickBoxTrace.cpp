@@ -93,13 +93,8 @@ void UAT_TickBoxTrace::TimerTrace()
 
 					UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(HitActor);
 
-					if (TargetASC && AbilitySystemComponent.IsValid())
+					if (TargetASC)
 					{
-						FGameplayEffectContextHandle EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
-						EffectContextHandle.AddSourceObject(OwnerActor);
-
-						float EffectLevel = Ability->GetAbilityLevel(Ability->GetCurrentAbilitySpecHandle(), Ability->GetCurrentActorInfo());
-						FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(DamageEffectClass, EffectLevel, EffectContextHandle);
 						FGameplayAbilityTargetDataHandle DataHandle;
 						FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
 						DataHandle.Add(TargetData);

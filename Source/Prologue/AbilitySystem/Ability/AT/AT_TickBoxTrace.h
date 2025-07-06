@@ -31,7 +31,6 @@ public:
 
 	void TimerTrace();
 
-protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
 	float TotalDuration;
 	
@@ -43,13 +42,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
 	float DamageInterval;
-
+	
+protected:
 	float ElapsedTime;
 
 	FTimerHandle Timer;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<UGameplayEffect> DamageEffectClass;
-
+	
 	TMap<AActor*, float> TimeMap;
 };
