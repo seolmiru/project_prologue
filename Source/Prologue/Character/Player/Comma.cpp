@@ -51,7 +51,7 @@ AComma::AComma()
 	FollowCamera->FieldOfView = 50.f;
 	FollowCamera->bUsePawnControlRotation = false;
 
-	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
@@ -311,6 +311,16 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
+
+		if (!MovementVector.IsNearlyZero())
+		{
+			FVector WorldMovementDirection = ForwardDirection * MovementVector.Y + RightDirection * MovementVector.X;
+			WorldMovementDirection.Z = 0.f;
+			WorldMovementDirection.Normalize();
+
+			FRotator NewRotation = WorldMovementDirection.Rotation();
+			SetActorRotation(NewRotation);
+		}
 	}
 
 	/** Sejin */
@@ -404,7 +414,6 @@ void AComma::RotateToTarget(AActor* Target)
 
 void AComma::OnAttackEnded()
 {
-	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bIsUsingSmoothRotation = false;
 	TargetRotation = FRotator::ZeroRotator;
 }
