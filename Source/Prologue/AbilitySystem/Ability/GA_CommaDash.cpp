@@ -6,31 +6,37 @@
 #include "NavigationSystem.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AT/AT_TickCurve.h"
+#include "AT/AT_WaitBoolCondition.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Player/Comma.h"
+#include "Prologue/Character/Player/PlayerDashPoint.h"
 #include "Prologue/Controller/CommaController.h"
 
 struct FPotentialDashTarget
 {
-    FVector FeetLocation;
-    float DistanceSqToStart;
+	FVector FeetLocation;
+	float DistanceSqToStart;
 
-    FPotentialDashTarget(const FVector& InFeetLocation, const FVector& StartActorPos)
-        : FeetLocation(InFeetLocation), DistanceSqToStart(FVector::DistSquared(StartActorPos, InFeetLocation)) {}
+	FPotentialDashTarget(const FVector& InFeetLocation, const FVector& StartActorPos)
+		: FeetLocation(InFeetLocation), DistanceSqToStart(FVector::DistSquared(StartActorPos, InFeetLocation))
+	{
+	}
 
-    bool operator<(const FPotentialDashTarget& Other) const
-    {
-        return DistanceSqToStart < Other.DistanceSqToStart;
-    }
+	bool operator<(const FPotentialDashTarget& Other) const
+	{
+		return DistanceSqToStart < Other.DistanceSqToStart;
+	}
 };
 
 
 bool UGA_CommaDash::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
-	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+                                       const FGameplayAbilityActorInfo* ActorInfo,
+                                       const FGameplayTagContainer* SourceTags,
+                                       const FGameplayTagContainer* TargetTags,
+                                       FGameplayTagContainer* OptionalRelevantTags) const
 {
 	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
 	{
@@ -49,42 +55,75 @@ bool UGA_CommaDash::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
 }
 
 void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-                                    const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+                                    const FGameplayAbilityActivationInfo ActivationInfo,
+                                    const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
+
+	// DashPoint 회전이 끝났다면 즉시 실행
+	if (Comma->GetDashPoint()->GetIsDirectionSync())
+	{
+		LOG_SCREEN("Dash: Sync");
+		OnDashAllowed();
+	}
+	// 아니면 기다렸다 실행
+	else
+	{
+		LOG_SCREEN("Dash: Not Sync");
+		auto Condition = [Comma]()
+		{
+			return Comma
+				&& Comma->GetDashPoint()
+				&& Comma->GetDashPoint()->GetIsDirectionSync();
+		};
+
+		UAT_WaitBoolCondition* WaitTask = UAT_WaitBoolCondition::WaitUntilTrue(this, Condition);
+		WaitTask->OnCondition.AddDynamic(this, &UGA_CommaDash::OnDashAllowed);
+		WaitTask->ReadyForActivation();
+	}
+
+	return;
+
+	/*
 	// Just Dash Effect 부여
-	FGameplayEffectContextHandle JustDashEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	FGameplayEffectContextHandle JustDashEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
+		MakeEffectContext();
 	JustDashEffectContextHandle.AddSourceObject(this);
-	FGameplayEffectSpecHandle JustDashEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(JustDashTimingEffect, 0.f, JustDashEffectContextHandle);
+	FGameplayEffectSpecHandle JustDashEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
+		JustDashTimingEffect, 0.f, JustDashEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*JustDashEffectSpecHandle.Data.Get());
 
 	// Invincible Effect 부여
-	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
+		MakeEffectContext();
 	InvincibleEffectContextHandle.AddSourceObject(this);
-	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(InvincibleEffect, 0.f, InvincibleEffectContextHandle);
+	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
+		InvincibleEffect, 0.f, InvincibleEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
-	
-	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
+
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
-	
-	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayMontage"), AnimMontage, 1.0f);
+
+	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this, TEXT("PlayMontage"), AnimMontage, 1.0f);
 	PlayTask->OnCompleted.AddDynamic(this, &UGA_CommaDash::OnComplete);
 	PlayTask->OnInterrupted.AddDynamic(this, &UGA_CommaDash::OnInterrupted);
 	PlayTask->ReadyForActivation();
-	
+
 	bCanMoveToDashTarget = false;
-	
+
 	if (!Nav)
 	{
 		return;
 	}
-	
+
 	FVector ActorStartPos = Comma->GetActorLocation();
 	const float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	const float CapsuleRadius = Comma->GetCapsuleComponent()->GetScaledCapsuleRadius();
 
 
+#pragma region past code
 	// // 플레이어의 입력 방향 계산
 	// ACommaController* Controller = Cast<ACommaController>(Comma->GetController());
 	// FVector DesiredDirection = FVector::ZeroVector;
@@ -109,10 +148,11 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	// {
 	// 	DesiredDirection = Comma->GetActorForwardVector().GetSafeNormal();
 	// }
+#pragma endregion
 
 	BasePos = ActorStartPos;
 	// TargetPos = ActorStartPos;
-	TargetPos = Comma->GetDashPoint();
+	TargetPos = Comma->GetDashPoint()->GetPoint();
 
 	float Distance2D = FVector2d::Distance((FVector2d)BasePos, (FVector2d)TargetPos);
 	bool bSuccessfullyFoundTarget = Distance2D >= MinDashDistance;
@@ -120,6 +160,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(Comma);
 
+#pragma region past code
 	// // 경로 검사 단계 수
 	// const int32 EffectivePathCheckSteps = FMath::Max(1, PathCheckSteps);
 	// // LineTrace 시작 지점 수직 Offset
@@ -239,7 +280,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	// 			{
 	// 				// 현재 위치까지의 거리 계산
 	// 				float CurrentDistance = FVector::Dist(ActorStartPos, NavMeshLocation.Location);
- //            
+	//            
 	// 				// 더 멀고 안전한 위치를 발견했을 때만 업데이트
 	// 				if (CurrentDistance > FarthestValidDistance)
 	// 				{
@@ -258,7 +299,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	// 			float AchievedDistance = FVector::Dist(ActorStartPos, BestValidFeetPosInDirection);
 	// 			float DesiredDistance = MoveLength;
 	// 			float AchievedPercentage = AchievedDistance / DesiredDistance;
- //        
+	//        
 	// 			if (AchievedPercentage >= PartialDashMinPercentage)
 	// 			{
 	// 				FVector DirectionToStart = (ActorStartPos - BestValidFeetPosInDirection).GetSafeNormal();
@@ -302,7 +343,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	// 		{
 	// 			float BestDistance = FLT_MAX;
 	// 			FVector BestPosition = ActorStartPos;
- //        
+	//        
 	// 			for (const FVector& Pos : PotentialPositions)
 	// 			{
 	// 				float DistToTarget = FVector::Dist(Pos, CurrentDashAttemptEndPos);
@@ -312,7 +353,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	// 					BestPosition = Pos;
 	// 				}
 	// 			}
- //        
+	//        
 	// 			OutValidatedFeetPos = BestPosition;
 	// 			return true;
 	// 		}
@@ -330,6 +371,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	// 	TargetPos = ForwardDashTargetFeetLocation;
 	// 	bSuccessfullyFoundTarget = true;
 	// }
+#pragma endregion
 
 	if (!bSuccessfullyFoundTarget && NumFOVTracesPerSide > 0 && FOVAngleDegrees > 0.f)
 	{
@@ -337,17 +379,18 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		FVector CharacterActualForwardDir = Comma->GetActorForwardVector().GetSafeNormal();
 
 		float HalfFOV_Rads = FMath::DegreesToRadians(FOVAngleDegrees / 2.0f);
-        float AngleIncrementPerTrace = (FOVAngleDegrees / 2.0f) / FMath::Max(1, NumFOVTracesPerSide);
+		float AngleIncrementPerTrace = (FOVAngleDegrees / 2.0f) / FMath::Max(1, NumFOVTracesPerSide);
 
 		for (int32 Side = -1; Side <= 1; Side += 2)
 		{
 			for (int32 TraceIndex = 1; TraceIndex <= NumFOVTracesPerSide; ++TraceIndex)
 			{
 				float CurrentSampleAngleDegrees = AngleIncrementPerTrace * TraceIndex * Side;
-				
+
 				FRotator AngleOffsetRotator(0, CurrentSampleAngleDegrees, 0);
 				FVector SampleDirectionForFOV = AngleOffsetRotator.RotateVector(CharacterActualForwardDir);
-				
+
+#pragma region past code
 				// FVector FOVTargetFeetLocation;
 				// EDrawDebugTrace::Type FOVTraceDebugType = bDebugFOVTraces ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
 
@@ -355,6 +398,7 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 				// {
 				// 	PotentialTargetsInFOV.Emplace(FOVTargetFeetLocation, ActorStartPos);
 				// }
+#pragma  endregion
 			}
 		}
 
@@ -375,22 +419,24 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		FinalCheckIgnoreActors.Add(Comma);
 
 		TargetPos.Z += Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-    
+
 		if (FVector::DistSquared(BasePos, TargetPos) >= FMath::Square(MinDashDistance))
 		{
 			bCanMoveToDashTarget = true;
 		}
-		
+
+#pragma region past code
 		// if (IsSafeLandingZone(TargetPos, FinalCheckIgnoreActors, FinalValidatedFeetPos))
 		// {
 		// 	TargetPos = FinalValidatedFeetPos;
 		// 	TargetPos.Z += Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-  //   
+		//   
 		// 	if (FVector::DistSquared(BasePos, TargetPos) >= FMath::Square(MinDashDistance))
 		// 	{
 		// 		bCanMoveToDashTarget = true;
 		// 	}
 		// }
+#pragma endregion
 	}
 
 	if (bCanMoveToDashTarget)
@@ -404,10 +450,11 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		}
 	}
 
+#pragma region past code
 	// if (!bSuccessfullyFoundTarget)
 	// {
 	// 	const float FallbackDistances[] = { MoveLength * 0.7f, MoveLength * 0.5f, MoveLength * 0.3f };
- //    
+	//    
 	// 	for (float FallbackDist : FallbackDistances)
 	// 	{
 	// 		// FVector FallbackDirection = DesiredDirection;
@@ -430,11 +477,14 @@ void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	// 		// }
 	// 	}
 	// }
+#pragma  endregion
+*/
 }
 
 
 void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+                               const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility,
+                               bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
@@ -462,7 +512,7 @@ void UGA_CommaDash::OnComplete()
 			Comma->GetCharacterMovement()->UpdateFloorFromAdjustment();
 		}
 	}
-    
+
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
@@ -473,7 +523,8 @@ void UGA_CommaDash::OnInterrupted()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
 }
 
-bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const
+bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors,
+                                      FVector& OutAdjustedLocation) const
 {
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement();
@@ -513,9 +564,10 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 
 		if (bDebugFOVTraces)
 		{
-			DrawDebugLine(GetWorld(), TraceStart, bHit ? HitResult.ImpactPoint : TraceEnd, bHit ? FColor::Cyan : FColor::Magenta, false, 2.0f);
+			DrawDebugLine(GetWorld(), TraceStart, bHit ? HitResult.ImpactPoint : TraceEnd,
+			              bHit ? FColor::Cyan : FColor::Magenta, false, 2.0f);
 		}
-		
+
 		if (!bHit || !MovementComp->IsWalkable(HitResult))
 		{
 			return false;
@@ -525,7 +577,7 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 		MaxZ = FMath::Max(MaxZ, HitResult.ImpactPoint.Z);
 		MinZ = FMath::Min(MinZ, HitResult.ImpactPoint.Z);
 	}
-	
+
 	if ((MaxZ - MinZ) > MaxStepHeight)
 	{
 		return false;
@@ -564,6 +616,109 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 	{
 		OutAdjustedLocation = FinalFeetLocation;
 	}
-	
+
 	return true;
+}
+
+void UGA_CommaDash::OnDashAllowed()
+{
+	LOG_SCREEN("Start Dash");
+	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
+
+	// Just Dash Effect 부여
+	FGameplayEffectContextHandle JustDashEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
+		MakeEffectContext();
+	JustDashEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle JustDashEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
+		JustDashTimingEffect, 0.f, JustDashEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*JustDashEffectSpecHandle.Data.Get());
+
+	// Invincible Effect 부여
+	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
+		MakeEffectContext();
+	InvincibleEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
+		InvincibleEffect, 0.f, InvincibleEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
+
+	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
+
+	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this, TEXT("PlayMontage"), AnimMontage, 1.0f);
+	PlayTask->OnCompleted.AddDynamic(this, &UGA_CommaDash::OnComplete);
+	PlayTask->OnInterrupted.AddDynamic(this, &UGA_CommaDash::OnInterrupted);
+	PlayTask->ReadyForActivation();
+
+	bCanMoveToDashTarget = false;
+
+	if (!Nav)
+	{
+		return;
+	}
+
+	FVector ActorStartPos = Comma->GetActorLocation();
+	const float CapsuleHalfHeight = Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	const float CapsuleRadius = Comma->GetCapsuleComponent()->GetScaledCapsuleRadius();
+
+	BasePos = ActorStartPos;
+	TargetPos = Comma->GetDashPoint()->GetPoint();
+
+	float Distance2D = FVector2d::Distance((FVector2d)BasePos, (FVector2d)TargetPos);
+	bool bSuccessfullyFoundTarget = Distance2D >= MinDashDistance;
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(Comma);
+
+	if (!bSuccessfullyFoundTarget && NumFOVTracesPerSide > 0 && FOVAngleDegrees > 0.f)
+	{
+		TArray<FPotentialDashTarget> PotentialTargetsInFOV;
+		FVector CharacterActualForwardDir = Comma->GetActorForwardVector().GetSafeNormal();
+
+		float HalfFOV_Rads = FMath::DegreesToRadians(FOVAngleDegrees / 2.0f);
+		float AngleIncrementPerTrace = (FOVAngleDegrees / 2.0f) / FMath::Max(1, NumFOVTracesPerSide);
+
+		for (int32 Side = -1; Side <= 1; Side += 2)
+		{
+			for (int32 TraceIndex = 1; TraceIndex <= NumFOVTracesPerSide; ++TraceIndex)
+			{
+				float CurrentSampleAngleDegrees = AngleIncrementPerTrace * TraceIndex * Side;
+
+				FRotator AngleOffsetRotator(0, CurrentSampleAngleDegrees, 0);
+				FVector SampleDirectionForFOV = AngleOffsetRotator.RotateVector(CharacterActualForwardDir);
+			}
+		}
+
+		if (PotentialTargetsInFOV.Num() > 0)
+		{
+			PotentialTargetsInFOV.Sort();
+			TargetPos = PotentialTargetsInFOV[0].FeetLocation;
+			bSuccessfullyFoundTarget = true;
+		}
+	}
+
+	bCanMoveToDashTarget = false;
+
+	if (bSuccessfullyFoundTarget)
+	{
+		TArray<AActor*> FinalCheckIgnoreActors;
+		FinalCheckIgnoreActors.Add(Comma);
+
+		TargetPos.Z += Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+		if (FVector::DistSquared(BasePos, TargetPos) >= FMath::Square(MinDashDistance))
+		{
+			bCanMoveToDashTarget = true;
+		}
+	}
+
+	if (bCanMoveToDashTarget)
+	{
+		UAT_TickCurve* TickCurveTask = UAT_TickCurve::CreateTask(this, Curve);
+		if (TickCurveTask)
+		{
+			TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
+			TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
+			TickCurveTask->ReadyForActivation();
+		}
+	}
 }
