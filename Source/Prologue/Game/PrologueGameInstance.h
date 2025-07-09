@@ -7,6 +7,7 @@
 #include "MoviePlayer.h"
 #include "PrologueGameInstance.generated.h"
 
+class AComma;
 /**
  * 
  */
