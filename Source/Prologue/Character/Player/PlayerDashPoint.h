@@ -25,10 +25,13 @@ public:
 	/*=======Dash Section=======*/
 public:
 	// 검사 방향 변경 함수
-	void SetDirection(FVector NewDirection);
+	void SetDirection(FVector NewDirection, bool bConvertLocalToCameraDirection = true);
 
 	FVector GetPoint();
 
+	// 회전 동기화 여부
+	bool GetIsDirectionSync();
+	
 protected:
 	// 최대 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
@@ -64,7 +67,7 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Dash")
 	FVector CurrentDirection;
 	
-	// 대쉬 위치
+	// 대시 위치
 	FVector Point;
 
 	// 이전 대쉬 대상 지면 액터

@@ -394,6 +394,10 @@ void AComma::RotateToMouseSmooth()
 		TargetRotation = DirectionToMouse.Rotation();
 		bIsUsingSmoothRotation = true;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
+
+		/* Sejin */
+		// 공격시 DashPoint도 회전
+		DashPoint->SetDirection(DirectionToMouse, false);
 	}
 }
 
@@ -492,15 +496,15 @@ void AComma::UpdateDamageEffect()
 	DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), CurrentIntensity);
 }
 
-FVector AComma::GetDashPoint() const
+APlayerDashPoint* AComma::GetDashPoint() const
 {
 	if (DashPoint != nullptr)
 	{
-		return DashPoint->GetPoint();
+		return DashPoint;
 	}
 	else
 	{
 		LOG_SCREEN("Dash Point is null");
-		return GetActorLocation();
+		return nullptr;
 	}	
 }

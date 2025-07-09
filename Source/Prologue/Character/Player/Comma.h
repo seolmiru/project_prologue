@@ -208,7 +208,7 @@ private:
 
 	/** Sejin */
 public:
-	FVector GetDashPoint() const;
+	class APlayerDashPoint* GetDashPoint() const;
 	
 private:
 	TObjectPtr<class APlayerDashPoint> DashPoint;
