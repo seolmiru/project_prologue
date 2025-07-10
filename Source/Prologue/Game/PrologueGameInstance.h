@@ -19,6 +19,15 @@ class PROLOGUE_API UPrologueGameInstance : public UGameInstance
 public:
 	virtual void Init() override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
+	bool bHasIntroDialoguePlayed = false;
+
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	void SetHasIntroDialoguePlayed(bool bPlayed) { bHasIntroDialoguePlayed = bPlayed; }
+
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	bool GetHasIntroDialoguePlayed() const { return bHasIntroDialoguePlayed; }
+	
 protected:
 	void OnPreLoadMap(const FString& MapName);
 	void OnDestinationWorldLoaded(UWorld* LoadedWorld);

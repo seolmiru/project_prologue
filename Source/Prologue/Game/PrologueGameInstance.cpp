@@ -14,8 +14,8 @@ void UPrologueGameInstance::Init()
 
 	if (LoadingScreenWidgets.Num() == 0)
 	{
-		LoadingScreenWidgets.Add(TSoftClassPtr<UUserWidget>(FSoftObjectPath(TEXT("/Game/UI/WBP_LoadingScreen_First.WBP_LoadingScreen_First_C"))));
-		LoadingScreenWidgets.Add(TSoftClassPtr<UUserWidget>(FSoftObjectPath(TEXT("/Game/UI/WBP_LoadingScreen_Second.WBP_LoadingScreen_Second_C"))));
+		LoadingScreenWidgets.Add(TSoftClassPtr<UUserWidget>(FSoftObjectPath(TEXT("/Game/UI/Widget/WBP_LoadingScreen_First.WBP_LoadingScreen_First_C"))));
+		LoadingScreenWidgets.Add(TSoftClassPtr<UUserWidget>(FSoftObjectPath(TEXT("/Game/UI/Widget/WBP_LoadingScreen_Second.WBP_LoadingScreen_Second_C"))));
 	}
 }
 
