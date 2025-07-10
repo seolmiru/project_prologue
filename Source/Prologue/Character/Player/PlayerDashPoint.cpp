@@ -129,12 +129,24 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	FVector PlayerFloorStart = PlayerLocation;
 	FVector PlayerFloorEnd = PlayerLocation;
 	PlayerFloorEnd.Z -= Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 50.0f;
+	const float CapsuleRadius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	const float CapsuleHalfHeight = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
-	bool bPlayerHit = GetWorld()->LineTraceSingleByChannel(
+	// bool bPlayerHit = GetWorld()->LineTraceSingleByChannel(
+	// 	HitResult,
+	// 	PlayerFloorStart,
+	// 	PlayerFloorEnd,
+	// 	ECC_GameTraceChannel8,
+	// 	Params
+	// );
+
+	bool bPlayerHit = GetWorld()->SweepSingleByChannel(
 		HitResult,
-		PlayerFloorStart,
+		PlayerLocation,
 		PlayerFloorEnd,
+		FQuat::Identity,
 		ECC_GameTraceChannel8,
+		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight),
 		Params
 	);
 
@@ -142,15 +154,17 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 #pragma region Debug
 	FColor DrawColor = bPlayerHit ? FColor::Green : FColor::Red;
 
-	DrawDebugLine(
+	DrawDebugCapsule(
 		GetWorld(),
-		PlayerFloorStart,
-		PlayerFloorEnd,
+		PlayerLocation,
+		CapsuleHalfHeight,
+		CapsuleRadius,
+		FQuat::Identity,
 		DrawColor,
 		false,
-		-1.0f,
-		0,
-		2.0f
+		 -1.0f,
+		 0,
+		 2.0f
 	);
 #pragma endregion
 
