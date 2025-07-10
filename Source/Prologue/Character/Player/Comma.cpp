@@ -74,10 +74,6 @@ AComma::AComma()
 	SwitchAttackWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	SwitchAttackWidgetComponent->SetDrawSize(FVector2D(400.f, 384.f));
 	SwitchAttackWidgetComponent->SetVisibility(false);
-
-	OverClockPostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("OverClockPostProcessComponent"));
-	OverClockPostProcessComponent->SetupAttachment(FollowCamera);
-	OverClockPostProcessComponent->bEnabled = false;
 	
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
 
@@ -445,20 +441,6 @@ void AComma::OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) co
 		else
 		{
 			SwitchAttackWidgetComponent->SetVisibility(false);
-		}
-	}
-}
-
-void AComma::SetOverClockEffectActive(bool bActive)
-{
-	if (OverClockPostProcessComponent && OverClockPostProcessMaterial)
-	{
-		OverClockPostProcessComponent->bEnabled = bActive;
-
-		if (bActive)
-		{
-			OverClockPostProcessComponent->Settings.WeightedBlendables.Array.Empty();
-			OverClockPostProcessComponent->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.f, OverClockPostProcessMaterial));
 		}
 	}
 }

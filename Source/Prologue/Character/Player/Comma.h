@@ -64,12 +64,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCommaCombatComponent* CommaCombatComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UPostProcessComponent* OverClockPostProcessComponent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UMaterialInterface> OverClockPostProcessMaterial;	
 	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
@@ -120,6 +114,9 @@ private:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_SwitchAttackWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> OverClockWidget;	
 	
 	void Input_Move(const FInputActionValue& InputActionValue);
 
@@ -173,9 +170,6 @@ public:
 	void OnAttackEnded();
 
 	void OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;
-
-	UFUNCTION(BlueprintCallable)
-	void SetOverClockEffectActive(bool bActive);
 
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void TriggerDamageEffect(float DamageAmount = 1.f);

@@ -32,6 +32,9 @@ protected:
 
 	UFUNCTION()
 	void OnBlendOut();
+
+	UFUNCTION()
+	void OnMoveToTargetFinished();
 	
 	FName GetNextSection();
 	void StartComboTimer();
@@ -42,7 +45,14 @@ protected:
 	void EnableComboInput();
 
 	void ProcessNextCombo();
+
+	AActor* FindNearestEnemyInFront();
+	AActor* FindNearestEnemyInDirection(const FVector& SearchDirection);
+
+	FVector GetMouseDirection() const;
 	
+	void StartAttackMontage();
+
 protected:
 	UPROPERTY()
 	TObjectPtr<class UComboSwordData> CurrentComboData;
@@ -57,4 +67,27 @@ protected:
 	bool HasNextComboInput = false;
 
 	FTimerHandle CurrentComboTimerHandle;
+
+// 추격 시스템 관련 변수
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection", meta = (AllowPrivateAccess = true))
+	float DetectionRange = 500.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection", meta = (AllowPrivateAccess = true))
+	float DetectionAngle = 90.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection", meta = (AllowPrivateAccess = true))
+	float DashDuration = 0.2f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection", meta = (AllowPrivateAccess = true))
+	float DashDistance = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug", meta = (AllowPrivateAccess = true))
+	bool bShowDebugDetection = true;
+
+private:
+	UPROPERTY()
+	class AComma* CachedComma = nullptr;
+
+	FVector CachedAttackDirection;
 };
