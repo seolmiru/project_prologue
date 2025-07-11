@@ -20,6 +20,7 @@
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/AbilitySystem/Ability/GA_CommaAttackSword.h"
+#include "Prologue/Game/PrologueTutorialSubSystem.h"
 #include "Prologue/Player/ProloguePlayerState.h"
 #include "Prologue/UI/Comma/CommaWidget.h"
 
@@ -159,6 +160,11 @@ void AComma::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
+	if (UPrologueTutorialSubSystem* TutorialSubSystem = GetGameInstance()->GetSubsystem<UPrologueTutorialSubSystem>())
+	{
+		TutorialSubSystem->RegisterPlayer(this);
+	}
+	
 	if (AProloguePlayerState* GASPS = GetPlayerState<AProloguePlayerState>())
 	{
 		ASC = GASPS->GetAbilitySystemComponent();
@@ -246,6 +252,11 @@ void AComma::BeginPlay()
 
 void AComma::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (UPrologueTutorialSubSystem* TutorialSubSystem = GetGameInstance()->GetSubsystem<UPrologueTutorialSubSystem>())
+	{
+		TutorialSubSystem->UnregisterPlayer();
+	}
+	
 	if (ASC && SwitchAttackSwordTag.IsValid())
 	{
 		ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
