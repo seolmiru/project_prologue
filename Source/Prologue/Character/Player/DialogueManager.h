@@ -49,7 +49,7 @@ protected:
 	void OnDialogueCompleted();
 
 	UPROPERTY()
-	APlayerController* CommaController;
+	APlayerController* PlayerController;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	bool bDisablePlayerInputDuringDialogue = true;

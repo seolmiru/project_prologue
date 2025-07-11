@@ -21,11 +21,11 @@ void ADialogueManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CommaController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
-	if (DialogueWidgetClass && CommaController)
+	if (DialogueWidgetClass && PlayerController)
 	{
-		DialogueWidget = CreateWidget<UDialogueWidget>(CommaController, DialogueWidgetClass);
+		DialogueWidget = CreateWidget<UDialogueWidget>(PlayerController, DialogueWidgetClass);
 		if (DialogueWidget)
 		{
 			DialogueWidget->AddToViewport(10);
@@ -56,26 +56,42 @@ void ADialogueManager::StartDialogue(FName StartDialogueID)
 
 	bIsDialogueActive = true;
 
+	if (bDisablePlayerInputDuringDialogue && PlayerController)
+	{
+		if (APawn* PlayerPawn = PlayerController->GetPawn())
+		{
+			PlayerPawn->DisableInput(PlayerController);
+		}
+	}
+	
 	DialogueWidget->StartDialogue(StartDialogueID);
 }
 
 void ADialogueManager::EndDialogue()
 {
-	CleanUpInputComponent();
-	
 	bIsDialogueActive = false;
+
+	if (bDisablePlayerInputDuringDialogue && PlayerController)
+	{
+		if (APawn* PlayerPawn = PlayerController->GetPawn())
+		{
+			PlayerPawn->EnableInput(PlayerController);
+		}
+	}
+
+	CleanUpInputComponent();
 }
 
 void ADialogueManager::SetupInputComponent()
 {
-	if (!CommaController || !DialogueInputAction)
+	if (!PlayerController || !DialogueInputAction)
 	{
 		return;
 	}
 
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(CommaController->GetLocalPlayer()))
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 	{
-		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(CommaController->InputComponent))
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
 			DialogueInputBindingHandle = EnhancedInputComponent->BindAction(DialogueInputAction, ETriggerEvent::Started, this, &ADialogueManager::HandleDialogueInput).GetHandle();
 		}
@@ -84,12 +100,12 @@ void ADialogueManager::SetupInputComponent()
 
 void ADialogueManager::CleanUpInputComponent()
 {
-	if (!CommaController || !DialogueInputAction)
+	if (!PlayerController || !DialogueInputAction)
 	{
 		return;
 	}
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(CommaController->InputComponent))
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 	{
 		if (DialogueInputBindingHandle != 0)
 		{
@@ -111,6 +127,7 @@ void ADialogueManager::HandleDialogueInput()
 
 void ADialogueManager::OnDialogueCompleted()
 {
+	LOG_SCREEN("OnDialogueCompleted Called");
 	EndDialogue();
 }
 

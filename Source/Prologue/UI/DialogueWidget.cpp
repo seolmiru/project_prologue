@@ -106,7 +106,7 @@ void UDialogueWidget::EndDialogue()
 
 	SetVisibility(ESlateVisibility::Collapsed);
 
-	OnDialogueCompleted.IsBound();
+	OnDialogueCompleted.Broadcast();
 
 	LOG_SCREEN("Dialogue End");
 }
@@ -118,6 +118,9 @@ void UDialogueWidget::SetCurrentDialogue(const FDialogueData& DialogueData)
 		SpeakerNameText->SetText(FText::FromString(DialogueData.SpeakerName));
 
 		FullDialogueText = DialogueData.DialogueText.ToString();
+
+		FullDialogueText = FullDialogueText.Replace(TEXT("<br>"), TEXT("\n"));
+		
 		CurrentCharIndex = 0;
 
 		if (DialogueText)
