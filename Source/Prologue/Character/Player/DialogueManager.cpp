@@ -25,6 +25,7 @@ void ADialogueManager::BeginPlay()
 
 	if (DialogueWidgetClass && PlayerController)
 	{
+		// 대사 위젯 띄우기
 		DialogueWidget = CreateWidget<UDialogueWidget>(PlayerController, DialogueWidgetClass);
 		if (DialogueWidget)
 		{

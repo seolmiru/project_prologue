@@ -11,6 +11,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMoveToTargetDelegate);
 /**
  * 
  */
+
+// 추격 시스템
 UCLASS()
 class PROLOGUE_API UAT_MoveToTarget : public UAbilityTask
 {
@@ -19,7 +21,7 @@ class PROLOGUE_API UAT_MoveToTarget : public UAbilityTask
 public:
 	UPROPERTY(BlueprintAssignable)
 	FMoveToTargetDelegate OnFinished;
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Ability|Tasks", meta = (HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "TRUE"))
 	static UAT_MoveToTarget* MoveToTarget(UGameplayAbility* OwningAbility, FVector TargetLocation, float Duration);
 
