@@ -80,7 +80,53 @@ void APlayerDashPoint::SetDirection(FVector NewDirection, bool bConvertLocalToCa
 
 FVector APlayerDashPoint::GetPoint()
 {
-	return Point;
+	FVector ResultPoint = Point;
+	
+	FVector Direction = Point - Player->GetActorLocation();
+	Direction.Z = 0.0f;
+	Direction.Normalize();
+
+	FHitResult ForwardResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Player);
+	FVector ForwardStartPoint = Point + (Direction * SafeWeight);
+	FVector ForwardEndPoint = ForwardStartPoint;
+	ForwardStartPoint.Z += VerticalOffset;
+	ForwardEndPoint.Z -= VerticalOffset;
+
+	bool bForward = GetWorld()->LineTraceSingleByChannel(
+		ForwardResult,
+		ForwardStartPoint,
+		ForwardEndPoint,
+		ECC_GameTraceChannel8,
+		Params
+		);
+
+	FHitResult RearResult;
+	FVector RearStartPoint = Point - (Direction * SafeWeight);
+	FVector RearEndPoint = RearStartPoint;
+	RearStartPoint.Z += VerticalOffset;
+	RearEndPoint.Z -= VerticalOffset;
+	
+	bool bRear = GetWorld()->LineTraceSingleByChannel(
+		RearResult,
+		RearStartPoint,
+		RearEndPoint,
+		ECC_GameTraceChannel8,
+		Params
+	);
+
+	// 지면 끝에 걸쳐있다면 지면 안쪽으로 보정
+	if (bForward && !bRear) // 앞쪽으로 보정
+	{
+		ResultPoint = ForwardResult.ImpactPoint;
+	}
+	else if (!bForward && bRear) // 뒤쪽으로 보정
+	{
+		ResultPoint = RearResult.ImpactPoint;
+	}
+	
+	return ResultPoint;
 }
 
 bool APlayerDashPoint::GetIsDirectionSync()
