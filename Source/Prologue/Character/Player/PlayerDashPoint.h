@@ -53,6 +53,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	int32 PartialUnitCount = 64;
 
+	// 안전 영역 범위
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float SafeWeight = 100.0f;
+	
 private:
 	UPROPERTY(VisibleAnywhere, Category="Dash")
 	TObjectPtr<class AComma> Player;
