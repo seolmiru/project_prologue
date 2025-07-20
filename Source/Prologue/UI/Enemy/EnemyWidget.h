@@ -27,5 +27,5 @@ protected:
 	float CurrentHealth = 0.0f;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	float CurrentMaxHealth = 0.1f;	
+	float CurrentMaxHealth = 0.1f;
 };

@@ -3,6 +3,8 @@
 
 #include "EnemyWidget.h"
 
+#include "Components/ProgressBar.h"
+
 void UEnemyWidget::SetAbilitySystemComponent(AActor* InOwner)
 {
 	Super::SetAbilitySystemComponent(InOwner);

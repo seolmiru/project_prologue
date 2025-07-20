@@ -31,6 +31,13 @@ APrologueEnemyCharacter::APrologueEnemyCharacter()
 
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	Attributes = CreateDefaultSubobject<UPrologueAttributeSet>(TEXT("Attributes"));
+
+	EnemyWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("EnemyWidgetComponent"));
+	EnemyWidgetComponent->SetupAttachment(GetMesh());
+	EnemyWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	EnemyWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	EnemyWidgetComponent->SetDrawSize(FVector2D(200.f, 50.f));
+	EnemyWidgetComponent->SetWidgetClass(BP_EnemyWidget);
 }
 
 void APrologueEnemyCharacter::BeginPlay()
