@@ -31,12 +31,12 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Dash|GroundCheck")
 	bool IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const;
 
-	/* Sejin */
+	/* Start Sejin */
 
 	UFUNCTION(BlueprintCallable, Category = "Dash")
 	void OnDashAllowed();
 	
-	/* Sejin */
+	/* End Sejin */
 	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAnimMontage> AnimMontage;

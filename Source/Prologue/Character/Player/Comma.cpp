@@ -28,9 +28,9 @@ AComma::AComma()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
-	
+
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
-	
+
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
@@ -45,7 +45,7 @@ AComma::AComma()
 	CameraBoom->bInheritPitch = false;
 	CameraBoom->bInheritYaw = false;
 	CameraBoom->bInheritRoll = false;
-	
+
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->FieldOfView = 50.f;
@@ -61,24 +61,24 @@ AComma::AComma()
 
 	BowWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BowWeaponMesh"));
 	BowWeaponMesh->SetupAttachment(GetMesh(),TEXT("BowSocket"));
-	
+
 	CommaCombatComponent = CreateDefaultSubobject<UCommaCombatComponent>(TEXT("CommaCombatComponent"));
 
 	UIAnchorComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("UIAnchorComponent"));
 	UIAnchorComponent->SetupAttachment(GetRootComponent());
 	UIAnchorComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
-	
+
 	SwitchAttackWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SwitchAttackWidgetComponent"));
 	SwitchAttackWidgetComponent->SetupAttachment(UIAnchorComponent);
 	SwitchAttackWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 	SwitchAttackWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	SwitchAttackWidgetComponent->SetDrawSize(FVector2D(400.f, 384.f));
 	SwitchAttackWidgetComponent->SetVisibility(false);
-	
+
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
 
 	SwitchAttackBowTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Bow"));
-	
+
 	SwordWeaponMesh->SetVisibility(false);
 
 	/** Sejin */
@@ -86,12 +86,14 @@ AComma::AComma()
 	// 대쉬 위치 오브젝트 소환
 	FActorSpawnParameters SpawnParams;
 	UWorld* World = GetWorld();
-	
-	static ConstructorHelpers::FClassFinder<APlayerDashPoint> DashRef(TEXT("/Script/Engine.Blueprint'/Game/Characters/Comma/Dash/DashPoint.DashPoint_C'"));
-	
+
+	static ConstructorHelpers::FClassFinder<APlayerDashPoint> DashRef(
+		TEXT("/Script/Engine.Blueprint'/Game/Characters/Comma/Dash/DashPoint.DashPoint_C'"));
+
 	if (World && DashRef.Class)
 	{
-		DashPoint = World->SpawnActor<APlayerDashPoint>(DashRef.Class, GetActorLocation(), FRotator::ZeroRotator, SpawnParams);		
+		DashPoint = World->SpawnActor<APlayerDashPoint>(DashRef.Class, GetActorLocation(), FRotator::ZeroRotator,
+		                                                SpawnParams);
 	}
 }
 
@@ -143,7 +145,8 @@ void AComma::NotifyControllerChanged()
 
 	if (ACommaController* CommaController = Cast<ACommaController>(Controller))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(CommaController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<
+			UEnhancedInputLocalPlayerSubsystem>(CommaController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
@@ -158,7 +161,7 @@ void AComma::PostInitializeComponents()
 void AComma::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	
+
 	if (AProloguePlayerState* GASPS = GetPlayerState<AProloguePlayerState>())
 	{
 		ASC = GASPS->GetAbilitySystemComponent();
@@ -166,19 +169,21 @@ void AComma::PossessedBy(AController* NewController)
 
 		if (ASC && SwitchAttackSwordTag.IsValid())
 		{
-			ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnSwitchAttackUI);
+			ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(
+				this, &AComma::OnSwitchAttackUI);
 		}
 
 		if (ASC && SwitchAttackBowTag.IsValid())
 		{
-			ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnSwitchAttackUI);
+			ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).AddUObject(
+				this, &AComma::OnSwitchAttackUI);
 		}
 	}
-	
+
 	if (ASC)
 	{
 		//ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Comma.Weapon.Hammer")));
-		
+
 		for (auto& Ability : StartAbilities)
 		{
 			FGameplayAbilitySpec GameplayAbilitySpec(Ability);
@@ -203,7 +208,7 @@ void AComma::PossessedBy(AController* NewController)
 
 	if (!StartEffect.IsEmpty())
 	{
-		for (const TSubclassOf<UGameplayEffect> &EffectClass : StartEffect)
+		for (const TSubclassOf<UGameplayEffect>& EffectClass : StartEffect)
 		{
 			if (!EffectClass) continue;
 
@@ -239,7 +244,8 @@ void AComma::BeginPlay()
 		{
 			DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), 0.f);
 
-			FollowCamera->PostProcessSettings.WeightedBlendables.Array.Add(FWeightedBlendable(1.f, DamagePostProcessMID));
+			FollowCamera->PostProcessSettings.WeightedBlendables.Array.Add(
+				FWeightedBlendable(1.f, DamagePostProcessMID));
 		}
 	}
 }
@@ -250,12 +256,12 @@ void AComma::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 	}
-	
+
 	if (ASC && SwitchAttackBowTag.IsValid())
 	{
 		ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 	}
-	
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -271,7 +277,8 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		{
 			for (auto InputAction : InputConfigDataAsset->InputActions)
 			{
-				EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputGAS, InputAction.Tag);
+				EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this,
+				                                   &AComma::InputGAS, InputAction.Tag);
 
 				LOG_SCREEN("%s", *InputAction.Tag.ToString());
 			}
@@ -283,7 +290,7 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 {
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 	CachedMovementInput = MovementVector;
-	
+
 	if (ASC)
 	{
 		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
@@ -300,7 +307,7 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 
 		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
+
 		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
@@ -486,7 +493,6 @@ APlayerDashPoint* AComma::GetDashPoint() const
 	}
 	else
 	{
-		LOG_SCREEN("Dash Point is null");
 		return nullptr;
-	}	
+	}
 }
