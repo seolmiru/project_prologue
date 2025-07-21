@@ -141,7 +141,7 @@ void APlayerDashPoint::SetDirectionMinGround()
 
 	// 충돌 대상 타입 정의
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
-	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel8));
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel7));
 
 	// 결과 배열
 	TArray<AActor*> OverlapActors;
@@ -174,10 +174,11 @@ void APlayerDashPoint::SetDirectionMinGround()
 	OverlapIgnore.Add(Player); // 플레이어
 	OverlapIgnore.Add(HitResult.GetActor()); // 플레이어가 서있는 지면
 
-	bool bGroundHit = UKismetSystemLibrary::SphereOverlapActors(
+	bool bGroundHit = UKismetSystemLibrary::CapsuleOverlapActors(
 		GetWorld(),
 		PlayerLocation,
 		MaxDistance,
+		VerticalOffset,
 		ObjectTypes,
 		nullptr,
 		OverlapIgnore,
