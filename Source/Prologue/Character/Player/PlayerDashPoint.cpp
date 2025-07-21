@@ -14,7 +14,6 @@ APlayerDashPoint::APlayerDashPoint()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	bTickFlag = true;
 	TargetDirection = FVector::ForwardVector;
 	CurrentDirection = TargetDirection;
 }
@@ -49,11 +48,7 @@ void APlayerDashPoint::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// 대시 위치 갱신
-	if (bTickFlag)
-	{
-		CheckNewDirecionPoint();
-	}
+	CheckNewDirecionPoint();
 }
 
 void APlayerDashPoint::SetDirection(FVector NewDirection, bool bConvertLocalToCameraDirection)
@@ -81,7 +76,7 @@ void APlayerDashPoint::SetDirection(FVector NewDirection, bool bConvertLocalToCa
 FVector APlayerDashPoint::GetPoint()
 {
 	FVector ResultPoint = Point;
-	
+
 	FVector Direction = Point - Player->GetActorLocation();
 	Direction.Z = 0.0f;
 	Direction.Normalize();
@@ -100,14 +95,14 @@ FVector APlayerDashPoint::GetPoint()
 		ForwardEndPoint,
 		ECC_GameTraceChannel8,
 		Params
-		);
+	);
 
 	FHitResult RearResult;
 	FVector RearStartPoint = Point - (Direction * SafeWeight);
 	FVector RearEndPoint = RearStartPoint;
 	RearStartPoint.Z += VerticalOffset;
 	RearEndPoint.Z -= VerticalOffset;
-	
+
 	bool bRear = GetWorld()->LineTraceSingleByChannel(
 		RearResult,
 		RearStartPoint,
@@ -125,7 +120,7 @@ FVector APlayerDashPoint::GetPoint()
 	{
 		ResultPoint = RearResult.ImpactPoint;
 	}
-	
+
 	return ResultPoint;
 }
 
@@ -138,6 +133,93 @@ bool APlayerDashPoint::GetIsDirectionSync()
 	float DegreeAngle = FMath::RadiansToDegrees(RadianAngle);
 	DegreeAngle = FMath::Abs(DegreeAngle);
 	return DegreeAngle < 5;
+}
+
+void APlayerDashPoint::SetDirectionMinGround()
+{
+	FVector PlayerLocation = Player->GetActorLocation();
+
+	// 충돌 대상 타입 정의
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel8));
+
+	// 결과 배열
+	TArray<AActor*> OverlapActors;
+
+	// =======================================
+	// 플레이어 지면 검사
+	// =======================================
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Player);
+
+	FVector PlayerFloorStart = PlayerLocation;
+	FVector PlayerFloorEnd = PlayerLocation;
+	PlayerFloorEnd.Z -= Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 50.0f;
+	const float CapsuleRadius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	const float CapsuleHalfHeight = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+	bool bPlayerHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		PlayerLocation,
+		PlayerFloorEnd,
+		FQuat::Identity,
+		ECC_GameTraceChannel8,
+		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight),
+		Params
+	);
+
+	// 무시할 대상
+	TArray<AActor*> OverlapIgnore;
+	OverlapIgnore.Add(Player); // 플레이어
+	OverlapIgnore.Add(HitResult.GetActor()); // 플레이어가 서있는 지면
+
+	bool bGroundHit = UKismetSystemLibrary::SphereOverlapActors(
+		GetWorld(),
+		PlayerLocation,
+		MaxDistance,
+		ObjectTypes,
+		nullptr,
+		OverlapIgnore,
+		OverlapActors
+	);
+
+	// 주변 지면 존재시 실행
+	if (bGroundHit)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Direction Min Ground: %d"), OverlapActors.Num());
+		// 플레이어 전방
+		FVector PlayerForward = Player->GetActorForwardVector();
+		PlayerForward.Z = 0.0f;
+		PlayerForward.Normalize();
+
+		float LowAngle = 360.0f;
+		FVector LowDirection = CurrentDirection;
+
+		for (int i = 0; i < OverlapActors.Num(); i++)
+		{
+			FVector GroundLocation = OverlapActors[i]->GetActorLocation();
+			FVector GroundDirection = GroundLocation - PlayerLocation;
+			GroundDirection.Z = 0.0f;
+			GroundDirection.Normalize();
+
+			float Radian = FMath::Atan2(
+				FVector::CrossProduct(PlayerForward, GroundDirection).Z,
+				FVector::DotProduct(PlayerForward, GroundDirection)
+			);
+			float Degree = FMath::RadiansToDegrees(Radian);
+			Degree = FMath::Abs(Degree);
+
+			if (Degree <= FOVAngle && Degree < LowAngle)
+			{
+				UE_LOG(LogTemp, Log, TEXT("Senc: %s"), *OverlapActors[i]->GetName());
+				LowDirection = GroundDirection;
+				LowAngle = Degree;
+			}
+		}
+
+		CurrentDirection = LowDirection;
+	}
 }
 
 void APlayerDashPoint::CheckNewDirecionPoint()
@@ -162,9 +244,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	FVector CurrentCheckLocation = PlayerLocation + CurrentDirection * MaxDistance; // 라인 트레이스 검사 시작 위치
 	float UnitDistance = MaxDistance / PartialUnitCount; // 유닛 거리 단위
 
-	// 위치 업데이트 중지
-	bTickFlag = false;
-
 	// =======================================
 	// 플레이어 지면 검사
 	// =======================================
@@ -177,14 +256,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	PlayerFloorEnd.Z -= Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 50.0f;
 	const float CapsuleRadius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius();
 	const float CapsuleHalfHeight = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-
-	// bool bPlayerHit = GetWorld()->LineTraceSingleByChannel(
-	// 	HitResult,
-	// 	PlayerFloorStart,
-	// 	PlayerFloorEnd,
-	// 	ECC_GameTraceChannel8,
-	// 	Params
-	// );
 
 	bool bPlayerHit = GetWorld()->SweepSingleByChannel(
 		HitResult,
@@ -208,9 +279,9 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 		FQuat::Identity,
 		DrawColor,
 		false,
-		 -1.0f,
-		 0,
-		 2.0f
+		-1.0f,
+		0,
+		2.0f
 	);
 #pragma endregion
 
@@ -303,9 +374,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 				// =======================================
 				if (GroundActor != nullptr && HitGround != PlayerGround)
 				{
-					UE_LOG(LogTemp, Log, TEXT("Another Player Ground Hit: %s / %s"), *HitGround->GetName(),
-					       *PlayerGround->GetName());
-
 					// 현재 이동 대상 지면과 같은 지면일 경우 
 					if (HitGround == GroundActor)
 					{
@@ -350,11 +418,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 			CurrentCheckLocation -= TargetDirection * UnitDistance;
 		}
 	}
-
-	// =======================================
-	// 위치 업데이트 재개
-	// =======================================
-	bTickFlag = true;
 }
 
 FQuat APlayerDashPoint::RotateToWorld(const FQuat& From, const FQuat& To, float MaxRadian)
