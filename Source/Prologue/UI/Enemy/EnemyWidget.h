@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/ProgressBar.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 #include "Prologue/UI/PrologueUserWidget.h"
 #include "EnemyWidget.generated.h"
@@ -22,10 +23,35 @@ protected:
 	virtual void OnHealthChanged(const FOnAttributeChangeData& ChangeData);
 	virtual void OnMaxHealthChanged(const FOnAttributeChangeData& ChangeData);
 
+	// 체력바 애니메이션 함수
+	void UpdateDelayedHealthBar();
+
+	void StartHealthBarAnimation();
+
 protected:
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UProgressBar* CurrentHealthBar;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UProgressBar* DelayedHealthBar;
+
+	// 체력바 설정값
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	float CurrentHealth = 0.0f;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	float CurrentMaxHealth = 0.1f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	float DelayedHealth = 0.f;
+
+	// 체력바 감소 애니메이션 설정값
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	float DelayAnimation = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	float AnimationSpeed = 2.f;
+	
+	FTimerHandle DelayedHealthTimerHandle;
+	FTimerHandle HealthAnimationTimerHandle;
 };
