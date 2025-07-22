@@ -40,6 +40,8 @@ namespace PrologueGameplayTags
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_PerfectShot);
 
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_Parrying);
+
 	/** Comma State Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_JustDash);
 
@@ -91,6 +93,8 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Ability_BackJump);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Ability_FirstEncounter);
+
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Ability_Parried);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_State_Strafing);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_State_RunningAway);

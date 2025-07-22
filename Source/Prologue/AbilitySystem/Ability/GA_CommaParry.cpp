@@ -4,6 +4,7 @@
 #include "GA_CommaParry.h"
 
 #include "AbilitySystemComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                      const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
@@ -33,4 +34,9 @@ void UGA_CommaParry::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+void UGA_CommaParry::OnCurveTick(float Alpha)
+{
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), Alpha);
 }

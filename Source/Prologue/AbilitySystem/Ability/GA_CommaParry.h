@@ -21,6 +21,12 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UFUNCTION()
+	void OnCurveTick(float Alpha);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	TSubclassOf<UGameplayEffect> ParryEffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
+	TObjectPtr<class UCurveFloat> Curve;
 };
