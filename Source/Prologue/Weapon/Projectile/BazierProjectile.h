@@ -18,6 +18,9 @@ public:
 	//virtual ~ABazierProjectile() override;
 
 	void FireInDirection(const FVector& ShootDirection);
+
+	// 투사체 반사당했을 때 호출
+	void Deflected(AActor* DeflectingActor);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -95,4 +98,13 @@ protected:
 /*protected:
 	UFUNCTION()
 	void SyncNiagaraSpeed(float NewTimeScale);	*/
+
+
+protected:
+	// 투사체가 패링 당했을 때의 상태 관리
+	UPROPERTY()
+	bool bIsDeflected = false;
+
+	UPROPERTY()
+	TObjectPtr<AActor> OriginalTarget;
 };
