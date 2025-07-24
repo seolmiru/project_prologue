@@ -22,18 +22,30 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 protected:
-	/*UFUNCTION()
-	void OnCurveTick(float Alpha);*/
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	TSubclassOf<UGameplayEffect> ParryEffectClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
-	TObjectPtr<class UCurveFloat> Curve;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parry")
 	float ParryRadius = 300.f;
+
+protected:
+	UFUNCTION()
+	void OnDashCurveTick(float Alpha);
+
+	void OnComplete() override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline|Dash")
+	TObjectPtr<class UCurveFloat> DashCurve;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TSubclassOf<UGameplayEffect> InvincibleEffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ParryDash")
+	float MoveLength = 300.f;
 	
 private:
 	void Deflect(AComma* Comma);
+
+	FVector BasePos;
+	FVector TargetPos;
 };

@@ -167,6 +167,8 @@ public:
 	
 	void RotateToTarget(AActor* Target);
 
+	FVector GetMouseDirection() const;
+
 	void OnAttackEnded();
 
 	void OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;

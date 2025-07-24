@@ -419,6 +419,32 @@ void AComma::RotateToTarget(AActor* Target)
 	SetActorRotation(LookAtRot);
 }
 
+FVector AComma::GetMouseDirection() const
+{
+	ACommaController* CommaController = Cast<ACommaController>(GetController());
+
+	float MouseX, MouseY;
+	CommaController->GetMousePosition(MouseX, MouseY);
+
+	FVector WorldLocation, WorldDirection;
+	CommaController->DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection);
+
+	FVector MyLocation = GetActorLocation();
+	float Z = MyLocation.Z;
+	float Distance = (Z - WorldLocation.Z) / WorldDirection.Z;
+
+	FVector Target = WorldLocation + WorldDirection * Distance;
+	FVector DirectionToMouse = Target - MyLocation;
+	DirectionToMouse.Z = 0;
+
+	if (DirectionToMouse.IsNearlyZero())
+	{
+		return GetActorForwardVector();
+	}
+
+	return DirectionToMouse.GetSafeNormal();
+}
+
 void AComma::OnAttackEnded()
 {
 	bIsUsingSmoothRotation = false;

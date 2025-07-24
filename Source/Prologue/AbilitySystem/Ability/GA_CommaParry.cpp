@@ -3,6 +3,7 @@
 
 #include "GA_CommaParry.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "AT/AT_TickCurve.h"
 #include "Kismet/GameplayStatics.h"
@@ -19,20 +20,69 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
 
 	Comma->RotateToMouse();
+
+	// Parry Effect
+	FGameplayEffectContextHandle ParryEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	ParryEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle ParryEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryEffectClass, 0.f, ParryEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*ParryEffectSpecHandle.Data.Get());
+
+	// Invincible Effect
+	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	InvincibleEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryEffectClass, 0.f, InvincibleEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
+
+	// Dash Tick Curve Task
+	UAT_TickCurve* DashTickCurve = UAT_TickCurve::CreateTask(this, DashCurve);
+	DashTickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaParry::OnDashCurveTick);
+	DashTickCurve->OnComplete.AddDynamic(this, &UGA_CommaParry::OnComplete);
 	
-	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(this);
-	FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryEffectClass, 0.f, EffectContextHandle);
-	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+	FVector StartPos = GetAvatarActorFromActorInfo()->GetActorLocation();
+	FVector EndPos = StartPos + GetAvatarActorFromActorInfo()->GetActorForwardVector() * MoveLength;
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(GetAvatarActorFromActorInfo());
+	TArray<FHitResult> Hits;
 
-	/*UAT_TickCurve* TickCurveTask = UAT_TickCurve::CreateTask(this, Curve);
-	TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaParry::OnComplete);
-	TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaParry::OnCurveTick);
-	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Parried);
+	bool bResult = UKismetSystemLibrary::LineTraceMulti(
+		GetWorld(),
+		StartPos,
+		EndPos,
+		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4),
+		false,
+		IgnoreActors,
+		EDrawDebugTrace::None,
+		Hits,
+		true
+		);
 
-	TickCurveTask->ReadyForActivation();*/
+	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
+	TargetPos = EndPos;
 
-	Deflect(Comma);
+	// 대상이 공격 중인지 체크
+	if (bResult && Hits.Num() > 0)
+	{
+		for (const FHitResult& Hit : Hits)
+		{
+			if (AActor* HitActor = Hit.GetActor())
+			{
+				if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor))
+				{
+					// 대상이 공격 중이라면 대상 앞까지만 돌진
+					if (TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
+					{
+						TargetPos = Hit.ImpactPoint;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	DashTickCurve->ReadyForActivation();
+	
+	// 투세차 반사 확정 전까지 미사용
+	//Deflect(Comma);
 }
 
 void UGA_CommaParry::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -53,6 +103,19 @@ void UGA_CommaParry::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
+void UGA_CommaParry::OnDashCurveTick(float Alpha)
+{
+	GetAvatarActorFromActorInfo()->SetActorLocation(FMath::Lerp(BasePos, TargetPos, Alpha));
+}
+
+void UGA_CommaParry::OnComplete()
+{
+	bool bReplicatedEndAbility = true;
+	bool bWasCancelled = false;
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+}
+
+// 투사체 반사 함수
 void UGA_CommaParry::Deflect(AComma* Comma)
 {
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
@@ -61,6 +124,7 @@ void UGA_CommaParry::Deflect(AComma* Comma)
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(Comma);
 
+	// ParryRadius 범위 내에 투사체 탐지
 	TArray<AActor*> OverlappedActors;
 	UKismetSystemLibrary::SphereOverlapActors(
 		GetWorld(),
@@ -71,7 +135,7 @@ void UGA_CommaParry::Deflect(AComma* Comma)
 		IgnoreActors,
 		OverlappedActors
 	);
-
+	
 	for (AActor* Actor : OverlappedActors)
 	{
 		if (ABazierProjectile* Projectile = Cast<ABazierProjectile>(Actor))
@@ -82,8 +146,3 @@ void UGA_CommaParry::Deflect(AComma* Comma)
 		}
 	}
 }
-
-/*void UGA_CommaParry::OnCurveTick(float Alpha)
-{
-	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), Alpha);
-}*/

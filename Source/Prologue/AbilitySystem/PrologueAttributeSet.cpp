@@ -66,11 +66,11 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 			return false;
 		}
 
-		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Parrying))
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_JustParrying))
 		{
 			FGameplayEventData PlayData;
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.Target.GetAvatarActor(), PrologueGameplayTags::Comma_Ability_Parry, PlayData);
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.EffectSpec.GetContext().GetEffectCauser(), PrologueGameplayTags::Enemy_Ability_Parried, PlayData);
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.Target.GetAvatarActor(), PrologueGameplayTags::Comma_Event_JustParry, PlayData);
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.EffectSpec.GetContext().GetEffectCauser(), PrologueGameplayTags::Enemy_Event_Parried, PlayData);
 			LOG_SCREEN_R("%s", *Data.EffectSpec.GetContext().GetEffectCauser()->GetName());
 
 			return false;
