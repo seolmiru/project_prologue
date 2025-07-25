@@ -75,6 +75,11 @@ AComma::AComma()
 	SwitchAttackWidgetComponent->SetDrawSize(FVector2D(400.f, 384.f));
 	SwitchAttackWidgetComponent->SetVisibility(false);
 
+	CooldownWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("CooldownWidgetComponent"));
+	CooldownWidgetComponent->SetupAttachment(RootComponent);
+	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, -130.f));
+	CooldownWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
 
 	SwitchAttackBowTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Bow"));

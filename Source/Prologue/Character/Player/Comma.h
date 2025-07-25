@@ -116,7 +116,13 @@ private:
 	TSubclassOf<UUserWidget> BP_SwitchAttackWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> OverClockWidget;	
+	TSubclassOf<UUserWidget> OverClockWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* CooldownWidgetComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_CooldownWidget;
 	
 	void Input_Move(const FInputActionValue& InputActionValue);
 
