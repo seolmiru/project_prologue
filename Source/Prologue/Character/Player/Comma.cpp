@@ -75,6 +75,11 @@ AComma::AComma()
 	SwitchAttackWidgetComponent->SetDrawSize(FVector2D(400.f, 384.f));
 	SwitchAttackWidgetComponent->SetVisibility(false);
 
+	CooldownWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("CooldownWidgetComponent"));
+	CooldownWidgetComponent->SetupAttachment(RootComponent);
+	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, -130.f));
+	CooldownWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
 
 	SwitchAttackBowTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Bow"));
@@ -417,6 +422,32 @@ void AComma::RotateToTarget(AActor* Target)
 	LookAtRot.Roll = 0.f;
 
 	SetActorRotation(LookAtRot);
+}
+
+FVector AComma::GetMouseDirection() const
+{
+	ACommaController* CommaController = Cast<ACommaController>(GetController());
+
+	float MouseX, MouseY;
+	CommaController->GetMousePosition(MouseX, MouseY);
+
+	FVector WorldLocation, WorldDirection;
+	CommaController->DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection);
+
+	FVector MyLocation = GetActorLocation();
+	float Z = MyLocation.Z;
+	float Distance = (Z - WorldLocation.Z) / WorldDirection.Z;
+
+	FVector Target = WorldLocation + WorldDirection * Distance;
+	FVector DirectionToMouse = Target - MyLocation;
+	DirectionToMouse.Z = 0;
+
+	if (DirectionToMouse.IsNearlyZero())
+	{
+		return GetActorForwardVector();
+	}
+
+	return DirectionToMouse.GetSafeNormal();
 }
 
 void AComma::OnAttackEnded()

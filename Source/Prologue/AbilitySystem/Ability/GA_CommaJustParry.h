@@ -3,18 +3,28 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GA_MontageAbility.h"
-#include "GA_EnemyParried.generated.h"
+#include "Abilities/GameplayAbility.h"
+#include "GA_CommaJustParry.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_EnemyParried : public UGA_MontageAbility
+class PROLOGUE_API UGA_CommaJustParry : public UGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline|Slow")
+	TObjectPtr<class UCurveFloat> SlowCurve;
+
+	UFUNCTION()
+	void OnComplete();
+
+	UFUNCTION()
+	void OnSlowCurveTick(float Alpha);
 };
