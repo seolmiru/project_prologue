@@ -204,6 +204,5 @@ private:
 public:
 	class APlayerDashPoint* GetDashPoint() const;
 	
-private:
 	TObjectPtr<class APlayerDashPoint> DashPoint;
 };

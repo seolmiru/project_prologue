@@ -65,6 +65,16 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 
 			return false;
 		}
+
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Parrying))
+		{
+			FGameplayEventData PlayData;
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.Target.GetAvatarActor(), PrologueGameplayTags::Comma_Ability_Parry, PlayData);
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.EffectSpec.GetContext().GetEffectCauser(), PrologueGameplayTags::Enemy_Ability_Parried, PlayData);
+			LOG_SCREEN_R("%s", *Data.EffectSpec.GetContext().GetEffectCauser()->GetName());
+
+			return false;
+		}
 	}
 
 	if (Data.EvaluatedData.Attribute == GetCurrentToughnessAttribute())

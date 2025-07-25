@@ -74,7 +74,8 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 			FVector TargetLocation = TargetEnemy->GetActorLocation() - (Direction * DashDistance);
 			
 			float AdjustedDashDuration = DashDuration;
-			
+
+			// 추격 시스템 태스크 실행
 			UAT_MoveToTarget* MoveTask = UAT_MoveToTarget::MoveToTarget(this, TargetLocation, AdjustedDashDuration);
 			MoveTask->OnFinished.AddDynamic(this, &UGA_CommaAttackSword::OnMoveToTargetFinished);
 			MoveTask->ReadyForActivation();
@@ -284,6 +285,7 @@ void UGA_CommaAttackSword::ProcessNextCombo()
 	HasNextComboInput = false;
 }
 
+// 추격 시스템의 감지 방향과 마우스 클릭 방향을 동기화 시키기 위한 함수
 FVector UGA_CommaAttackSword::GetMouseDirection() const
 {
 	if (!CachedComma)

@@ -27,10 +27,14 @@ public:
 	// 검사 방향 변경 함수
 	void SetDirection(FVector NewDirection, bool bConvertLocalToCameraDirection = true);
 
+	// 대시 위치 리턴 함수 (보정과 함꼐 리턴)
 	FVector GetPoint();
 
 	// 회전 동기화 여부
 	bool GetIsDirectionSync();
+
+	// 주변 땅을 감지해 시야각이 가까운 땅 방향을 바라보게 설정
+	void SetDirectionMinGround();
 	
 protected:
 	// 최대 거리
@@ -53,13 +57,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	int32 PartialUnitCount = 64;
 
+	// 안전 영역 범위
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float SafeWeight = 100.0f;
+	
 private:
 	UPROPERTY(VisibleAnywhere, Category="Dash")
 	TObjectPtr<class AComma> Player;
 	
-	// 업데이트 플래그
-	bool bTickFlag;
-
 	// 대쉬 방향
 	UPROPERTY(VisibleAnywhere, Category = "Dash")
 	FVector TargetDirection;

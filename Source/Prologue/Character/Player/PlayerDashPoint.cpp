@@ -14,7 +14,6 @@ APlayerDashPoint::APlayerDashPoint()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	bTickFlag = true;
 	TargetDirection = FVector::ForwardVector;
 	CurrentDirection = TargetDirection;
 }
@@ -49,11 +48,7 @@ void APlayerDashPoint::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// 대시 위치 갱신
-	if (bTickFlag)
-	{
-		CheckNewDirecionPoint();
-	}
+	CheckNewDirecionPoint();
 }
 
 void APlayerDashPoint::SetDirection(FVector NewDirection, bool bConvertLocalToCameraDirection)
@@ -80,7 +75,53 @@ void APlayerDashPoint::SetDirection(FVector NewDirection, bool bConvertLocalToCa
 
 FVector APlayerDashPoint::GetPoint()
 {
-	return Point;
+	FVector ResultPoint = Point;
+
+	FVector Direction = Point - Player->GetActorLocation();
+	Direction.Z = 0.0f;
+	Direction.Normalize();
+
+	FHitResult ForwardResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Player);
+	FVector ForwardStartPoint = Point + (Direction * SafeWeight);
+	FVector ForwardEndPoint = ForwardStartPoint;
+	ForwardStartPoint.Z += VerticalOffset;
+	ForwardEndPoint.Z -= VerticalOffset;
+
+	bool bForward = GetWorld()->LineTraceSingleByChannel(
+		ForwardResult,
+		ForwardStartPoint,
+		ForwardEndPoint,
+		ECC_GameTraceChannel8,
+		Params
+	);
+
+	FHitResult RearResult;
+	FVector RearStartPoint = Point - (Direction * SafeWeight);
+	FVector RearEndPoint = RearStartPoint;
+	RearStartPoint.Z += VerticalOffset;
+	RearEndPoint.Z -= VerticalOffset;
+
+	bool bRear = GetWorld()->LineTraceSingleByChannel(
+		RearResult,
+		RearStartPoint,
+		RearEndPoint,
+		ECC_GameTraceChannel8,
+		Params
+	);
+
+	// 지면 끝에 걸쳐있다면 지면 안쪽으로 보정
+	if (bForward && !bRear) // 앞쪽으로 보정
+	{
+		ResultPoint = ForwardResult.ImpactPoint;
+	}
+	else if (!bForward && bRear) // 뒤쪽으로 보정
+	{
+		ResultPoint = RearResult.ImpactPoint;
+	}
+
+	return ResultPoint;
 }
 
 bool APlayerDashPoint::GetIsDirectionSync()
@@ -92,6 +133,92 @@ bool APlayerDashPoint::GetIsDirectionSync()
 	float DegreeAngle = FMath::RadiansToDegrees(RadianAngle);
 	DegreeAngle = FMath::Abs(DegreeAngle);
 	return DegreeAngle < 5;
+}
+
+void APlayerDashPoint::SetDirectionMinGround()
+{
+	FVector PlayerLocation = Player->GetActorLocation();
+
+	// 충돌 대상 타입 정의
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel7));
+
+	// 결과 배열
+	TArray<AActor*> OverlapActors;
+
+	// =======================================
+	// 플레이어 지면 검사
+	// =======================================
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Player);
+
+	FVector PlayerFloorStart = PlayerLocation;
+	FVector PlayerFloorEnd = PlayerLocation;
+	PlayerFloorEnd.Z -= Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 50.0f;
+	const float CapsuleRadius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	const float CapsuleHalfHeight = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+	bool bPlayerHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		PlayerLocation,
+		PlayerFloorEnd,
+		FQuat::Identity,
+		ECC_GameTraceChannel8,
+		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight),
+		Params
+	);
+
+	// 무시할 대상
+	TArray<AActor*> OverlapIgnore;
+	OverlapIgnore.Add(Player); // 플레이어
+	OverlapIgnore.Add(HitResult.GetActor()); // 플레이어가 서있는 지면
+
+	bool bGroundHit = UKismetSystemLibrary::CapsuleOverlapActors(
+		GetWorld(),
+		PlayerLocation,
+		MaxDistance,
+		VerticalOffset,
+		ObjectTypes,
+		nullptr,
+		OverlapIgnore,
+		OverlapActors
+	);
+
+	// 주변 지면 존재시 실행
+	if (bGroundHit)
+	{
+		// 플레이어 전방
+		FVector PlayerForward = Player->GetActorForwardVector();
+		PlayerForward.Z = 0.0f;
+		PlayerForward.Normalize();
+
+		float LowAngle = 360.0f;
+		FVector LowDirection = CurrentDirection;
+
+		for (int i = 0; i < OverlapActors.Num(); i++)
+		{
+			FVector GroundLocation = OverlapActors[i]->GetActorLocation();
+			FVector GroundDirection = GroundLocation - PlayerLocation;
+			GroundDirection.Z = 0.0f;
+			GroundDirection.Normalize();
+
+			float Radian = FMath::Atan2(
+				FVector::CrossProduct(PlayerForward, GroundDirection).Z,
+				FVector::DotProduct(PlayerForward, GroundDirection)
+			);
+			float Degree = FMath::RadiansToDegrees(Radian);
+			Degree = FMath::Abs(Degree);
+
+			if (Degree <= FOVAngle && Degree < LowAngle)
+			{
+				LowDirection = GroundDirection;
+				LowAngle = Degree;
+			}
+		}
+
+		CurrentDirection = LowDirection;
+	}
 }
 
 void APlayerDashPoint::CheckNewDirecionPoint()
@@ -116,9 +243,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	FVector CurrentCheckLocation = PlayerLocation + CurrentDirection * MaxDistance; // 라인 트레이스 검사 시작 위치
 	float UnitDistance = MaxDistance / PartialUnitCount; // 유닛 거리 단위
 
-	// 위치 업데이트 중지
-	bTickFlag = false;
-
 	// =======================================
 	// 플레이어 지면 검사
 	// =======================================
@@ -132,14 +256,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	const float CapsuleRadius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius();
 	const float CapsuleHalfHeight = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
-	// bool bPlayerHit = GetWorld()->LineTraceSingleByChannel(
-	// 	HitResult,
-	// 	PlayerFloorStart,
-	// 	PlayerFloorEnd,
-	// 	ECC_GameTraceChannel8,
-	// 	Params
-	// );
-
 	bool bPlayerHit = GetWorld()->SweepSingleByChannel(
 		HitResult,
 		PlayerLocation,
@@ -151,22 +267,20 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	);
 
 	// 디버깅
-#pragma region Debug
 	FColor DrawColor = bPlayerHit ? FColor::Green : FColor::Red;
 
 	DrawDebugCapsule(
 		GetWorld(),
-		PlayerLocation,
+		HitResult.ImpactPoint,
 		CapsuleHalfHeight,
 		CapsuleRadius,
 		FQuat::Identity,
 		DrawColor,
 		false,
-		 -1.0f,
-		 0,
-		 2.0f
+		-1.0f,
+		0,
+		2.0f
 	);
-#pragma endregion
 
 	// 새로운 이동 위치 탐색
 	if (bPlayerHit)
@@ -174,7 +288,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 		AActor* PlayerGround = HitResult.GetActor();
 
 		// 현재 설정 위치의 시야각 계산
-#pragma region Current FOV Angle
 		FVector OldDirection = Point - PlayerLocation;
 		OldDirection.Z = 0.0f;
 		OldDirection.Normalize();
@@ -189,7 +302,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 		);
 		float OldDegreeAngle = FMath::RadiansToDegrees(OldRadianAngle);
 		OldDegreeAngle = FMath::Abs(OldDegreeAngle);
-#pragma endregion
 
 		for (int i = 0; i < PartialUnitCount; i++)
 		{
@@ -207,7 +319,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 				Params
 			);
 
-#pragma region Debug
 			DrawColor = bHit ? FColor::Green : FColor::Red;
 			DrawDebugSphere(
 				GetWorld(),
@@ -220,7 +331,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 				0,
 				2.f
 			);
-#pragma endregion
 
 			// 충돌시 실행
 			if (bHit)
@@ -255,13 +365,10 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 				// =======================================
 				// 플레이어가 서있지 않은 지면과 충돌
 				// =======================================
-				if (GroundActor != nullptr && HitGround != PlayerGround)
+				if (HitGround != PlayerGround)
 				{
-					UE_LOG(LogTemp, Log, TEXT("Another Player Ground Hit: %s / %s"), *HitGround->GetName(),
-					       *PlayerGround->GetName());
-
 					// 현재 이동 대상 지면과 같은 지면일 경우 
-					if (HitGround == GroundActor)
+					if (GroundActor != nullptr || HitGround == GroundActor)
 					{
 						float NewDistance = FVector2D::Distance((FVector2d)PlayerLocation,
 						                                        (FVector2d)HitResult.ImpactPoint);
@@ -288,10 +395,11 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 				// =======================================
 				else
 				{
+					UE_LOG(LogTemp, Log, TEXT("Same Ground"));
 					// 조건 충족시 현재 충돌된 지점으로 대시 위치 변경
 					if (OldDegreeAngle > FOVAngle // 조건 1: 현재 위치가 시야각을 벗어날 경우
 						|| CurrentDistance > MaxDistance // 조건 2: 현재 위치가 최대 거리보다 멀 경우
-						|| OldDegreeAngle > NewDegreeAngle) // 조건 3: 새로운 위치가 정면 방향에 더 가까울 경우
+						|| (OldDegreeAngle > NewDegreeAngle && GroundActor == PlayerGround)) // 조건 3: 새로운 위치가 정면 방향에 더 가까울 경우 (플레이어와 같은 지면에 한하여)
 					{
 						GroundActor = HitGround;
 						Point = HitResult.ImpactPoint;
@@ -304,11 +412,6 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 			CurrentCheckLocation -= TargetDirection * UnitDistance;
 		}
 	}
-
-	// =======================================
-	// 위치 업데이트 재개
-	// =======================================
-	bTickFlag = true;
 }
 
 FQuat APlayerDashPoint::RotateToWorld(const FQuat& From, const FQuat& To, float MaxRadian)
