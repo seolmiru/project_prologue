@@ -5,7 +5,11 @@
 #include "CoreMinimal.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 #include "Prologue/Character/PrologueCharacter.h"
+#include "Prologue/UI/PrologueUserWidget.h"
 #include "PrologueEnemyCharacter.generated.h"
+
+
+class UEnemyWidgetComponent;
 
 USTRUCT(BlueprintType)
 struct FWeightedAbilityInfo
@@ -44,6 +48,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
 	UPrologueAttributeSet* Attributes;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UEnemyWidgetComponent> HpBar;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_EnemyWidget;
 	
 protected:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
@@ -54,4 +64,6 @@ protected:
 
 private:
 	FDelegateHandle DamageAttributeChangedHandle;
+
+	bool bHealthBarVisible = false;
 };

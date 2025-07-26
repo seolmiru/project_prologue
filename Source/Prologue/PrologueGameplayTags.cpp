@@ -20,8 +20,12 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Dash, "Comma.Ability.Dash");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_OverClock, "Comma.Ability.OverClock");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Parry, "Comma.Ability.Parry");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_SmashAttack, "Comma.Ability.SmashAttack");
 	
-	/** State Tags */
+	/** Comma State Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_SwitchAttack_Sword, "Comma.State.SwitchAttack.Sword");
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_SwitchAttack_Bow, "Comma.State.SwitchAttack.Bow");
 
@@ -35,8 +39,11 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_OverClock, "Comma.State.OverClock");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_PerfectShot, "Comma.State.PerfectShot");
+	
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_Parrying, "Comma.State.Parrying")
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_JustParrying, "Comma.State.JustParrying")
 
-	/** State Tags */
+	/** Comma Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_JustDash, "Comma.Event.JustDash");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_PerfectShot, "Comma.Event.PerfectShot");
@@ -44,6 +51,11 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_SwitchAttackSword, "Comma.Event.SwitchAttackSword");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_SwitchAttackBow, "Comma.Event.SwitchAttackBow");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_JustParry, "Comma.Event.JustParry");
+
+	/** Comma Cooldown Tags */
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Parry, "Comma.Cooldown.Parry");
 	
 	/** Effect Tags */
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Damaging, "GameplayCue.Effect.Damaging");
@@ -51,6 +63,8 @@ namespace PrologueGameplayTags
 	
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_PlayerHit, "GameplayCue.Effect.PlayerHit");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_EnemyHit, "GameplayCue.Effect.EnemyHit");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Parried, "GameplayCue.Effect.Parried");
 
 	/** Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AttackHitCheck, "Event.Character.AttackHitCheck");
@@ -85,7 +99,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_BackJump, "Enemy.Ability.BackJump");
 
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_FirstEncounter, "Enemy.Ability.FirstEncounter");
-
+	
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_Strafing, "Enemy.State.Strafing");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_RunningAway, "Enemy.State.RunningAway");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_Charge, "Enemy.State.Charge");
@@ -93,6 +107,8 @@ namespace PrologueGameplayTags
 	
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_Dashed, "Enemy.Event.Dashed");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_LastCombo, "Enemy.Event.LastCombo");
+
+	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_Parried, "Enemy.Event.Parried");
 	
 	/** Shared Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Ability_Death, "Shared.Ability.Death");

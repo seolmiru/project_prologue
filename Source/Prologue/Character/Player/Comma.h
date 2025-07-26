@@ -116,7 +116,13 @@ private:
 	TSubclassOf<UUserWidget> BP_SwitchAttackWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> OverClockWidget;	
+	TSubclassOf<UUserWidget> OverClockWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* CooldownWidgetComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_CooldownWidget;
 	
 	void Input_Move(const FInputActionValue& InputActionValue);
 
@@ -167,6 +173,8 @@ public:
 	
 	void RotateToTarget(AActor* Target);
 
+	FVector GetMouseDirection() const;
+
 	void OnAttackEnded();
 
 	void OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;
@@ -204,6 +212,5 @@ private:
 public:
 	class APlayerDashPoint* GetDashPoint() const;
 	
-private:
 	TObjectPtr<class APlayerDashPoint> DashPoint;
 };
