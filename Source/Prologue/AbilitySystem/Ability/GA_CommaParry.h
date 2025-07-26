@@ -33,6 +33,9 @@ protected:
 	void OnDashCurveTick(float Alpha);
 
 	void OnComplete() override;
+
+	UFUNCTION()
+	void OnJustParry(FGameplayEventData Payload);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline|Dash")
 	TObjectPtr<class UCurveFloat> DashCurve;
