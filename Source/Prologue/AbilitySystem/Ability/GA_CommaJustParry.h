@@ -27,4 +27,7 @@ protected:
 
 	UFUNCTION()
 	void OnSlowCurveTick(float Alpha);
+
+	UFUNCTION(BlueprintCallable)
+	void ResetParryCooldown(const FGameplayTagContainer CooldownTagContainer);
 };

@@ -74,6 +74,8 @@ namespace PrologueGameplayTags
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_SwitchAttackHitCheck);
 
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_ParryAttackHitCheck);
+	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_TraceStart);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_TraceStop);
 	

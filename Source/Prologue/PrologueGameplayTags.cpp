@@ -73,6 +73,8 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SwitchAttackHitCheck, "Event.Character.SwitchAttackHitCheck");
 
+	UE_DEFINE_GAMEPLAY_TAG(Event_Character_ParryAttackHitCheck, "Event.Character.ParryAttackHitCheck");
+	
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_TraceStart, "Event.Character.TraceStart");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_TraceStop, "Event.Character.TraceStop");
 

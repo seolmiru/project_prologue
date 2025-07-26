@@ -5,6 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AT/AT_TickCurve.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
@@ -21,6 +22,12 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	Comma->RotateToMouse();
 
+	// 패링 성공 이벤트 대기
+	UAbilityTask_WaitGameplayEvent* WaitJustParryTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, PrologueGameplayTags::Comma_Event_JustParry);
+	WaitJustParryTask->EventReceived.AddDynamic(this, &UGA_CommaParry::OnJustParry);
+	WaitJustParryTask->ReadyForActivation();
+	
+	
 	// Parry Effect
 	FGameplayEffectContextHandle ParryEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 	ParryEffectContextHandle.AddSourceObject(this);
@@ -113,6 +120,17 @@ void UGA_CommaParry::OnComplete()
 	bool bReplicatedEndAbility = true;
 	bool bWasCancelled = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+}
+
+void UGA_CommaParry::OnJustParry(FGameplayEventData Payload)
+{
+	FGameplayTagContainer CooldownTags;
+
+	if (CooldownTags.Num() > 0)
+	{
+		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+		ASC->RemoveActiveEffectsWithGrantedTags(CooldownTags);
+	}
 }
 
 // 투사체 반사 함수
