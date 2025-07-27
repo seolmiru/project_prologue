@@ -296,6 +296,14 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 	CachedMovementInput = MovementVector;
 
+	/** Sejin */
+
+	// 대쉬 위치 오브젝트에 입력 방향 전달
+	if (DashPoint != nullptr)
+	{
+		DashPoint->SetDirection(FVector(MovementVector.X, MovementVector.Y, 0.f).GetSafeNormal());
+	}
+	
 	if (ASC)
 	{
 		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
@@ -329,14 +337,6 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 			FRotator NewRotation = WorldMovementDirection.Rotation();
 			SetActorRotation(NewRotation);
 		}
-	}
-
-	/** Sejin */
-
-	// 대쉬 위치 오브젝트에 입력 방향 전달
-	if (DashPoint != nullptr)
-	{
-		DashPoint->SetDirection(FVector(MovementVector.X, MovementVector.Y, 0.f).GetSafeNormal());
 	}
 }
 
