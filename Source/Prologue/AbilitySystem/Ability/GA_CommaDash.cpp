@@ -526,6 +526,18 @@ void UGA_CommaDash::OnInterrupted()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
 }
 
+void UGA_CommaDash::OnAnimationComplete()
+{
+	bAnimationCompleted = true;
+	CheckForAbilityEnd();
+}
+
+void UGA_CommaDash::OnCurveComplete()
+{
+	bCurveCompleted = true;
+	CheckForAbilityEnd();
+}
+
 bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors,
                                       FVector& OutAdjustedLocation) const
 {
@@ -625,6 +637,9 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 
 void UGA_CommaDash::OnDashAllowed()
 {
+	bAnimationCompleted = false;
+	bCurveCompleted = false;
+	
 	LOG_SCREEN("Start Dash");
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 
@@ -648,7 +663,7 @@ void UGA_CommaDash::OnDashAllowed()
 
 	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this, TEXT("PlayMontage"), AnimMontage, 1.0f);
-	PlayTask->OnCompleted.AddDynamic(this, &UGA_CommaDash::OnComplete);
+	PlayTask->OnCompleted.AddDynamic(this, &UGA_CommaDash::OnAnimationComplete);
 	PlayTask->OnInterrupted.AddDynamic(this, &UGA_CommaDash::OnInterrupted);
 	PlayTask->ReadyForActivation();
 
@@ -720,8 +735,20 @@ void UGA_CommaDash::OnDashAllowed()
 		if (TickCurveTask)
 		{
 			TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
-			TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
+			TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnCurveComplete);
 			TickCurveTask->ReadyForActivation();
 		}
+	}
+	else
+	{
+		bCurveCompleted = true;
+	}
+}
+
+void UGA_CommaDash::CheckForAbilityEnd()
+{
+	if (bAnimationCompleted && bCurveCompleted)
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 	}
 }
