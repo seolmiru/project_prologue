@@ -10,7 +10,7 @@
 class UPostProcessComponent;
 class UCommaWidget;
 class UComboSwordData;
-class UComboBowData;
+//class UComboBowData;
 class UInputAction;
 class UInputMappingContext;
 class UCommaCombatComponent;
@@ -27,8 +27,6 @@ class PROLOGUE_API AComma : public APrologueCharacter
 
 public:
 	AComma();
-
-	virtual UPawnCombatComponent* GetPawnCombatComponent() const override;
 
 	virtual void Tick(float DeltaSeconds) override;
 	
@@ -61,9 +59,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCommaCombatComponent* CommaCombatComponent;
 	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
@@ -72,8 +67,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChracterData", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UComboSwordData> ComboSwordData;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChracterData", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UComboBowData> ComboBowData;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChracterData", meta = (AllowPrivateAccess = "true"))
+	//TObjectPtr<UComboBowData> ComboBowData;
 	
 	/** Inputs */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
@@ -96,8 +91,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> SwordWeaponMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> BowWeaponMesh;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	//TObjectPtr<UStaticMeshComponent> BowWeaponMesh;
 
 	/** UI */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
@@ -146,26 +141,24 @@ private:
 	float DamageEffectIntensity = 0.5f;
 	
 public:
-	FORCEINLINE UCommaCombatComponent* GetCommaCombatComponent() const { return CommaCombatComponent; }
-	
 	FORCEINLINE FVector2D GetDirection() const { return Direction; }
 	
 	FORCEINLINE UComboSwordData* GetComboSwordData() const { return ComboSwordData; }
-	FORCEINLINE UComboBowData* GetComboBowData() const { return ComboBowData; }
+	//FORCEINLINE UComboBowData* GetComboBowData() const { return ComboBowData; }
 	
 	FORCEINLINE UAnimMontage* GetSwordComboMontage() const { return SwordComboMontage; }
-	FORCEINLINE UAnimMontage* GetBowComboMontage() const { return BowComboMontage; }
+	//FORCEINLINE UAnimMontage* GetBowComboMontage() const { return BowComboMontage; }
 
 	FORCEINLINE UAnimMontage* GetSwordSwitchAttackMontage() const { return SwordSwitchAttackMontage; }
-	FORCEINLINE UAnimMontage* GetBowSwitchAttackMontage() const { return BowSwitchAttackMontage; }
+	//FORCEINLINE UAnimMontage* GetBowSwitchAttackMontage() const { return BowSwitchAttackMontage; }
 
 	FVector2D GetCachedMovementInput() const { return CachedMovementInput; }
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	UStaticMeshComponent* GetSwordWeaponMesh() const;
 
-	UFUNCTION(BlueprintPure, Category = "Weapon")
-	UStaticMeshComponent* GetBowWeaponMesh() const;
+	//UFUNCTION(BlueprintPure, Category = "Weapon")
+	//UStaticMeshComponent* GetBowWeaponMesh() const;
 
 	void RotateToMouse();
 
@@ -186,20 +179,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<class UAnimMontage> SwordComboMontage;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TObjectPtr<class UAnimMontage> BowComboMontage;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	//TObjectPtr<class UAnimMontage> BowComboMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<class UAnimMontage> SwordSwitchAttackMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TObjectPtr<class UAnimMontage> BowSwitchAttackMontage;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	//TObjectPtr<class UAnimMontage> BowSwitchAttackMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FGameplayTag SwitchAttackSwordTag;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FGameplayTag SwitchAttackBowTag;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//FGameplayTag SwitchAttackBowTag;
 	
 private:
 	FRotator TargetRotation = FRotator::ZeroRotator;

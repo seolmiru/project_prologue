@@ -9,7 +9,6 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Prologue/PrologueGameplayTags.h"
-#include "Prologue/Component/Combat/CommaCombatComponent.h"
 #include "Prologue/Controller/CommaController.h"
 #include "Prologue/DataAsset/Input/DataAsset_InputConfig.h"
 #include "EnhancedInputComponent.h"
@@ -59,11 +58,6 @@ AComma::AComma()
 	SwordWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SwordWeaponMesh"));
 	SwordWeaponMesh->SetupAttachment(GetMesh(),TEXT("SwordSocket"));
 
-	BowWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BowWeaponMesh"));
-	BowWeaponMesh->SetupAttachment(GetMesh(),TEXT("BowSocket"));
-
-	CommaCombatComponent = CreateDefaultSubobject<UCommaCombatComponent>(TEXT("CommaCombatComponent"));
-
 	UIAnchorComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("UIAnchorComponent"));
 	UIAnchorComponent->SetupAttachment(GetRootComponent());
 	UIAnchorComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
@@ -81,10 +75,8 @@ AComma::AComma()
 	CooldownWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
-
-	SwitchAttackBowTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Bow"));
-
-	SwordWeaponMesh->SetVisibility(false);
+	
+	SwordWeaponMesh->SetVisibility(true);
 
 	/** Sejin */
 
@@ -100,11 +92,6 @@ AComma::AComma()
 		DashPoint = World->SpawnActor<APlayerDashPoint>(DashRef.Class, GetActorLocation(), FRotator::ZeroRotator,
 		                                                SpawnParams);
 	}
-}
-
-UPawnCombatComponent* AComma::GetPawnCombatComponent() const
-{
-	return CommaCombatComponent;
 }
 
 void AComma::Tick(float DeltaSeconds)
@@ -175,12 +162,6 @@ void AComma::PossessedBy(AController* NewController)
 		if (ASC && SwitchAttackSwordTag.IsValid())
 		{
 			ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(
-				this, &AComma::OnSwitchAttackUI);
-		}
-
-		if (ASC && SwitchAttackBowTag.IsValid())
-		{
-			ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).AddUObject(
 				this, &AComma::OnSwitchAttackUI);
 		}
 	}
@@ -261,12 +242,7 @@ void AComma::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 	}
-
-	if (ASC && SwitchAttackBowTag.IsValid())
-	{
-		ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
-	}
-
+	
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -343,11 +319,6 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 UStaticMeshComponent* AComma::GetSwordWeaponMesh() const
 {
 	return SwordWeaponMesh;
-}
-
-UStaticMeshComponent* AComma::GetBowWeaponMesh() const
-{
-	return BowWeaponMesh;
 }
 
 // 활 공격 시에 사용되는 마우스 방향으로 회전하는 함수
@@ -459,18 +430,6 @@ void AComma::OnAttackEnded()
 void AComma::OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const
 {
 	if (CallbackTag == SwitchAttackSwordTag && SwitchAttackWidgetComponent)
-	{
-		if (NewCount > 0)
-		{
-			SwitchAttackWidgetComponent->SetVisibility(true);
-		}
-		else
-		{
-			SwitchAttackWidgetComponent->SetVisibility(false);
-		}
-	}
-
-	if (CallbackTag == SwitchAttackBowTag && SwitchAttackWidgetComponent)
 	{
 		if (NewCount > 0)
 		{
