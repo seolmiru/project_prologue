@@ -7,9 +7,12 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AT/AT_TickCurve.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Player/Comma.h"
+#include "Prologue/Character/Player/PlayerDashPoint.h"
 #include "Prologue/Weapon/Projectile/BazierProjectile.h"
 
 void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -22,11 +25,17 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	Comma->RotateToMouse();
 
+	Comma->GetDashPoint()->SetCursorDirectionState(false);
+
+	if (UCapsuleComponent* CapsuleComp = Comma->GetCapsuleComponent())
+	{
+		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Overlap);
+	}
+
 	// 패링 성공 이벤트 대기
 	UAbilityTask_WaitGameplayEvent* WaitJustParryTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, PrologueGameplayTags::Comma_Event_JustParry);
 	WaitJustParryTask->EventReceived.AddDynamic(this, &UGA_CommaParry::OnJustParry);
 	WaitJustParryTask->ReadyForActivation();
-	
 	
 	// Parry Effect
 	FGameplayEffectContextHandle ParryEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
@@ -45,27 +54,25 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	DashTickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaParry::OnDashCurveTick);
 	DashTickCurve->OnComplete.AddDynamic(this, &UGA_CommaParry::OnComplete);
 	
-	FVector StartPos = GetAvatarActorFromActorInfo()->GetActorLocation();
-	FVector EndPos = StartPos + GetAvatarActorFromActorInfo()->GetActorForwardVector() * MoveLength;
+	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
+	TargetPos = Comma->GetDashPoint()->GetParryPoint();
+	
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(GetAvatarActorFromActorInfo());
 	TArray<FHitResult> Hits;
 
 	bool bResult = UKismetSystemLibrary::LineTraceMulti(
 		GetWorld(),
-		StartPos,
-		EndPos,
+		BasePos,
+		TargetPos,
 		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4),
 		false,
 		IgnoreActors,
 		EDrawDebugTrace::None,
 		Hits,
 		true
-		);
-
-	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
-	TargetPos = EndPos;
-
+	);
+	
 	// 대상이 공격 중인지 체크
 	if (bResult && Hits.Num() > 0)
 	{
@@ -107,16 +114,56 @@ void UGA_CommaParry::CancelAbility(const FGameplayAbilitySpecHandle Handle, cons
 void UGA_CommaParry::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
+
+	Comma->GetDashPoint()->SetCursorDirectionState(true);
+
+	if (UCapsuleComponent* CapsuleComp = Comma->GetCapsuleComponent())
+	{
+		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Block);
+	}
+	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void UGA_CommaParry::OnDashCurveTick(float Alpha)
 {
-	GetAvatarActorFromActorInfo()->SetActorLocation(FMath::Lerp(BasePos, TargetPos, Alpha));
+	FVector CurrentPos = FMath::Lerp(BasePos, TargetPos, Alpha);
+
+	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
+	{
+		FHitResult HitResult;
+		FVector TraceStart = CurrentPos + FVector(0.f, 0.f, 100.f);
+		FVector TraceEnd = CurrentPos - FVector(0.f, 0.f, 200.f);
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(Comma);
+
+		if (GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			TraceStart,
+			TraceEnd,
+			ECC_WorldStatic,
+			QueryParams
+		))
+		{
+			CurrentPos.Z = HitResult.ImpactPoint.Z + Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		}
+	}
+
+	GetAvatarActorFromActorInfo()->SetActorLocation(CurrentPos);
 }
 
 void UGA_CommaParry::OnComplete()
 {
+	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
+	{
+		if (UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement())
+		{
+			MovementComp->UpdateFloorFromAdjustment();
+		}
+	}
+	
 	bool bReplicatedEndAbility = true;
 	bool bWasCancelled = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);

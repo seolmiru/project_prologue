@@ -490,6 +490,11 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	// 주변 가까운 땅 대시 위치 검사 (대시 보정 알고리즘)
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	Comma->DashPoint->SetDirectionMinGround();
+
+	if (UCapsuleComponent* CapsuleComp = Comma->GetCapsuleComponent())
+	{
+		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Block);
+	}
 }
 
 void UGA_CommaDash::OnCurveTick(float Alpha)
@@ -643,6 +648,11 @@ void UGA_CommaDash::OnDashAllowed()
 	LOG_SCREEN("Start Dash");
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 
+	if (UCapsuleComponent* CapsuleComp = Comma->GetCapsuleComponent())
+	{
+		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Overlap);
+	}
+	
 	// Just Dash Effect 부여
 	FGameplayEffectContextHandle JustDashEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
 		MakeEffectContext();
