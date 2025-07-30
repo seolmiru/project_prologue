@@ -23,6 +23,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline|Slow")
 	TObjectPtr<class UCurveFloat> SlowCurve;
 
+	virtual void OnComplete() override;
+	
 	UFUNCTION()
 	void OnSlowCurveTick(float Alpha);
 
