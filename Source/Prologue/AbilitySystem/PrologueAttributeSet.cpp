@@ -68,6 +68,11 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 
 		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_JustParrying))
 		{
+			if (Data.EffectSpec.Def->GetGrantedTags().HasTag(PrologueGameplayTags::Enemy_Ability_CantParryAttack))
+			{
+				return true;
+			}
+			
 			FGameplayEventData PlayData;
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.Target.GetAvatarActor(), PrologueGameplayTags::Comma_Event_JustParry, PlayData);
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.EffectSpec.GetContext().GetEffectCauser(), PrologueGameplayTags::Enemy_Event_Parried, PlayData);

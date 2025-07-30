@@ -96,6 +96,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_Attack, "Enemy.Ability.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_RangeAttack, "Enemy.Ability.RangeAttack");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_LaserAttack, "Enemy.Ability.LaserAttack");
+	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_CantParryAttack, "Enemy.Ability.CantParryAttack");
 
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_Charge, "Enemy.Ability.Charge");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_Jump, "Enemy.Ability.Jump");
