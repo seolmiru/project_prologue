@@ -490,11 +490,6 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	// 주변 가까운 땅 대시 위치 검사 (대시 보정 알고리즘)
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	Comma->DashPoint->SetDirectionMinGround();
-
-	if (UCapsuleComponent* CapsuleComp = Comma->GetCapsuleComponent())
-	{
-		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Block);
-	}
 }
 
 void UGA_CommaDash::OnCurveTick(float Alpha)
@@ -529,18 +524,6 @@ void UGA_CommaDash::OnInterrupted()
 	bool bReplicatedEndAbility = true;
 	bool bWasCancelled = true;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
-}
-
-void UGA_CommaDash::OnAnimationComplete()
-{
-	bAnimationCompleted = true;
-	CheckForAbilityEnd();
-}
-
-void UGA_CommaDash::OnCurveComplete()
-{
-	bCurveCompleted = true;
-	CheckForAbilityEnd();
 }
 
 bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors,
@@ -642,16 +625,8 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 
 void UGA_CommaDash::OnDashAllowed()
 {
-	bAnimationCompleted = false;
-	bCurveCompleted = false;
-	
 	LOG_SCREEN("Start Dash");
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
-
-	if (UCapsuleComponent* CapsuleComp = Comma->GetCapsuleComponent())
-	{
-		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Overlap);
-	}
 	
 	// Just Dash Effect 부여
 	FGameplayEffectContextHandle JustDashEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
@@ -673,7 +648,7 @@ void UGA_CommaDash::OnDashAllowed()
 
 	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this, TEXT("PlayMontage"), AnimMontage, 1.0f);
-	PlayTask->OnCompleted.AddDynamic(this, &UGA_CommaDash::OnAnimationComplete);
+	PlayTask->OnCompleted.AddDynamic(this, &UGA_CommaDash::OnComplete);
 	PlayTask->OnInterrupted.AddDynamic(this, &UGA_CommaDash::OnInterrupted);
 	PlayTask->ReadyForActivation();
 
@@ -745,20 +720,8 @@ void UGA_CommaDash::OnDashAllowed()
 		if (TickCurveTask)
 		{
 			TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
-			TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnCurveComplete);
+			//TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 			TickCurveTask->ReadyForActivation();
 		}
-	}
-	else
-	{
-		bCurveCompleted = true;
-	}
-}
-
-void UGA_CommaDash::CheckForAbilityEnd()
-{
-	if (bAnimationCompleted && bCurveCompleted)
-	{
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 	}
 }

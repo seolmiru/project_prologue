@@ -27,13 +27,7 @@ protected:
 
 	UFUNCTION()
 	void OnInterrupted();
-
-	UFUNCTION()
-	void OnAnimationComplete();
-
-	UFUNCTION()
-	void OnCurveComplete();
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Dash|GroundCheck")
 	bool IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const;
 
@@ -117,9 +111,4 @@ protected:
 	FVector BasePos;
 
 	bool bCanMoveToDashTarget = false;
-
-	bool bAnimationCompleted = false;
-	bool bCurveCompleted = false;
-
-	void CheckForAbilityEnd();
 };

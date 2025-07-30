@@ -44,6 +44,8 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_Parrying);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_JustParrying);
 
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_ParrySuccess);
+
 	/** Comma State Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_JustDash);
 

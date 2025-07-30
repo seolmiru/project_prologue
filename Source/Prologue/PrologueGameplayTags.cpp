@@ -43,6 +43,8 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_Parrying, "Comma.State.Parrying")
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_JustParrying, "Comma.State.JustParrying")
 
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_ParrySuccess, "Comma.State.ParrySuccess")
+
 	/** Comma Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_JustDash, "Comma.Event.JustDash");
 

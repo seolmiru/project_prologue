@@ -23,14 +23,20 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
 
+	if (UCapsuleComponent* CapsuleComponent = Comma->GetCapsuleComponent())
+	{
+		CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore);
+	}
+
+	if (Comma)
+	{
+		Comma->GetParryCollision()->SetActive(true);
+		Comma->GetParryCollision()->OnComponentBeginOverlap.AddDynamic(this, &UGA_CommaParry::OnOverlap);
+	}
+	
 	Comma->RotateToMouse();
 
 	Comma->GetDashPoint()->SetCursorDirectionState(false);
-
-	if (UCapsuleComponent* CapsuleComp = Comma->GetCapsuleComponent())
-	{
-		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Overlap);
-	}
 
 	// 패링 성공 이벤트 대기
 	UAbilityTask_WaitGameplayEvent* WaitJustParryTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, PrologueGameplayTags::Comma_Event_JustParry);
@@ -48,11 +54,6 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	InvincibleEffectContextHandle.AddSourceObject(this);
 	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryEffectClass, 0.f, InvincibleEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
-
-	// Dash Tick Curve Task
-	UAT_TickCurve* DashTickCurve = UAT_TickCurve::CreateTask(this, DashCurve);
-	DashTickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaParry::OnDashCurveTick);
-	DashTickCurve->OnComplete.AddDynamic(this, &UGA_CommaParry::OnComplete);
 	
 	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
 	TargetPos = Comma->GetDashPoint()->GetParryPoint();
@@ -85,14 +86,17 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 					// 대상이 공격 중이라면 대상 앞까지만 돌진
 					if (TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
 					{
-						TargetPos = Hit.ImpactPoint;
+						TargetPos = Hit.ImpactPoint - 100.f;
 						break;
 					}
 				}
 			}
 		}
 	}
-
+	
+	// Dash Tick Curve Task
+	UAT_TickCurve* DashTickCurve = UAT_TickCurve::CreateTask(this, DashCurve);
+	DashTickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaParry::OnDashCurveTick);
 	DashTickCurve->ReadyForActivation();
 	
 	// 투세차 반사 확정 전까지 미사용
@@ -120,7 +124,13 @@ void UGA_CommaParry::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 
 	if (UCapsuleComponent* CapsuleComp = Comma->GetCapsuleComponent())
 	{
-		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Block);
+		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Block);
+	}
+
+	if (ActorInfo && ActorInfo->AvatarActor.Get())
+	{
+		Comma->GetParryCollision()->SetActive(false);
+		Comma->GetParryCollision()->OnComponentBeginOverlap.Clear();
 	}
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -154,21 +164,6 @@ void UGA_CommaParry::OnDashCurveTick(float Alpha)
 	GetAvatarActorFromActorInfo()->SetActorLocation(CurrentPos);
 }
 
-void UGA_CommaParry::OnComplete()
-{
-	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
-	{
-		if (UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement())
-		{
-			MovementComp->UpdateFloorFromAdjustment();
-		}
-	}
-	
-	bool bReplicatedEndAbility = true;
-	bool bWasCancelled = false;
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
-}
-
 void UGA_CommaParry::OnJustParry(FGameplayEventData Payload)
 {
 	FGameplayTagContainer CooldownTags;
@@ -177,6 +172,27 @@ void UGA_CommaParry::OnJustParry(FGameplayEventData Payload)
 	{
 		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 		ASC->RemoveActiveEffectsWithGrantedTags(CooldownTags);
+	}
+}
+
+void UGA_CommaParry::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor)
+	{
+		LOG_SCREEN("%s", *OtherActor->GetName());
+
+		if (SweepResult.GetActor())
+		{
+			FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+			EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
+
+			FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryFailedDamageEffect, 1.f, EffectContextHandle);
+			FGameplayAbilityTargetDataHandle DataHandle;
+			FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(SweepResult);
+			DataHandle.Add(TargetData);
+			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, DataHandle);
+		}
 	}
 }
 

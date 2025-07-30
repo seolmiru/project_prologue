@@ -15,7 +15,6 @@ void UGA_CommaJustParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	
 	UAT_TickCurve* TickCurveTask = UAT_TickCurve::CreateTask(this, SlowCurve);
-	TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaJustParry::OnComplete);
 	TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaJustParry::OnSlowCurveTick);
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Parried);
 
@@ -26,13 +25,6 @@ void UGA_CommaJustParry::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-}
-
-void UGA_CommaJustParry::OnComplete()
-{
-	bool bReplicatedEndAbility = true;
-	bool bWasCancelled = false;
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
 }
 
 void UGA_CommaJustParry::OnSlowCurveTick(float Alpha)
