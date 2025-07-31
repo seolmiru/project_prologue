@@ -93,22 +93,23 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                 FGameplayCueParameters CueParam;
                 CueParam.EffectContext = CueContextHandle;
             }
+
+            // 오버클락 게이지 증가
+            if (IncreaseGaugeEffect)
+            {
+                FGameplayEffectSpecHandle GaugeEffectSpecHandle = MakeOutgoingGameplayEffectSpec(IncreaseGaugeEffect);
+                if (GaugeEffectSpecHandle.IsValid())
+                {
+                    GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*GaugeEffectSpecHandle.Data.Get());
+                }
+            }
         }
     }
     
-    // 카메라 쉐이킹 적용, 오버클락 게이지 증가
+    // 카메라 쉐이킹 적용
     if (TargetDataHandle.Num() > 0)
     {
         GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
-        
-        if (IncreaseGaugeEffect)
-        {
-            FGameplayEffectSpecHandle GaugeEffectSpecHandle = MakeOutgoingGameplayEffectSpec(IncreaseGaugeEffect);
-            if (GaugeEffectSpecHandle.IsValid())
-            {
-                GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*GaugeEffectSpecHandle.Data.Get());
-            }
-        }
     }
     
     bool bReplicatedEndAbility = true;

@@ -50,6 +50,11 @@ void APrologueEnemyCharacter::BeginPlay()
 		HpBar->SetVisibility(false);
 	}
 	
+	if (MangoHpBarWidget)
+	{
+		MangoHpBarWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+	
 	if (ASC && Attributes)
 	{
 		DamageAttributeChangedHandle = ASC->GetGameplayAttributeValueChangeDelegate(Attributes->GetCurrentHealthAttribute()).AddUObject(this, &APrologueEnemyCharacter::OnDamageAttributeChanged);
@@ -111,6 +116,13 @@ void APrologueEnemyCharacter::PossessedBy(AController* NewController)
 				ASC->MakeEffectContext()
 			);
 		}
+	}
+
+	if (BP_MangoWidget)
+	{
+		MangoHpBarWidget = CreateWidget<UEnemyWidget>(GetWorld(), BP_MangoWidget);
+		MangoHpBarWidget->SetAbilitySystemComponent(this);
+		MangoHpBarWidget->AddToViewport();
 	}
 }
 

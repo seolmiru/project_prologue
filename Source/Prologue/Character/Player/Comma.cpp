@@ -91,7 +91,7 @@ AComma::AComma()
 	UWorld* World = GetWorld();
 
 	static ConstructorHelpers::FClassFinder<APlayerDashPoint> DashRef(
-		TEXT("/Script/Engine.Blueprint'/Game/Characters/Comma/Dash/DashPoint.DashPoint_C'"));
+		TEXT("/Script/Engine.Blueprint'/Game/Characters/Comma/Dash/BP_DashPoint.BP_DashPoint_C'"));
 
 	if (World && DashRef.Class)
 	{
