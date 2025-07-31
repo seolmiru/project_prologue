@@ -62,16 +62,20 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	IgnoreActors.Add(GetAvatarActorFromActorInfo());
 	TArray<FHitResult> Hits;
 
-	bool bResult = UKismetSystemLibrary::LineTraceMulti(
+	bool bResult = UKismetSystemLibrary::SphereTraceMulti(
 		GetWorld(),
 		BasePos,
 		TargetPos,
+		150.f,
 		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4),
 		false,
 		IgnoreActors,
-		EDrawDebugTrace::None,
+		EDrawDebugTrace::ForDuration,
 		Hits,
-		true
+		false,
+		FLinearColor::Red,
+		FLinearColor::Green,
+		2.f
 	);
 	
 	// 대상이 공격 중인지 체크
@@ -84,7 +88,7 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 				if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor))
 				{
 					// 대상이 공격 중이라면 대상 앞까지만 돌진
-					if (TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
+					if (TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Enemy_State_CanParry))
 					{
 						TargetPos = Hit.ImpactPoint - 100.f;
 						break;
