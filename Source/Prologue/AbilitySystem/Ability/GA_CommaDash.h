@@ -104,7 +104,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TEnumAsByte<ECollisionChannel> TraceChannel;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bIgnoreCancelRestriction = false;
 	
 	FVector TargetPos;
