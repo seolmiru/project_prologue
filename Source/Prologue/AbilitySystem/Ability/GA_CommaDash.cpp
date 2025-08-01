@@ -627,7 +627,7 @@ void UGA_CommaDash::OnDashAllowed()
 {
 	LOG_SCREEN("Start Dash");
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
-
+	
 	// Just Dash Effect 부여
 	FGameplayEffectContextHandle JustDashEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
 		MakeEffectContext();
@@ -720,7 +720,7 @@ void UGA_CommaDash::OnDashAllowed()
 		if (TickCurveTask)
 		{
 			TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
-			TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
+			//TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 			TickCurveTask->ReadyForActivation();
 		}
 	}

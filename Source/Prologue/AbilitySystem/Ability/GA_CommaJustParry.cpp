@@ -13,10 +13,10 @@ void UGA_CommaJustParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle
                                          const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
+	
 	UAT_TickCurve* TickCurveTask = UAT_TickCurve::CreateTask(this, SlowCurve);
-	TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaJustParry::OnComplete);
 	TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaJustParry::OnSlowCurveTick);
+	TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaJustParry::OnComplete);
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Parried);
 
 	TickCurveTask->ReadyForActivation();
@@ -30,12 +30,19 @@ void UGA_CommaJustParry::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 
 void UGA_CommaJustParry::OnComplete()
 {
-	bool bReplicatedEndAbility = true;
-	bool bWasCancelled = false;
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+	Super::OnComplete();
 }
 
 void UGA_CommaJustParry::OnSlowCurveTick(float Alpha)
 {
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), Alpha);
+}
+
+void UGA_CommaJustParry::ResetParryCooldown(const FGameplayTagContainer CooldownTagContainer)
+{
+	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
+	{
+		const FGameplayEffectQuery Query = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(CooldownTagContainer);
+		ASC->RemoveActiveEffects(Query);
+	}
 }

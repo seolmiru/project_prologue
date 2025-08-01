@@ -7,7 +7,6 @@
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Player/Comma.h"
-#include "Prologue/DataAsset/ComboBowData.h"
 #include "Prologue/DataAsset/ComboSwordData.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "AT/AT_MoveToTarget.h"
@@ -58,9 +57,6 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 
 	CachedComma->CurrentSwordCombo = CurrentCombo;
 	
-	CachedComma->GetSwordWeaponMesh()->SetVisibility(true);
-	CachedComma->GetBowWeaponMesh()->SetVisibility(false);
-
 	if (CurrentCombo == 0)
 	{
 		CachedAttackDirection = GetMouseDirection();

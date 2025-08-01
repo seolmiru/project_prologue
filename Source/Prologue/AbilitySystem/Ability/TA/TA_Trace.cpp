@@ -37,11 +37,10 @@ FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
 	IgnoreActors.Add(Character);
 
 	FGameplayAbilityTargetDataHandle DataHandle;
+	TSet<AActor*> HitActors;
 
 	if (bUseFanShapeTrace)
 	{
-		TSet<AActor*> HitActors;
-		
 		const FVector Forward = Character->GetActorForwardVector();
 		const FVector StartBase = Character->GetActorLocation() + Forward * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
 
@@ -58,8 +57,8 @@ FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
 			FVector Start = StartBase;
 			FVector End = Start + TraceDirection * TraceLength;
 
-			FHitResult HitResult;
-			bool bTraceResult = UKismetSystemLibrary::SphereTraceSingle(
+			TArray<FHitResult> HitResults;
+			bool bTraceResult = UKismetSystemLibrary::SphereTraceMulti(
 				GetWorld(),
 				Start,
 				End,
@@ -68,22 +67,23 @@ FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
 				false,
 				IgnoreActors,
 				bShowDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
-				HitResult,
+				HitResults,
 				false,
 				FLinearColor::Red,
 				FLinearColor::Green,
 				1.0f
 			);
 
-			if (bTraceResult && HitResult.GetActor())
+			if (bTraceResult)
 			{
-				AActor* HitActor = HitResult.GetActor();
-
-				if (!HitActors.Contains(HitActor))
+				for (const FHitResult& HitResult : HitResults)
 				{
-					HitActors.Add(HitActor);
-					FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
-					DataHandle.Add(TargetData);
+					if (HitResult.GetActor() && !HitActors.Contains(HitResult.GetActor()))
+					{
+						HitActors.Add(HitResult.GetActor());
+						FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
+						DataHandle.Add(TargetData);
+					}
 				}
 			}
 		}
@@ -112,8 +112,12 @@ FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
 		{
 			for (const FHitResult& HitResult : HitResults)
 			{
-				FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
-				DataHandle.Add(TargetData);
+				if (HitResult.GetActor() && !HitActors.Contains(HitResult.GetActor()))
+				{
+					HitActors.Add(HitResult.GetActor());
+					FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
+					DataHandle.Add(TargetData);
+				}
 			}
 		}
 	}

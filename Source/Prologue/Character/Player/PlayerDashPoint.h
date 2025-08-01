@@ -22,6 +22,23 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	/*=======Shar Section=======*/
+protected:
+	// 수직 오프셋
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float VerticalOffset = 500.0f;
+
+	// 안전 영역 범위
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float SafeWeight = 100.0f;
+
+private:
+	UPROPERTY(VisibleAnywhere, Category="Dash")
+	TObjectPtr<class AComma> Player;
+	
+	// 특정 각도만큼 회전시키는 함수
+	FQuat RotateToWorld(const FQuat& From, const FQuat& To, float MaxRadian);
+	
 	/*=======Dash Section=======*/
 public:
 	// 검사 방향 변경 함수
@@ -49,39 +66,67 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	float RotationMaxDegreeAngle = 15.0f;
 	
-	// 수직 오프셋
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
-	float VerticalOffset = 500.0f;
-
 	// 검사 단위
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	int32 PartialUnitCount = 64;
 
-	// 안전 영역 범위
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
-	float SafeWeight = 100.0f;
-	
 private:
-	UPROPERTY(VisibleAnywhere, Category="Dash")
-	TObjectPtr<class AComma> Player;
-	
 	// 대쉬 방향
-	UPROPERTY(VisibleAnywhere, Category = "Dash")
+	UPROPERTY(EditAnywhere, Category = "Dash")
 	FVector TargetDirection;
-	
-	UPROPERTY(VisibleAnywhere, Category = "Dash")
+	UPROPERTY(EditAnywhere, Category = "Dash")
 	FVector CurrentDirection;
 	
 	// 대시 위치
-	FVector Point;
+	FVector DashPoint;
 
 	// 이전 대쉬 대상 지면 액터
-	UPROPERTY(VisibleAnywhere, Category = "Dash")
 	AActor* GroundActor;
 	
 	// 대쉬 탐색 함수
 	void CheckNewDirecionPoint();
 	
-	// 특정 각도만큼 회전시키는 함수
-	FQuat RotateToWorld(const FQuat& From, const FQuat& To, float MaxRadian);
+	
+	/*=======Parry Section=======*/
+public:
+
+	// 패리 위치 리턴 함수
+	FVector GetParryPoint();
+
+	// 패리 방향 동기화 여부 리턴
+	bool GetIsParrySync();
+
+	// 방향업데이트 중지 여부
+	void SetCursorDirectionState(bool bState);
+	
+protected:
+	// 최대 거리
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parry")
+	float ParryMaxDistance = 800.0f;
+
+	// 회전 검사 최대 각
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parry")
+	float ParryRotationMaxDelta = 15.0f;
+
+	// 검사 단위
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parry")
+	int32 ParryPartialUnit = 32;
+
+private:
+	// 패리 방향 업데이트 불리언
+	bool bParrySync;
+	
+	// 패리 방향
+	UPROPERTY(VisibleAnywhere, Category = "Parry")
+	FVector ParryCursorDirection;
+	UPROPERTY(VisibleAnywhere, Category = "Parry")
+	FVector ParryDirection;
+
+	// 패리 돌진 위치
+	FVector ParryPoint;
+
+	// 이전 패리 대상 지면
+	AActor* ParryGroundActor;
+	
+	void CheckParryDirectionPoint();
 };

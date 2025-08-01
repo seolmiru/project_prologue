@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GA_MontageAbility.h"
 #include "Abilities/GameplayAbility.h"
 #include "GA_CommaJustParry.generated.h"
 
@@ -10,7 +11,7 @@
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_CommaJustParry : public UGameplayAbility
+class PROLOGUE_API UGA_CommaJustParry : public UGA_MontageAbility
 {
 	GENERATED_BODY()
 
@@ -22,9 +23,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline|Slow")
 	TObjectPtr<class UCurveFloat> SlowCurve;
 
-	UFUNCTION()
-	void OnComplete();
-
+	virtual void OnComplete() override;
+	
 	UFUNCTION()
 	void OnSlowCurveTick(float Alpha);
+
+	UFUNCTION(BlueprintCallable)
+	void ResetParryCooldown(const FGameplayTagContainer CooldownTagContainer);
 };

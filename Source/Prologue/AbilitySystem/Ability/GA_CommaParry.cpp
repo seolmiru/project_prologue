@@ -5,10 +5,14 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AT/AT_TickCurve.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Player/Comma.h"
+#include "Prologue/Character/Player/PlayerDashPoint.h"
 #include "Prologue/Weapon/Projectile/BazierProjectile.h"
 
 void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -19,8 +23,26 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
 
+	if (UCapsuleComponent* CapsuleComponent = Comma->GetCapsuleComponent())
+	{
+		CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore);
+	}
+
+	if (Comma)
+	{
+		Comma->GetParryCollision()->SetActive(true);
+		Comma->GetParryCollision()->OnComponentBeginOverlap.AddDynamic(this, &UGA_CommaParry::OnOverlap);
+	}
+	
 	Comma->RotateToMouse();
 
+	Comma->GetDashPoint()->SetCursorDirectionState(false);
+
+	// 패링 성공 이벤트 대기
+	UAbilityTask_WaitGameplayEvent* WaitJustParryTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, PrologueGameplayTags::Comma_Event_JustParry);
+	WaitJustParryTask->EventReceived.AddDynamic(this, &UGA_CommaParry::OnJustParry);
+	WaitJustParryTask->ReadyForActivation();
+	
 	// Parry Effect
 	FGameplayEffectContextHandle ParryEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 	ParryEffectContextHandle.AddSourceObject(this);
@@ -32,33 +54,30 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	InvincibleEffectContextHandle.AddSourceObject(this);
 	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryEffectClass, 0.f, InvincibleEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
-
-	// Dash Tick Curve Task
-	UAT_TickCurve* DashTickCurve = UAT_TickCurve::CreateTask(this, DashCurve);
-	DashTickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaParry::OnDashCurveTick);
-	DashTickCurve->OnComplete.AddDynamic(this, &UGA_CommaParry::OnComplete);
 	
-	FVector StartPos = GetAvatarActorFromActorInfo()->GetActorLocation();
-	FVector EndPos = StartPos + GetAvatarActorFromActorInfo()->GetActorForwardVector() * MoveLength;
+	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
+	TargetPos = Comma->GetDashPoint()->GetParryPoint();
+	
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(GetAvatarActorFromActorInfo());
 	TArray<FHitResult> Hits;
 
-	bool bResult = UKismetSystemLibrary::LineTraceMulti(
+	bool bResult = UKismetSystemLibrary::SphereTraceMulti(
 		GetWorld(),
-		StartPos,
-		EndPos,
+		BasePos,
+		TargetPos,
+		150.f,
 		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4),
 		false,
 		IgnoreActors,
-		EDrawDebugTrace::None,
+		EDrawDebugTrace::ForDuration,
 		Hits,
-		true
-		);
-
-	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
-	TargetPos = EndPos;
-
+		false,
+		FLinearColor::Red,
+		FLinearColor::Green,
+		2.f
+	);
+	
 	// 대상이 공격 중인지 체크
 	if (bResult && Hits.Num() > 0)
 	{
@@ -69,16 +88,19 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 				if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor))
 				{
 					// 대상이 공격 중이라면 대상 앞까지만 돌진
-					if (TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
+					if (TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Enemy_State_CanParry))
 					{
-						TargetPos = Hit.ImpactPoint;
+						TargetPos = Hit.ImpactPoint - 100.f;
 						break;
 					}
 				}
 			}
 		}
 	}
-
+	
+	// Dash Tick Curve Task
+	UAT_TickCurve* DashTickCurve = UAT_TickCurve::CreateTask(this, DashCurve);
+	DashTickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaParry::OnDashCurveTick);
 	DashTickCurve->ReadyForActivation();
 	
 	// 투세차 반사 확정 전까지 미사용
@@ -100,19 +122,82 @@ void UGA_CommaParry::CancelAbility(const FGameplayAbilitySpecHandle Handle, cons
 void UGA_CommaParry::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
+
+	Comma->GetDashPoint()->SetCursorDirectionState(true);
+
+	if (UCapsuleComponent* CapsuleComp = Comma->GetCapsuleComponent())
+	{
+		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Block);
+	}
+
+	if (ActorInfo && ActorInfo->AvatarActor.Get())
+	{
+		Comma->GetParryCollision()->SetActive(false);
+		Comma->GetParryCollision()->OnComponentBeginOverlap.Clear();
+	}
+	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void UGA_CommaParry::OnDashCurveTick(float Alpha)
 {
-	GetAvatarActorFromActorInfo()->SetActorLocation(FMath::Lerp(BasePos, TargetPos, Alpha));
+	FVector CurrentPos = FMath::Lerp(BasePos, TargetPos, Alpha);
+
+	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
+	{
+		FHitResult HitResult;
+		FVector TraceStart = CurrentPos + FVector(0.f, 0.f, 100.f);
+		FVector TraceEnd = CurrentPos - FVector(0.f, 0.f, 200.f);
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(Comma);
+
+		if (GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			TraceStart,
+			TraceEnd,
+			ECC_WorldStatic,
+			QueryParams
+		))
+		{
+			CurrentPos.Z = HitResult.ImpactPoint.Z + Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		}
+	}
+
+	GetAvatarActorFromActorInfo()->SetActorLocation(CurrentPos);
 }
 
-void UGA_CommaParry::OnComplete()
+void UGA_CommaParry::OnJustParry(FGameplayEventData Payload)
 {
-	bool bReplicatedEndAbility = true;
-	bool bWasCancelled = false;
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+	FGameplayTagContainer CooldownTags;
+
+	if (CooldownTags.Num() > 0)
+	{
+		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+		ASC->RemoveActiveEffectsWithGrantedTags(CooldownTags);
+	}
+}
+
+void UGA_CommaParry::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor)
+	{
+		LOG_SCREEN("%s", *OtherActor->GetName());
+
+		if (SweepResult.GetActor())
+		{
+			FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+			EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
+
+			FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryFailedDamageEffect, 1.f, EffectContextHandle);
+			FGameplayAbilityTargetDataHandle DataHandle;
+			FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(SweepResult);
+			DataHandle.Add(TargetData);
+			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, DataHandle);
+		}
+	}
 }
 
 // 투사체 반사 함수
