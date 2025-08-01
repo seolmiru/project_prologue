@@ -107,7 +107,14 @@ void APrologueCharacter::InputGAS(const FGameplayTag Tag)
 	GameplayTags.AddTag(Tag);
 	if (ASC)
 	{
-		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
+		static TArray<FGameplayTag> NonBufferTags = {
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Sword")),
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Bow"))
+		};
+
+		bool bShouldBuffer = !NonBufferTags.Contains(Tag);
+		
+		if (bShouldBuffer && ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
 		{
 			InputBufferComponent->BufferInput(Tag);
 			return;
