@@ -19,6 +19,7 @@
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/AbilitySystem/Ability/GA_CommaAttackSword.h"
+#include "Prologue/Component/InputBufferComponent.h"
 #include "Prologue/Player/ProloguePlayerState.h"
 #include "Prologue/UI/Comma/CommaWidget.h"
 
@@ -79,6 +80,8 @@ AComma::AComma()
 	CooldownWidgetComponent->SetupAttachment(RootComponent);
 	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, -130.f));
 	CooldownWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+
+	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
 	

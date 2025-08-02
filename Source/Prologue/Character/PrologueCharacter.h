@@ -15,6 +15,7 @@ class UPawnCombatComponent;
 class UDataAsset_StartUpDataBase;
 class UPrologueAttributeSet;
 class UPrologueAbilitySystemComponent;
+class UInputBufferComponent;
 class UMotionWarpingComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -28,7 +29,7 @@ public:
 	APrologueCharacter();
 
 	virtual UPawnCombatComponent* GetPawnCombatComponent() const override;
-
+	
 protected:
 	virtual void PossessedBy(AController* NewController) override;
 
@@ -46,6 +47,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MotionWarping")
 	UMotionWarpingComponent* MotionWarpingComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UInputBufferComponent* InputBufferComponent;
+	
 	FDelegateHandle ToughnessTagHandle;
 
 	FTimerHandle ToughnessRecoveryTimerHandle;
