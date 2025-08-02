@@ -21,41 +21,6 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	
 protected:
-	UFUNCTION()
-	void OnTraceFinished();
-    
-	UFUNCTION()
-	void OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle);
-
-	UFUNCTION()
-	void StartBoxTrace();
-
-private:
-	UPROPERTY()
-	UAT_TickBoxTrace* BoxTraceTask = nullptr;
-    
-	FTimerHandle LaserTimerHandle;
-	FTimerHandle TraceDelayTimerHandle;
-	
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
-	float LaserDuration = 3.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
-	float TraceDelay = 0.5f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
-	FVector LaserBoxHalfSize = FVector(50.f, 50.f, 50.f);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
-	float LaserLength = 800.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
-	float DamageTickInterval = 0.5f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
-	bool bShowDebugTrace = false;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Laser")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 };

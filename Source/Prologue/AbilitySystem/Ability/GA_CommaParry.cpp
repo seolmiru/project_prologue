@@ -37,66 +37,15 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	Comma->RotateToMouse();
 
 	Comma->GetDashPoint()->SetCursorDirectionState(false);
-
-	// 패링 성공 이벤트 대기
-	UAbilityTask_WaitGameplayEvent* WaitJustParryTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, PrologueGameplayTags::Comma_Event_JustParry);
-	WaitJustParryTask->EventReceived.AddDynamic(this, &UGA_CommaParry::OnJustParry);
-	WaitJustParryTask->ReadyForActivation();
 	
-	// Parry Effect
-	FGameplayEffectContextHandle ParryEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-	ParryEffectContextHandle.AddSourceObject(this);
-	FGameplayEffectSpecHandle ParryEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryEffectClass, 0.f, ParryEffectContextHandle);
-	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*ParryEffectSpecHandle.Data.Get());
-
 	// Invincible Effect
 	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 	InvincibleEffectContextHandle.AddSourceObject(this);
-	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryEffectClass, 0.f, InvincibleEffectContextHandle);
+	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(InvincibleEffectClass, 0.f, InvincibleEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
 	
 	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
 	TargetPos = Comma->GetDashPoint()->GetParryPoint();
-	
-	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(GetAvatarActorFromActorInfo());
-	TArray<FHitResult> Hits;
-
-	bool bResult = UKismetSystemLibrary::SphereTraceMulti(
-		GetWorld(),
-		BasePos,
-		TargetPos,
-		150.f,
-		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4),
-		false,
-		IgnoreActors,
-		EDrawDebugTrace::ForDuration,
-		Hits,
-		false,
-		FLinearColor::Red,
-		FLinearColor::Green,
-		2.f
-	);
-	
-	// 대상이 공격 중인지 체크
-	if (bResult && Hits.Num() > 0)
-	{
-		for (const FHitResult& Hit : Hits)
-		{
-			if (AActor* HitActor = Hit.GetActor())
-			{
-				if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor))
-				{
-					// 대상이 공격 중이라면 대상 앞까지만 돌진
-					if (TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Enemy_State_CanParry))
-					{
-						TargetPos = Hit.ImpactPoint - 100.f;
-						break;
-					}
-				}
-			}
-		}
-	}
 	
 	// Dash Tick Curve Task
 	UAT_TickCurve* DashTickCurve = UAT_TickCurve::CreateTask(this, DashCurve);
@@ -168,17 +117,6 @@ void UGA_CommaParry::OnDashCurveTick(float Alpha)
 	GetAvatarActorFromActorInfo()->SetActorLocation(CurrentPos);
 }
 
-void UGA_CommaParry::OnJustParry(FGameplayEventData Payload)
-{
-	FGameplayTagContainer CooldownTags;
-
-	if (CooldownTags.Num() > 0)
-	{
-		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-		ASC->RemoveActiveEffectsWithGrantedTags(CooldownTags);
-	}
-}
-
 void UGA_CommaParry::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -191,7 +129,7 @@ void UGA_CommaParry::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 			FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 			EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
 
-			FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryFailedDamageEffect, 1.f, EffectContextHandle);
+			FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SkillDamageEffect, 1.f, EffectContextHandle);
 			FGameplayAbilityTargetDataHandle DataHandle;
 			FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(SweepResult);
 			DataHandle.Add(TargetData);
@@ -214,7 +152,7 @@ void UGA_CommaParry::Deflect(AComma* Comma)
 	UKismetSystemLibrary::SphereOverlapActors(
 		GetWorld(),
 		Comma->GetActorLocation(),
-		ParryRadius,
+		SKillRadius,
 		ObjectTypes,
 		ABazierProjectile::StaticClass(),
 		IgnoreActors,
