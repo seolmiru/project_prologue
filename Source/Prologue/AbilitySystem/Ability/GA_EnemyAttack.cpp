@@ -12,16 +12,36 @@ UGA_EnemyAttack::UGA_EnemyAttack()
 	
 }
 
+bool UGA_EnemyAttack::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
+	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
+	{
+		return false;	
+	}
+
+	return !ActorInfo->AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Shared.Cooldown.Attack")));
+}
+
 void UGA_EnemyAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                       const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
                                       const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (!CommitAbilityCost(Handle, ActorInfo, ActivationInfo))
+	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
+	}
+
+	if (ParryTimingEffectClass)
+	{
+		FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+		EffectContextHandle.AddSourceObject(this);
+		FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(ParryTimingEffectClass, 0.f, EffectContextHandle);
+		GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
 	
 	APrologueEnemyCharacter* Enemy = CastChecked<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
@@ -33,11 +53,6 @@ void UGA_EnemyAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, const 
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
-	if (!bWasCancelled)
-	{
-		CommitAbilityCooldown(Handle, ActorInfo, ActivationInfo, false);
-	}
 	
 	APrologueEnemyCharacter* Enemy = CastChecked<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
 

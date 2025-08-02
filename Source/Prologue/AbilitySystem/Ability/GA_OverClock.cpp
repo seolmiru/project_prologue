@@ -41,11 +41,6 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	
 	bIsOverClockActive = true;
 	OverClockTimeScale = TimeScale;
-
-	if (AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get()))
-	{
-		Comma->SetOverClockEffectActive(true);
-	}
 	
 	ApplySlowToEnemies();
 	
@@ -61,11 +56,6 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	if (AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get()))
-	{
-		Comma->SetOverClockEffectActive(false);
-	}
-	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
 	GetWorld()->GetTimerManager().ClearTimer(OverClockTimerHandle);
@@ -78,14 +68,6 @@ void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 void UGA_OverClock::OnOverClockFinished()
 {
 	LOG_SCREEN_R("End OverClock. Restoring time.");
-
-	if (CurrentActorInfo && CurrentActorInfo->AvatarActor.IsValid())
-	{
-		if (AComma* Comma = Cast<AComma>(CurrentActorInfo->AvatarActor.Get()))
-		{
-			Comma->SetOverClockEffectActive(false);
-		}
-	}
 	
 	RestoreEnemyTime();
 	

@@ -2,14 +2,12 @@
 
 #include "PrologueCharacter.h"
 #include "Engine/LocalPlayer.h"
-#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "AbilitySystemComponent.h"
-#include "Player/Comma.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 #include "MotionWarpingComponent.h"
+#include "Prologue/Component/InputBufferComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -106,6 +104,19 @@ void APrologueCharacter::InputGAS(const FGameplayTag Tag)
 	GameplayTags.AddTag(Tag);
 	if (ASC)
 	{
+		static TArray<FGameplayTag> NonBufferTags = {
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Sword")),
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Bow"))
+		};
+
+		bool bShouldBuffer = !NonBufferTags.Contains(Tag);
+		
+		if (bShouldBuffer && ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
+		{
+			InputBufferComponent->BufferInput(Tag);
+			return;
+		}
+		
 		TArray<FGameplayAbilitySpec*> AbilitiesToActivatePtrs;
 		ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(GameplayTags, AbilitiesToActivatePtrs);
 		if (AbilitiesToActivatePtrs.Num() < 1)

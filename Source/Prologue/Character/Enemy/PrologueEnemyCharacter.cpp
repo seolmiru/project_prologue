@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/Component/EnemyWidgetComponent.h"
 #include "Prologue/Controller/PrologueAIController.h"
 #include "Prologue/UI/Enemy/EnemyWidget.h"
 
@@ -31,12 +32,29 @@ APrologueEnemyCharacter::APrologueEnemyCharacter()
 
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	Attributes = CreateDefaultSubobject<UPrologueAttributeSet>(TEXT("Attributes"));
+
+	HpBar = CreateDefaultSubobject<UEnemyWidgetComponent>(TEXT("Widget"));
+	HpBar->SetupAttachment(GetMesh());
+	HpBar->SetRelativeLocation(FVector(0.f, 0.f, 180.f));
+	HpBar->SetWidgetSpace(EWidgetSpace::Screen);
+	HpBar->SetWidgetClass(BP_EnemyWidget);
 }
 
 void APrologueEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// 전투 시작 전에는 체력바를 안 보이게 설정
+	if (HpBar)
+	{
+		HpBar->SetVisibility(false);
+	}
+	
+	if (MangoHpBarWidget)
+	{
+		MangoHpBarWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+	
 	if (ASC && Attributes)
 	{
 		DamageAttributeChangedHandle = ASC->GetGameplayAttributeValueChangeDelegate(Attributes->GetCurrentHealthAttribute()).AddUObject(this, &APrologueEnemyCharacter::OnDamageAttributeChanged);
@@ -45,6 +63,13 @@ void APrologueEnemyCharacter::BeginPlay()
 
 void APrologueEnemyCharacter::OnDamageAttributeChanged(const FOnAttributeChangeData& Data)
 {
+	// 플레이어에게 공격을 받는 순간 체력바 표시
+	if (!bHealthBarVisible && Data.OldValue > Data.NewValue && HpBar)
+	{
+		HpBar->SetVisibility(true);
+		bHealthBarVisible = true;
+	}
+	
 	if (Data.NewValue > 0.f)
 	{
 		if (const FGameplayEffectModCallbackData* ModData = Data.GEModData)
@@ -91,6 +116,13 @@ void APrologueEnemyCharacter::PossessedBy(AController* NewController)
 				ASC->MakeEffectContext()
 			);
 		}
+	}
+
+	if (BP_MangoWidget)
+	{
+		MangoHpBarWidget = CreateWidget<UEnemyWidget>(GetWorld(), BP_MangoWidget);
+		MangoHpBarWidget->SetAbilitySystemComponent(this);
+		MangoHpBarWidget->AddToViewport();
 	}
 }
 

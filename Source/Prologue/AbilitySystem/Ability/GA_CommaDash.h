@@ -27,10 +27,17 @@ protected:
 
 	UFUNCTION()
 	void OnInterrupted();
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Dash|GroundCheck")
 	bool IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const;
 
+	/* Start Sejin */
+
+	UFUNCTION(BlueprintCallable, Category = "Dash")
+	void OnDashAllowed();
+	
+	/* End Sejin */
+	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAnimMontage> AnimMontage;
 
@@ -97,7 +104,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TEnumAsByte<ECollisionChannel> TraceChannel;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bIgnoreCancelRestriction = false;
 	
 	FVector TargetPos;

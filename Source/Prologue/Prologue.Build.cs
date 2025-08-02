@@ -20,7 +20,8 @@ public class Prologue : ModuleRules
 			"NavigationSystem",
 			"AIModule", 
 			"MoviePlayer",
-			"MotionWarping"
+			"MotionWarping", 
+			"MediaAssets"
 		});
 	}
 }
