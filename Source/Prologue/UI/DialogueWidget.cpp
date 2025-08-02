@@ -18,12 +18,12 @@ void UDialogueWidget::NativeConstruct()
 
 	if (HourHand)
 	{
-		HourHand->SetColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, InactiveIconOpacity));
+		HourHand->SetColorAndOpacity(InactiveColor);
 	}
 
 	if (MinuteHand)
 	{
-		MinuteHand->SetColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, InactiveIconOpacity));
+		MinuteHand->SetColorAndOpacity(InactiveColor);
 	}
 	
 	SetVisibility(ESlateVisibility::Collapsed);
@@ -177,5 +177,16 @@ void UDialogueWidget::CompleteTypewriter()
 
 void UDialogueWidget::UpdateCharacterIconStates(const FString& SpeakerName)
 {
-	bool bIsLeftSpeaker = SpeakerName.Contains(TEXT(""));
+	bool bIsLeftSpeaker = SpeakerName.Contains(TEXT("분침"));
+
+	if (bIsLeftSpeaker)
+	{
+		MinuteHand->SetColorAndOpacity(ActiveColor);
+		HourHand->SetColorAndOpacity(InactiveColor);
+	}
+	else
+	{
+		MinuteHand->SetColorAndOpacity(InactiveColor);
+		HourHand->SetColorAndOpacity(ActiveColor);
+	}
 }

@@ -69,11 +69,11 @@ protected:
 	float TypewriterSpeed = 0.05f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	float ActiveIconOpacity = 1.f;
+	FLinearColor ActiveColor = FLinearColor(1.f, 1.f, 1.f, 1.f);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	float InactiveIconOpacity = 0.4f;
-
+	FLinearColor InactiveColor = FLinearColor(0.1f, 0.1f, 0.1f, 1.f);
+	
 	FTimerHandle TypewriterTimerHandle;
 	FString FullDialogueText;
 	int32 CurrentCharIndex;
