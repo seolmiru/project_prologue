@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Comma.generated.h"
 
+class UWidgetComponent;
 class UPostProcessComponent;
 class UCommaWidget;
 class UComboSwordData;
@@ -108,7 +109,7 @@ private:
 	class USceneComponent* UIAnchorComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* SwitchAttackWidgetComponent;
+	TObjectPtr<UWidgetComponent> SwitchAttackWidgetComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_SwitchAttackWidget;
@@ -117,7 +118,7 @@ private:
 	TSubclassOf<UUserWidget> OverClockWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* CooldownWidgetComponent;
+	TObjectPtr<UWidgetComponent> CooldownWidgetComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_CooldownWidget;
@@ -161,6 +162,15 @@ public:
 	UStaticMeshComponent* GetSwordWeaponMesh() const;
 
 	FORCEINLINE UCapsuleComponent* GetParryCollision() const { return ParryCollision; }
+
+	FORCEINLINE UCommaWidget* GetCommaWidget() const { return CommaWidget; }
+	FORCEINLINE UWidgetComponent* GetCooldownWidget() const { return CooldownWidgetComponent; }
+
+	void SetUIVisibility(bool bVisible);
+
+	void HideCommaUI();
+
+	void ShowCommaUI();
 	
 	//UFUNCTION(BlueprintPure, Category = "Weapon")
 	//UStaticMeshComponent* GetBowWeaponMesh() const;
@@ -203,6 +213,9 @@ private:
 	FRotator TargetRotation = FRotator::ZeroRotator;
 	float RotationInterpSpeed = 12.f;
 	bool bIsUsingSmoothRotation = false;
+
+	bool bCommaWidgetVisibility = true;
+	bool bCooldownWidgetVisibility = true;
 
 	void UpdateDamageEffect();
 

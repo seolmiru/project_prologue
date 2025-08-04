@@ -330,6 +330,48 @@ UStaticMeshComponent* AComma::GetSwordWeaponMesh() const
 	return SwordWeaponMesh;
 }
 
+void AComma::SetUIVisibility(bool bVisible)
+{
+	if (CommaWidget)
+	{
+		ESlateVisibility NewVisibility = bVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+		CommaWidget->SetVisibility(NewVisibility);
+	}
+
+	if (CooldownWidgetComponent)
+	{
+		CooldownWidgetComponent->SetVisibility(bVisible);
+	}
+}
+
+void AComma::HideCommaUI()
+{
+	if (CommaWidget)
+	{
+		bCommaWidgetVisibility = (CommaWidget->GetVisibility() == ESlateVisibility::Visible);
+		CommaWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	if (CooldownWidgetComponent)
+	{
+		bCommaWidgetVisibility = CooldownWidgetComponent->IsVisible();
+		CooldownWidgetComponent->SetVisibility(false);
+	}
+}
+
+void AComma::ShowCommaUI()
+{
+	if (CommaWidget && bCommaWidgetVisibility)
+	{
+		CommaWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+
+	if (CooldownWidgetComponent && bCooldownWidgetVisibility)
+	{
+		CooldownWidgetComponent->SetVisibility(true);
+	}
+}
+
 // 활 공격 시에 사용되는 마우스 방향으로 회전하는 함수
 void AComma::RotateToMouse()
 {
