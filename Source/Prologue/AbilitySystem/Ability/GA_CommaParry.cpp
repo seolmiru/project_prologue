@@ -25,7 +25,14 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	if (UCapsuleComponent* CapsuleComponent = Comma->GetCapsuleComponent())
 	{
-		CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore);
+		CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Overlap);
+	}
+
+	if (UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement())
+	{
+		MovementComp->bEnablePhysicsInteraction = false;
+
+		MovementComp->bPushForceUsingZOffset = false;
 	}
 
 	if (Comma)
@@ -80,6 +87,13 @@ void UGA_CommaParry::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Block);
 	}
 
+	if (UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement())
+	{
+		MovementComp->bEnablePhysicsInteraction = true;
+
+		MovementComp->bPushForceUsingZOffset = true;
+	}
+
 	if (ActorInfo && ActorInfo->AvatarActor.Get())
 	{
 		Comma->GetParryCollision()->SetActive(false);
@@ -120,20 +134,26 @@ void UGA_CommaParry::OnDashCurveTick(float Alpha)
 void UGA_CommaParry::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	// Collision에 Overlap된 대상이 있다면
 	if (OtherActor)
 	{
 		LOG_SCREEN("%s", *OtherActor->GetName());
 
+		// Overlap된 대상 Actor 가져오기
 		if (SweepResult.GetActor())
 		{
 			FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 			EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
 
+			// 대미지 적용
 			FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SkillDamageEffect, 1.f, EffectContextHandle);
 			FGameplayAbilityTargetDataHandle DataHandle;
 			FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(SweepResult);
 			DataHandle.Add(TargetData);
 			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, DataHandle);
+
+			// 히트스탑 적용
+			HitStop();
 		}
 	}
 }
@@ -152,7 +172,7 @@ void UGA_CommaParry::Deflect(AComma* Comma)
 	UKismetSystemLibrary::SphereOverlapActors(
 		GetWorld(),
 		Comma->GetActorLocation(),
-		SKillRadius,
+		DeflectRadius,
 		ObjectTypes,
 		ABazierProjectile::StaticClass(),
 		IgnoreActors,
@@ -167,5 +187,43 @@ void UGA_CommaParry::Deflect(AComma* Comma)
 
 			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Parried);
 		}
+	}
+}
+
+void UGA_CommaParry::HitStop()
+{
+	// 기존 히트스탑이 진행 중인 상황이라면 타이머 초기화
+	if (GetWorld()->GetTimerManager().IsTimerActive(HitStopTimerHandle))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(HitStopTimerHandle);
+	}
+	
+	// HitStopTimeScale만큼 느려지게 설정
+	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
+	{
+		Comma->CustomTimeDilation = HitStopTimeScale;
+	}
+
+	// 전체 게임 속도 조절
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), HitStopTimeScale);
+
+	// HitStopTimer가 종료되면 EndHitStop 호출
+	GetWorld()->GetTimerManager().SetTimer(
+		HitStopTimerHandle,
+		this,
+		&UGA_CommaParry::EndHitStop,
+		HitStopDuration * HitStopTimeScale,
+		false
+	);
+}
+
+void UGA_CommaParry::EndHitStop()
+{
+	// 시간 속도 복구
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
+
+	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
+	{
+		Comma->CustomTimeDilation = 1.f;
 	}
 }

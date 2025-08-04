@@ -31,6 +31,15 @@ void UGA_MangoLaserAttack::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
+	
+	if (TraceDelay > 0.f)
+	{
+		GetWorld()->GetTimerManager().SetTimer(TraceDelayTimerHandle, this, &UGA_MangoLaserAttack::StartBoxTrace, TraceDelay, false);
+	}
+	else
+	{
+		StartBoxTrace();
+	}
 }
 
 void UGA_MangoLaserAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
@@ -38,4 +47,48 @@ void UGA_MangoLaserAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	GetWorld()->GetTimerManager().ClearTimer(LaserTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(TraceDelayTimerHandle);
+	
+	if (BoxTraceTask)
+	{
+		BoxTraceTask->EndTask();
+		BoxTraceTask = nullptr;
+	}
+}
+
+void UGA_MangoLaserAttack::OnTraceFinished()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+}
+
+void UGA_MangoLaserAttack::OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
+{
+	if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, 0))
+	{
+		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffectClass);
+		if (EffectSpecHandle.IsValid())
+		{
+			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EffectSpecHandle, TargetDataHandle);
+		}
+	}
+}
+
+void UGA_MangoLaserAttack::StartBoxTrace()
+{
+	BoxTraceTask = UAT_TickBoxTrace::TickBoxTrace(this);
+	if (BoxTraceTask)
+	{
+		BoxTraceTask->TotalDuration = LaserDuration;
+		BoxTraceTask->BoxHalfSize = LaserBoxHalfSize;
+		BoxTraceTask->TraceLength = LaserLength;
+		BoxTraceTask->DamageInterval = DamageTickInterval;
+		BoxTraceTask->bShowDebug = bShowDebugTrace;
+		
+		BoxTraceTask->OnTraceResultCallback.AddDynamic(this, &UGA_MangoLaserAttack::OnTraceResultCallback);
+		BoxTraceTask->ReadyForActivation();
+
+		GetWorld()->GetTimerManager().SetTimer(LaserTimerHandle, this, &UGA_MangoLaserAttack::OnTraceFinished, LaserDuration, false);
+	}
 }
