@@ -104,14 +104,21 @@ void APrologueCharacter::InputGAS(const FGameplayTag Tag)
 	GameplayTags.AddTag(Tag);
 	if (ASC)
 	{
+		static TArray<FGameplayTag> CancelableTags = {
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")),
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Parry"))
+		};
+		
 		static TArray<FGameplayTag> NonBufferTags = {
 			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Sword")),
 			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Bow"))
 		};
 
 		bool bShouldBuffer = !NonBufferTags.Contains(Tag);
+
+		bool bCanCancel = CancelableTags.Contains(Tag) && ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
 		
-		if (bShouldBuffer && ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
+		if (bShouldBuffer && ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking) && !bCanCancel)
 		{
 			InputBufferComponent->BufferInput(Tag);
 			return;

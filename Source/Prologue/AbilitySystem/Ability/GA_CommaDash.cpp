@@ -31,29 +31,6 @@ struct FPotentialDashTarget
 	}
 };
 
-
-bool UGA_CommaDash::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
-                                       const FGameplayAbilityActorInfo* ActorInfo,
-                                       const FGameplayTagContainer* SourceTags,
-                                       const FGameplayTagContainer* TargetTags,
-                                       FGameplayTagContainer* OptionalRelevantTags) const
-{
-	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
-	{
-		return false;
-	}
-
-	if (!bIgnoreCancelRestriction)
-	{
-		if (ActorInfo->AbilitySystemComponent->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled))
-		{
-			return false;
-		}
-	}
-
-	return true;
-}
-
 void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
                                     const FGameplayAbilityActivationInfo ActivationInfo,
                                     const FGameplayEventData* TriggerEventData)

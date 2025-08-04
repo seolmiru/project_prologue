@@ -129,4 +129,8 @@ private:
 	AActor* ParryGroundActor;
 	
 	void CheckParryDirectionPoint();
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug")
+	bool bShowDebug = true;
 };
