@@ -126,6 +126,19 @@ private:
 	void Input_Move(const FInputActionValue& InputActionValue);
 
 private:
+	/** Camera Settings */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float DefaultZoomDist = 1200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float IntroZoomDist = 600.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float ZoomOutInterpSpeed = 4.f;
+	
+	float TargetZoomDist = 1200.f;
+	
+private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UMaterial> DamagePostProcessMaterial;
     
@@ -189,6 +202,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void TriggerDamageEffect(float DamageAmount = 1.f);
+
+	void ZoomIn(float ZoomDist = 600.f);
+
+	void ZoomOut();
+
+	void ResetZoom();
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")

@@ -58,4 +58,6 @@ private:
 
 	void HitStop();
 	void EndHitStop();
+
+	bool bHitStopApplied = false;
 };

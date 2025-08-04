@@ -21,6 +21,8 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	bHitStopApplied = false;
+	
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
 
 	if (UCapsuleComponent* CapsuleComponent = Comma->GetCapsuleComponent())
@@ -78,6 +80,8 @@ void UGA_CommaParry::CancelAbility(const FGameplayAbilitySpecHandle Handle, cons
 void UGA_CommaParry::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	bHitStopApplied = false;
+	
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
 
 	Comma->GetDashPoint()->SetCursorDirectionState(true);
@@ -153,7 +157,11 @@ void UGA_CommaParry::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, DataHandle);
 
 			// 히트스탑 적용
-			HitStop();
+			if (!bHitStopApplied)
+			{
+				HitStop();
+				bHitStopApplied = true;
+			}
 		}
 	}
 }

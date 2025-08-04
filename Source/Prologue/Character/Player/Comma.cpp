@@ -87,6 +87,10 @@ AComma::AComma()
 	
 	SwordWeaponMesh->SetVisibility(true);
 
+	CameraBoom->TargetArmLength = 1200.f;
+	DefaultZoomDist = CameraBoom->TargetArmLength;
+	TargetZoomDist = DefaultZoomDist;
+	
 	/** Sejin */
 
 	// 대쉬 위치 오브젝트 소환
@@ -116,16 +120,6 @@ void AComma::Tick(float DeltaSeconds)
 
 	Direction = FVector2D(ForwardDot, RightDot);
 
-	if (CameraBoom)
-	{
-		FVector TargetLocation = GetActorLocation();
-		TargetLocation.Z += 100.f;
-
-		FVector CurrentLocation = CameraBoom->GetComponentLocation();
-		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
-		CameraBoom->SetWorldLocation(NewLocation);
-	}
-
 	if (bIsUsingSmoothRotation && !TargetRotation.IsZero())
 	{
 		FRotator CurrentRotation = GetActorRotation();
@@ -133,6 +127,22 @@ void AComma::Tick(float DeltaSeconds)
 		SetActorRotation(NewRotation);
 	}
 
+	if (CameraBoom)
+	{
+		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, TargetZoomDist))
+		{
+			float NewArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, TargetZoomDist, DeltaSeconds, ZoomOutInterpSpeed);
+			CameraBoom->TargetArmLength = NewArmLength;
+		}
+		
+		FVector TargetLocation = GetActorLocation();
+		TargetLocation.Z += 100.f;
+
+		FVector CurrentLocation = CameraBoom->GetComponentLocation();
+		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
+		CameraBoom->SetWorldLocation(NewLocation);
+	}
+	
 	if (UIAnchorComponent)
 	{
 		FRotator FixedRotation = FRotator::ZeroRotator;
@@ -504,6 +514,23 @@ void AComma::TriggerDamageEffect(float DamageAmount)
 
 	GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
 	GetWorld()->GetTimerManager().SetTimer(DamageEffectTimerHandle, this, &AComma::UpdateDamageEffect, 0.05f, true);
+}
+
+void AComma::ZoomIn(float ZoomDist)
+{
+	CameraBoom->TargetArmLength = ZoomDist;
+	TargetZoomDist = ZoomDist;
+}
+
+void AComma::ZoomOut()
+{
+	TargetZoomDist = DefaultZoomDist;
+}
+
+void AComma::ResetZoom()
+{
+	CameraBoom->TargetArmLength = DefaultZoomDist;
+	TargetZoomDist = DefaultZoomDist;
 }
 
 void AComma::UpdateDamageEffect()
