@@ -4,6 +4,7 @@
 #include "Prologue/Character/Player/PlayerDashPoint.h"
 
 #include "Comma.h"
+#include "NavigationSystem.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/Controller/CommaController.h"
@@ -63,7 +64,7 @@ void APlayerDashPoint::Tick(float DeltaTime)
 		ParryCursorDirection = Player->GetMouseDirection();
 	}
 	CheckParryDirectionPoint();
-	
+
 	// 디버깅
 	FColor DrawColor = FColor::Green;
 	DrawDebugSphere(
@@ -77,8 +78,6 @@ void APlayerDashPoint::Tick(float DeltaTime)
 		0,
 		2.f
 	);
-
-
 }
 
 void APlayerDashPoint::SetDirection(FVector NewDirection, bool bConvertLocalToCameraDirection)
@@ -333,6 +332,9 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 		float OldDegreeAngle = FMath::RadiansToDegrees(OldRadianAngle);
 		OldDegreeAngle = FMath::Abs(OldDegreeAngle);
 
+		// 네비 확인 변수
+		UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+
 		for (int i = 0; i < PartialUnitCount; i++)
 		{
 			FVector Start = CurrentCheckLocation;
@@ -365,80 +367,87 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 			// 충돌시 실행
 			if (bHit)
 			{
-				// =======================================
-				// 새 충돌 지점 지면
-				// =======================================
-				AActor* HitGround = HitResult.GetActor();
-
-				// =======================================
-				// 현재 이동 위치와 플레이어의 거리
-				// =======================================
-				float CurrentDistance = FVector2D::Distance((FVector2d)PlayerLocation,
-				                                            (FVector2d)DashPoint);
-
-				// =======================================
-				// 새 위치 시야각
-				// =======================================
-
-				// 방향벡터
-				FVector NewDirection = HitResult.ImpactPoint - PlayerLocation;
-				NewDirection.Z = 0.0f;
-				NewDirection.Normalize();
-
-				float NewRadianAngle = FMath::Atan2(
-					FVector::CrossProduct(PlayerForward, NewDirection).Z,
-					FVector::DotProduct(PlayerForward, NewDirection)
-				);
-				float NewDegreeAngle = FMath::RadiansToDegrees(NewRadianAngle);
-				NewDegreeAngle = FMath::Abs(NewDegreeAngle);
-
-				// =======================================
-				// 플레이어가 서있지 않은 지면과 충돌
-				// =======================================
-				if (HitGround != PlayerGround)
+				FNavLocation NavLocation;
+				bool bOnNav = NavSystem->ProjectPointToNavigation(HitResult.ImpactPoint, NavLocation,
+				                                                  FVector(50, 50, 100));
+				if (bOnNav)
 				{
-					// 현재 이동 대상 지면과 같은 지면일 경우 
-					if (GroundActor != nullptr || HitGround == GroundActor)
-					{
-						float NewDistance = FVector2D::Distance((FVector2d)PlayerLocation,
-						                                        (FVector2d)HitResult.ImpactPoint);
+					// =======================================
+					// 새 충돌 지점 지면
+					// =======================================
+					AActor* HitGround = HitResult.GetActor();
 
-						if ((NewDistance > CurrentDistance && NewDistance <= MaxDistance) //조건 1: 더 먼 거리로 이동
-							|| NewDegreeAngle < OldDegreeAngle) // 조건 2: 정면이랑 더 가까운 방향으로 이동
+					// =======================================
+					// 현재 이동 위치와 플레이어의 거리
+					// =======================================
+					float CurrentDistance = FVector2D::Distance((FVector2d)PlayerLocation,
+					                                            (FVector2d)DashPoint);
+
+					// =======================================
+					// 새 위치 시야각
+					// =======================================
+
+					// 방향벡터
+					FVector NewDirection = NavLocation.Location - PlayerLocation;
+					NewDirection.Z = 0.0f;
+					NewDirection.Normalize();
+
+					float NewRadianAngle = FMath::Atan2(
+						FVector::CrossProduct(PlayerForward, NewDirection).Z,
+						FVector::DotProduct(PlayerForward, NewDirection)
+					);
+					float NewDegreeAngle = FMath::RadiansToDegrees(NewRadianAngle);
+					NewDegreeAngle = FMath::Abs(NewDegreeAngle);
+
+					// =======================================
+					// 플레이어가 서있지 않은 지면과 충돌
+					// =======================================
+					if (HitGround != PlayerGround)
+					{
+						// 현재 이동 대상 지면과 같은 지면일 경우 
+						if (GroundActor != nullptr || HitGround == GroundActor)
 						{
-							//위치 재설정
+							float NewDistance = FVector2D::Distance((FVector2d)PlayerLocation,
+							                                        (FVector2d)HitResult.ImpactPoint);
+
+							if ((NewDistance > CurrentDistance && NewDistance <= MaxDistance) //조건 1: 더 먼 거리로 이동
+								|| NewDegreeAngle < OldDegreeAngle) // 조건 2: 정면이랑 더 가까운 방향으로 이동
+							{
+								//위치 재설정
+								GroundActor = HitGround;
+								DashPoint = NavLocation.Location;
+								break;
+							}
+						}
+						// 새로운 지면일 경우 해당 위치로 설정
+						else
+						{
 							GroundActor = HitGround;
-							DashPoint = HitResult.ImpactPoint;
+							DashPoint = NavLocation.Location;
 							break;
 						}
 					}
-					// 새로운 지면일 경우 해당 위치로 설정
+					// =======================================
+					// 플레이어가 서있는 지면과 충돌
+					// =======================================
 					else
 					{
-						GroundActor = HitGround;
-						DashPoint = HitResult.ImpactPoint;
-						break;
+						float NewDistance = FVector2D::Distance((FVector2d)PlayerLocation,
+						                                        (FVector2d)NavLocation.Location);
+						// 조건 충족시 현재 충돌된 지점으로 대시 위치 변경
+						if (OldDegreeAngle > FOVAngle // 조건 1: 현재 위치가 시야각을 벗어날 경우
+							|| CurrentDistance > MaxDistance // 조건 2: 현재 위치가 최대 거리보다 멀 경우
+							|| NewDistance > CurrentDistance // 조건 3: 새 위치가 더 멀리 이동 가능할경우
+							|| (OldDegreeAngle > NewDegreeAngle && GroundActor == PlayerGround))
+						// 조건 4: 새로운 위치가 정면 방향에 더 가까울 경우 (플레이어와 같은 지면에 한하여)
+						{
+							GroundActor = HitGround;
+							DashPoint = NavLocation.Location;
+							break;
+						}
 					}
 				}
-				// =======================================
-				// 플레이어가 서있는 지면과 충돌
-				// =======================================
-				else
-				{
-					float NewDistance = FVector2D::Distance((FVector2d)PlayerLocation,
-															(FVector2d)HitResult.ImpactPoint);
-					// 조건 충족시 현재 충돌된 지점으로 대시 위치 변경
-					if (OldDegreeAngle > FOVAngle // 조건 1: 현재 위치가 시야각을 벗어날 경우
-						|| CurrentDistance > MaxDistance // 조건 2: 현재 위치가 최대 거리보다 멀 경우
-						|| NewDistance > CurrentDistance// 조건 3: 새 위치가 더 멀리 이동 가능할경우
-						|| (OldDegreeAngle > NewDegreeAngle && GroundActor == PlayerGround)) // 조건 4: 새로운 위치가 정면 방향에 더 가까울 경우 (플레이어와 같은 지면에 한하여)
-					{
-						GroundActor = HitGround;
-						DashPoint = HitResult.ImpactPoint;
-						break;
-					}
-				}
-			}
+			} // End bHit
 
 			// 검사 위치 땡기기
 			CurrentCheckLocation -= TargetDirection * UnitDistance;
@@ -575,6 +584,9 @@ void APlayerDashPoint::CheckParryDirectionPoint()
 		float OldDegreeAngle = FMath::RadiansToDegrees(OldRadianAngle);
 		OldDegreeAngle = FMath::Abs(OldDegreeAngle);
 
+		// 네비 관련 설정
+		UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+
 		for (int i = 0; i < ParryPartialUnit; i++)
 		{
 			FVector Start = CurrentCheckLocation;
@@ -594,74 +606,82 @@ void APlayerDashPoint::CheckParryDirectionPoint()
 			// 충돌시 실행
 			if (bHit)
 			{
-				// =======================================
-				// 새 충돌 지점 지면
-				// =======================================
-				AActor* HitGround = HitResult.GetActor();
+				FNavLocation NavLocation;
+				bool bOnNav = NavSystem->ProjectPointToNavigation(HitResult.ImpactPoint, NavLocation,
+				                                                  FVector(50, 50, 100));
 
-				// =======================================
-				// 현재 이동 위치와 플레이어의 거리
-				// =======================================
-				float CurrentDistance = FVector2D::Distance((FVector2d)PlayerLocation,
-				                                            (FVector2d)ParryPoint);
-
-				// =======================================
-				// 새 위치 시야각
-				// =======================================
-
-				// 방향벡터
-				FVector NewDirection = HitResult.ImpactPoint - PlayerLocation;
-				NewDirection.Z = 0.0f;
-				NewDirection.Normalize();
-
-				float NewRadianAngle = FMath::Atan2(
-					FVector::CrossProduct(ParryDirection, NewDirection).Z,
-					FVector::DotProduct(ParryDirection, NewDirection)
-				);
-				float NewDegreeAngle = FMath::RadiansToDegrees(NewRadianAngle);
-				NewDegreeAngle = FMath::Abs(NewDegreeAngle);
-
-				// =======================================
-				// 플레이어가 서있지 않은 지면과 충돌
-				// =======================================
-				if (HitGround != PlayerGround)
+				if (bOnNav)
 				{
-					// 현재 이동 대상 지면과 같은 지면일 경우 
-					if (ParryGroundActor != nullptr || HitGround == ParryGroundActor)
-					{
-						float NewDistance = FVector2D::Distance((FVector2d)PlayerLocation,
-						                                        (FVector2d)HitResult.ImpactPoint);
+					// =======================================
+					// 새 충돌 지점 지면
+					// =======================================
+					AActor* HitGround = HitResult.GetActor();
 
-						if ((NewDistance > CurrentDistance && NewDistance <= ParryMaxDistance) //조건 1: 더 먼 거리로 이동
-							|| NewDegreeAngle < OldDegreeAngle) // 조건 2: 정면이랑 더 가까운 방향으로 이동
+					// =======================================
+					// 현재 이동 위치와 플레이어의 거리
+					// =======================================
+					float CurrentDistance = FVector2D::Distance((FVector2d)PlayerLocation,
+					                                            (FVector2d)ParryPoint);
+
+					// =======================================
+					// 새 위치 시야각
+					// =======================================
+
+					// 방향벡터
+					FVector NewDirection = HitResult.ImpactPoint - PlayerLocation;
+					NewDirection.Z = 0.0f;
+					NewDirection.Normalize();
+
+					float NewRadianAngle = FMath::Atan2(
+						FVector::CrossProduct(ParryDirection, NewDirection).Z,
+						FVector::DotProduct(ParryDirection, NewDirection)
+					);
+					float NewDegreeAngle = FMath::RadiansToDegrees(NewRadianAngle);
+					NewDegreeAngle = FMath::Abs(NewDegreeAngle);
+
+					// =======================================
+					// 플레이어가 서있지 않은 지면과 충돌
+					// =======================================
+					if (HitGround != PlayerGround)
+					{
+						// 현재 이동 대상 지면과 같은 지면일 경우 
+						if (ParryGroundActor != nullptr || HitGround == ParryGroundActor)
 						{
-							//위치 재설정
+							float NewDistance = FVector2D::Distance((FVector2d)PlayerLocation,
+							                                        (FVector2d)HitResult.ImpactPoint);
+
+							if ((NewDistance > CurrentDistance && NewDistance <= ParryMaxDistance) //조건 1: 더 먼 거리로 이동
+								|| NewDegreeAngle < OldDegreeAngle) // 조건 2: 정면이랑 더 가까운 방향으로 이동
+							{
+								//위치 재설정
+								ParryGroundActor = HitGround;
+								ParryPoint = HitResult.ImpactPoint;
+								break;
+							}
+						}
+						// 새로운 지면일 경우 해당 위치로 설정
+						else
+						{
 							ParryGroundActor = HitGround;
 							ParryPoint = HitResult.ImpactPoint;
 							break;
 						}
 					}
-					// 새로운 지면일 경우 해당 위치로 설정
+					// =======================================
+					// 플레이어가 서있는 지면과 충돌
+					// =======================================
 					else
 					{
-						ParryGroundActor = HitGround;
-						ParryPoint = HitResult.ImpactPoint;
-						break;
-					}
-				}
-				// =======================================
-				// 플레이어가 서있는 지면과 충돌
-				// =======================================
-				else
-				{
-					// 조건 충족시 현재 충돌된 지점으로 대시 위치 변경
-					// if (OldDegreeAngle > FOVAngle // 조건 1: 현재 위치가 시야각을 벗어날 경우
-					if (CurrentDistance > MaxDistance // 조건 2: 현재 위치가 최대 거리보다 멀 경우
-						|| (OldDegreeAngle > NewDegreeAngle && GroundActor == PlayerGround)) // 조건 3: 새로운 위치가 정면 방향에 더 가까울 경우 (플레이어와 같은 지면에 한하여)
-					{
-						ParryGroundActor = HitGround;
-						ParryPoint = HitResult.ImpactPoint;
-						break;
+						// 조건 충족시 현재 충돌된 지점으로 대시 위치 변경
+						// if (OldDegreeAngle > FOVAngle // 조건 1: 현재 위치가 시야각을 벗어날 경우
+						if (CurrentDistance > MaxDistance // 조건 2: 현재 위치가 최대 거리보다 멀 경우
+							|| (OldDegreeAngle > NewDegreeAngle && GroundActor == PlayerGround))
+						// 조건 3: 새로운 위치가 정면 방향에 더 가까울 경우 (플레이어와 같은 지면에 한하여)
+						{
+							ParryGroundActor = HitGround;
+							ParryPoint = HitResult.ImpactPoint;
+							break;
+						}
 					}
 				}
 			}
