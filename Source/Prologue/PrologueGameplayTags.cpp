@@ -61,11 +61,15 @@ namespace PrologueGameplayTags
 	
 	/** Effect Tags */
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Damaging, "GameplayCue.Effect.Damaging");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_SwitchAttackDamaging, "GameplayCue.Effect.SwitchAttackDamaging");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_SmashAttackDamaging, "GameplayCue.Effect.SmashAttackDamaging");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_DamagingSound, "GameplayCue.Effect.DamagingSound");
 	
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_PlayerHit, "GameplayCue.Effect.PlayerHit");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_EnemyHit, "GameplayCue.Effect.EnemyHit");
 
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_EnemySmashHit, "GameplayCue.Effect.EnemySmashHit");
+	
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Parried, "GameplayCue.Effect.Parried");
 
 	/** Event Tags */
