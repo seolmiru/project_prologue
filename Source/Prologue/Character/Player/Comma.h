@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Comma.generated.h"
 
+class UWidgetComponent;
 class UPostProcessComponent;
 class UCommaWidget;
 class UComboSwordData;
@@ -108,7 +109,7 @@ private:
 	class USceneComponent* UIAnchorComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* SwitchAttackWidgetComponent;
+	TObjectPtr<UWidgetComponent> SwitchAttackWidgetComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_SwitchAttackWidget;
@@ -117,13 +118,26 @@ private:
 	TSubclassOf<UUserWidget> OverClockWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* CooldownWidgetComponent;
+	TObjectPtr<UWidgetComponent> CooldownWidgetComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_CooldownWidget;
 	
 	void Input_Move(const FInputActionValue& InputActionValue);
 
+private:
+	/** Camera Settings */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float DefaultZoomDist = 1200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float IntroZoomDist = 600.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float ZoomOutInterpSpeed = 4.f;
+	
+	float TargetZoomDist = 1200.f;
+	
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UMaterial> DamagePostProcessMaterial;
@@ -161,6 +175,15 @@ public:
 	UStaticMeshComponent* GetSwordWeaponMesh() const;
 
 	FORCEINLINE UCapsuleComponent* GetParryCollision() const { return ParryCollision; }
+
+	FORCEINLINE UCommaWidget* GetCommaWidget() const { return CommaWidget; }
+	FORCEINLINE UWidgetComponent* GetCooldownWidget() const { return CooldownWidgetComponent; }
+
+	void SetUIVisibility(bool bVisible);
+
+	void HideCommaUI();
+
+	void ShowCommaUI();
 	
 	//UFUNCTION(BlueprintPure, Category = "Weapon")
 	//UStaticMeshComponent* GetBowWeaponMesh() const;
@@ -179,6 +202,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void TriggerDamageEffect(float DamageAmount = 1.f);
+
+	void ZoomIn(float ZoomDist = 600.f);
+
+	void ZoomOut();
+
+	void ResetZoom();
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -203,6 +232,9 @@ private:
 	FRotator TargetRotation = FRotator::ZeroRotator;
 	float RotationInterpSpeed = 12.f;
 	bool bIsUsingSmoothRotation = false;
+
+	bool bCommaWidgetVisibility = true;
+	bool bCooldownWidgetVisibility = true;
 
 	void UpdateDamageEffect();
 

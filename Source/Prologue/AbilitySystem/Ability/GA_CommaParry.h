@@ -23,16 +23,13 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	TSubclassOf<UGameplayEffect> ParryEffectClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	TSubclassOf<UGameplayEffect> ParryFailedDamageEffect;
+	TSubclassOf<UGameplayEffect> SkillDamageEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	TSubclassOf<UGameplayEffect> InvincibleEffectClass;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parry")
-	float ParryRadius = 300.f;
+	float DeflectRadius = 300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline|Dash")
 	TObjectPtr<class UCurveFloat> DashCurve;
@@ -42,14 +39,25 @@ protected:
 	void OnDashCurveTick(float Alpha);
 
 	UFUNCTION()
-	void OnJustParry(FGameplayEventData Payload);
-
-	UFUNCTION()
 	void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitStop")
+	float HitStopDuration = 0.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitStop")
+	float HitStopTimeScale = 0.01f;
 	
 private:
 	void Deflect(AComma* Comma);
 
 	FVector BasePos;
 	FVector TargetPos;
+
+	FTimerHandle HitStopTimerHandle;
+
+	void HitStop();
+	void EndHitStop();
+
+	bool bHitStopApplied = false;
 };
