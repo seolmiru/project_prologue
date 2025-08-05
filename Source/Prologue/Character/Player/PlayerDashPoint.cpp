@@ -65,19 +65,22 @@ void APlayerDashPoint::Tick(float DeltaTime)
 	}
 	CheckParryDirectionPoint();
 
-	/*// 디버깅
-	FColor DrawColor = FColor::Green;
-	DrawDebugSphere(
-		GetWorld(),
-		ParryPoint,
-		50.f,
-		12,
-		DrawColor,
-		false,
-		-1.f,
-		0,
-		2.f
-	);*/
+	// 디버깅
+	if (bDrawDebug)
+	{
+		FColor DrawColor = FColor::Green;
+		DrawDebugSphere(
+			GetWorld(),
+			ParryPoint,
+			50.f,
+			12,
+			DrawColor,
+			false,
+			-1.f,
+			0,
+			2.f
+		);
+	}
 }
 
 void APlayerDashPoint::SetDirection(FVector NewDirection, bool bConvertLocalToCameraDirection)
@@ -296,20 +299,23 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	);
 
 	// 디버깅
-	/*FColor DrawColor = bPlayerHit ? FColor::Green : FColor::Red;
+	FColor DrawColor = bPlayerHit ? FColor::Green : FColor::Red;
 
-	DrawDebugCapsule(
-		GetWorld(),
-		HitResult.ImpactPoint,
-		CapsuleHalfHeight,
-		CapsuleRadius,
-		FQuat::Identity,
-		DrawColor,
-		false,
-		-1.0f,
-		0,
-		2.0f
-	);*/
+	if (bDrawDebug)
+	{
+		DrawDebugCapsule(
+			GetWorld(),
+			HitResult.ImpactPoint,
+			CapsuleHalfHeight,
+			CapsuleRadius,
+			FQuat::Identity,
+			DrawColor,
+			false,
+			-1.0f,
+			0,
+			2.0f
+		);
+	}
 
 	// 새로운 이동 위치 탐색
 	if (bPlayerHit)
@@ -351,18 +357,21 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 				Params
 			);
 
-			/*DrawColor = bHit ? FColor::Green : FColor::Red;
-			DrawDebugSphere(
-				GetWorld(),
-				DashPoint,
-				50.f,
-				12,
-				DrawColor,
-				false,
-				-1.f,
-				0,
-				2.f
-			);*/
+			if (bDrawDebug)
+			{
+				DrawColor = bHit ? FColor::Green : FColor::Red;
+				DrawDebugSphere(
+					GetWorld(),
+					DashPoint,
+					50.f,
+					12,
+					DrawColor,
+					false,
+					-1.f,
+					0,
+					2.f
+				);
+			}
 
 			// 충돌시 실행
 			if (bHit)
