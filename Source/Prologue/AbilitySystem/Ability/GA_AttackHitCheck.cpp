@@ -117,7 +117,15 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
     if (TargetDataHandle.Num() > 0)
     {
         GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
-        GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_DamagingSound);
+
+        if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(PrologueGameplayTags::Comma_Event_Sword))
+        {
+            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_DamagingSound);
+        }
+        else
+        {
+            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SmashDamagingSound);
+        }
     }
     
     bool bReplicatedEndAbility = true;

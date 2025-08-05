@@ -46,6 +46,8 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_ParrySuccess, "Comma.State.ParrySuccess")
 
 	/** Comma Event Tags */
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_Sword, "Comma.Event.Sword");
+	
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_JustDash, "Comma.Event.JustDash");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_PerfectShot, "Comma.Event.PerfectShot");
@@ -64,6 +66,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_SmashAttackDamaging, "GameplayCue.Effect.SmashAttackDamaging");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_DamagingSound, "GameplayCue.Effect.DamagingSound");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_SmashDamagingSound, "GameplayCue.Effect.SmashDamagingSound");
 	
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_PlayerHit, "GameplayCue.Effect.PlayerHit");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_EnemyHit, "GameplayCue.Effect.EnemyHit");
