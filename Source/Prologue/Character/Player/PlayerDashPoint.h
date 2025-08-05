@@ -10,15 +10,15 @@ UCLASS()
 class PROLOGUE_API APlayerDashPoint : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	APlayerDashPoint();
 
 protected:
 	virtual void BeginPlay() override;
-	
-public:	
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -35,10 +35,16 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere, Category="Dash")
 	TObjectPtr<class AComma> Player;
-	
+
 	// 특정 각도만큼 회전시키는 함수
 	FQuat RotateToWorld(const FQuat& From, const FQuat& To, float MaxRadian);
-	
+
+
+	/*=======Debug Section=======*/
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
+	bool bDrawDebug;
+
 	/*=======Dash Section=======*/
 public:
 	// 검사 방향 변경 함수
@@ -52,7 +58,7 @@ public:
 
 	// 주변 땅을 감지해 시야각이 가까운 땅 방향을 바라보게 설정
 	void SetDirectionMinGround();
-	
+
 protected:
 	// 최대 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
@@ -61,11 +67,11 @@ protected:
 	// 대쉬 허용 시야각
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	float FOVAngle = 60.0f;
-	
+
 	// 회전 검사 최대 각
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	float RotationMaxDegreeAngle = 15.0f;
-	
+
 	// 검사 단위
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	int32 PartialUnitCount = 64;
@@ -76,20 +82,19 @@ private:
 	FVector TargetDirection;
 	UPROPERTY(EditAnywhere, Category = "Dash")
 	FVector CurrentDirection;
-	
+
 	// 대시 위치
 	FVector DashPoint;
 
 	// 이전 대쉬 대상 지면 액터
 	AActor* GroundActor;
-	
+
 	// 대쉬 탐색 함수
 	void CheckNewDirecionPoint();
-	
-	
+
+
 	/*=======Parry Section=======*/
 public:
-
 	// 패리 위치 리턴 함수
 	FVector GetParryPoint();
 
@@ -98,7 +103,7 @@ public:
 
 	// 방향업데이트 중지 여부
 	void SetCursorDirectionState(bool bState);
-	
+
 protected:
 	// 최대 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parry")
@@ -115,7 +120,7 @@ protected:
 private:
 	// 패리 방향 업데이트 불리언
 	bool bParrySync;
-	
+
 	// 패리 방향
 	UPROPERTY(VisibleAnywhere, Category = "Parry")
 	FVector ParryCursorDirection;
@@ -127,7 +132,7 @@ private:
 
 	// 이전 패리 대상 지면
 	AActor* ParryGroundActor;
-	
+
 	void CheckParryDirectionPoint();
 
 protected:
