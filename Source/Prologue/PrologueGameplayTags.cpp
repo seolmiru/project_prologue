@@ -63,7 +63,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_EnemySmashHit, "GameplayCue.Effect.EnemySmashHit");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_EnemySkillHit, "GameplayCue.Effect.EnemySKillHit");
 
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Parried, "GameplayCue.Effect.Parried");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Stun, "GameplayCue.Effect.Stun");
 
 	/** Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AttackHitCheck, "Event.Character.AttackHitCheck");
@@ -111,7 +111,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_LastCombo, "Enemy.Event.LastCombo");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_LaserHitCheck, "Enemy.Event.LaserHitCheck");
 
-	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_Parried, "Enemy.Event.Parried");
+	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_Stun, "Enemy.Event.Stun");
 	
 	/** Shared Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Ability_Death, "Shared.Ability.Death");

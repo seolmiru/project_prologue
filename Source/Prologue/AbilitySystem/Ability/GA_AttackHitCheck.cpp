@@ -30,6 +30,8 @@ void UGA_AttackHitCheck::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 
 void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
+    bool bHitDetected = false;
+    
     for (int32 i = 0; i < TargetDataHandle.Num(); i++)
     {
         if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, i))
@@ -41,6 +43,8 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
             {
                 continue;
             }
+
+            bHitDetected = true;
             
             FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
             FGameplayEffectSpecHandle HitReactEffectSpecHandle = MakeOutgoingGameplayEffectSpec(ToughnessDamageEffect);
@@ -75,7 +79,6 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
             
             // 일반 공격 카메라 쉐이킹, 피격 사운드 출력
             GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
-            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_DamagingSound);
         }
         else if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, i))
         {
@@ -121,6 +124,11 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                 }
             }
         }
+    }
+
+    if (bHitDetected)
+    {
+        GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_DamagingSound);
     }
     
     bool bReplicatedEndAbility = true;

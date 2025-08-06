@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GA_MontageAbility.h"
-#include "GA_EnemyParried.generated.h"
+#include "GA_EnemyStun.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_EnemyParried : public UGA_MontageAbility
+class PROLOGUE_API UGA_EnemyStun : public UGA_MontageAbility
 {
 	GENERATED_BODY()
 

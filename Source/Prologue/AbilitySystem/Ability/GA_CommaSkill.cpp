@@ -139,7 +139,7 @@ void UGA_CommaSkill::OnDashCurveTick(float Alpha)
 void UGA_CommaSkill::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	// Collision에 Overlap된 대상이 있다면
+	// Collision에 Overlap된 적이 있다면
 	if (APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(OtherActor))
 	{
 		LOG_SCREEN("%s", *OtherActor->GetName());
@@ -149,7 +149,8 @@ void UGA_CommaSkill::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 		{
 			FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 			EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
-
+			
+			UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
 			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SweepResult.GetActor());
 			
 			// 대미지 적용
@@ -159,9 +160,13 @@ void UGA_CommaSkill::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 			DataHandle.Add(TargetData);
 			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, DataHandle);
 
+			// 경직 적용
+			FGameplayEventData PlayData;
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(SweepResult.GetActor(), PrologueGameplayTags::Enemy_Event_Stun, PlayData);
+			
 			// 피격 이펙트, 사운드 출력
 			TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemySkillHit);
-			TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SkillDamagingSound);
+			SourceASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SkillDamagingSound);
 
 			// 히트스탑 적용
 			if (!bHitStopApplied)
@@ -200,7 +205,7 @@ void UGA_CommaSkill::Deflect(AComma* Comma)
 		{
 			Projectile->Deflected(Comma);
 
-			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Parried);
+			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Stun);
 		}
 	}
 }

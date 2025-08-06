@@ -63,7 +63,7 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_EnemySmashHit);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_EnemySkillHit);
 	
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_Parried);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_Stun);
 
 	/** Event Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_AttackHitCheck);
@@ -111,7 +111,7 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Event_LastCombo);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Event_LaserHitCheck);
 
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Event_Parried);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Event_Stun);
 	
 	/** Shared Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_Ability_Death);
