@@ -59,6 +59,12 @@ public:
 	// 주변 땅을 감지해 시야각이 가까운 땅 방향을 바라보게 설정
 	void SetDirectionMinGround();
 
+	// 대시 쿨타임 설정
+	void SetDashCool();
+	
+	// 대시 쿨타임 리턴
+	bool DashCoolDown();
+	
 protected:
 	// 최대 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
@@ -82,6 +88,13 @@ private:
 	FVector TargetDirection;
 	UPROPERTY(EditAnywhere, Category = "Dash")
 	FVector CurrentDirection;
+
+	// 대시 쿨타임
+	UPROPERTY(EditAnywhere, Category = "Dash")
+	float DashCool;
+	
+	// 현재 대시 쿨타임
+	float CurrentDashCool;
 
 	// 대시 위치
 	FVector DashPoint;

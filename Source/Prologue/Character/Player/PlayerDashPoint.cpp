@@ -19,6 +19,7 @@ APlayerDashPoint::APlayerDashPoint()
 	TargetDirection = FVector::ForwardVector;
 	CurrentDirection = TargetDirection;
 	DashPoint = FVector::ForwardVector;
+	DashCool = 1.0f;
 
 	ParryCursorDirection = FVector::ForwardVector;
 	ParryDirection = ParryCursorDirection;
@@ -56,7 +57,8 @@ void APlayerDashPoint::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// Dash Section
-	CheckNewDirecionPoint();
+	CheckNewDirecionPoint(); // 대시 지점 탐색
+	CurrentDashCool -= DeltaTime; // 쿨타임 감소
 
 	// Parry Section
 	if (bParrySync && Player)
@@ -251,6 +253,45 @@ void APlayerDashPoint::SetDirectionMinGround()
 
 		CurrentDirection = LowDirection;
 	}
+}
+
+void APlayerDashPoint::SetDashCool()
+{
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Player);
+	FVector PlayerLocation = Player->GetActorLocation();
+
+	FVector PlayerFloorStart = PlayerLocation;
+	FVector PlayerFloorEnd = PlayerLocation;
+	PlayerFloorEnd.Z -= Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 50.0f;
+	const float CapsuleRadius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	const float CapsuleHalfHeight = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+	bool bPlayerHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		PlayerLocation,
+		PlayerFloorEnd,
+		FQuat::Identity,
+		ECC_GameTraceChannel8,
+		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight),
+		Params
+	);
+
+	if (bPlayerHit)
+	{
+		AActor* PlayerGround = HitResult.GetActor();
+		// 같은 지면 대시 = 쿨타임 부여
+		if (PlayerGround == GroundActor)
+		{
+			CurrentDashCool = DashCool;
+		}
+	}
+}
+
+bool APlayerDashPoint::DashCoolDown()
+{
+	return CurrentDashCool <= 0.0f;
 }
 
 void APlayerDashPoint::CheckNewDirecionPoint()
