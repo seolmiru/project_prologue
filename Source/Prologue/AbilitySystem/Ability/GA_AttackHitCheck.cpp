@@ -47,11 +47,13 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
             
             if (HitReactEffectSpecHandle.IsValid())
             {
+                // 강인도 감소 적용
                 TargetASC->ApplyGameplayEffectSpecToSelf(*HitReactEffectSpecHandle.Data.Get());
             }
             
             if (EffectSpecHandle.IsValid())
             {
+                // 대미지 적용
                 TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
                 
                 // VFX용 GameplayCue
@@ -59,7 +61,8 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                 CueContextHandle.AddHitResult(HitResult);
                 FGameplayCueParameters CueParam;
                 CueParam.EffectContext = CueContextHandle;
-                
+
+                // 피격 이펙트 출력
                 if (Cast<AComma>(GetAvatarActorFromActorInfo()))
                 {
                     TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
@@ -69,6 +72,10 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                     TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_PlayerHit, CueParam);
                 }
             }
+            
+            // 일반 공격 카메라 쉐이킹, 피격 사운드 출력
+            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
+            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_DamagingSound);
         }
         else if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, i))
         {
@@ -95,12 +102,15 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                     FGameplayCueParameters CueParam;
                     CueParam.EffectContext = CueContextHandle;
 
+                    // 피격 이펙트 출력
                     TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemySmashHit, CueParam);
                 }
             }
 
+            // 스매위 공격 전용 카메라 쉐이킹, 피격 사운드
             GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SmashAttackDamaging);
-            
+            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SmashDamagingSound);
+
             // 오버클락 게이지 증가
             if (IncreaseGaugeEffect)
             {
@@ -110,21 +120,6 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                     GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*GaugeEffectSpecHandle.Data.Get());
                 }
             }
-        }
-    }
-    
-    // 카메라 쉐이킹, 피격 사운드 적용
-    if (TargetDataHandle.Num() > 0)
-    {
-        GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
-
-        if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(PrologueGameplayTags::Comma_Event_Sword))
-        {
-            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_DamagingSound);
-        }
-        else
-        {
-            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SmashDamagingSound);
         }
     }
     

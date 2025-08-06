@@ -22,13 +22,12 @@ namespace PrologueGameplayTags
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_OverClock);
 
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Parry);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_Skill);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Ability_SmashAttack);
 	
 	/** Comma State Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_SwitchAttack_Sword);
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_SwitchAttack_Bow);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_CancelDisabled);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_CancelEnabled);
@@ -39,25 +38,12 @@ namespace PrologueGameplayTags
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_OverClock);
 
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_PerfectShot);
-
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_Parrying);
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_JustParrying);
-
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_ParrySuccess);
-
 	/** Comma State Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_Sword);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_JustDash);
-
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_PerfectShot);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_SwitchAttackSword);
-
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_SwitchAttackBow);
-
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_JustParry);
 
 	/** Comma Cooldown Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Cooldown_Parry);
@@ -65,15 +51,18 @@ namespace PrologueGameplayTags
 	/** Effect Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_Damaging);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_SmashAttackDamaging);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_SkillDamaging);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_DamagingSound);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_SmashDamagingSound);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_SkillDamagingSound);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_PlayerHit);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_EnemyHit);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_EnemySmashHit);
-
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_EnemySkillHit);
+	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_Parried);
 
 	/** Event Tags */
@@ -82,8 +71,6 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_ThirdAttackHitCheck);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_SwitchAttackHitCheck);
-
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_ParryAttackHitCheck);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_TraceStart);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_TraceStop);
