@@ -60,4 +60,7 @@ private:
 	void EndHitStop();
 
 	bool bHitStopApplied = false;
+
+	UPROPERTY()
+	TSet<AActor*> HitActors;
 };
