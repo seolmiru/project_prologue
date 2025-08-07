@@ -24,7 +24,6 @@ APrologueCharacter::APrologueCharacter()
 	GetMesh()->bReceivesDecals = false;
 
 	GetCharacterMovement()->bCanWalkOffLedges = false;
-	GetCharacterMovement()->PerchRadiusThreshold = 100.f;
 	GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
 }
 

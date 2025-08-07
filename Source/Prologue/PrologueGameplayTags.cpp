@@ -24,6 +24,8 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Skill, "Comma.Ability.Skill");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_SmashAttack, "Comma.Ability.SmashAttack");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Heal, "Comma.Ability.Heal");
 	
 	/** Comma State Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_SwitchAttack_Sword, "Comma.State.SwitchAttack.Sword");
@@ -48,6 +50,8 @@ namespace PrologueGameplayTags
 	/** Comma Cooldown Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Parry, "Comma.Cooldown.Parry");
 	
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Heal, "Comma.Cooldown.Heal");
+
 	/** Effect Tags */
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Damaging, "GameplayCue.Effect.Damaging");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_SmashAttackDamaging, "GameplayCue.Effect.SmashAttackDamaging");
@@ -64,6 +68,8 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_EnemySkillHit, "GameplayCue.Effect.EnemySKillHit");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Stun, "GameplayCue.Effect.Stun");
+	
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Heal, "GameplayCue.Effect.Heal");
 
 	/** Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AttackHitCheck, "Event.Character.AttackHitCheck");
