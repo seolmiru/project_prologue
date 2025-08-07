@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA_CommaParry.h"
+#include "GA_CommaSkill.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
@@ -11,11 +11,12 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
+#include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/Character/Player/PlayerDashPoint.h"
 #include "Prologue/Weapon/Projectile/BazierProjectile.h"
 
-void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+void UGA_CommaSkill::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                      const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
                                      const FGameplayEventData* TriggerEventData)
 {
@@ -40,7 +41,7 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	if (Comma)
 	{
 		Comma->GetParryCollision()->SetActive(true);
-		Comma->GetParryCollision()->OnComponentBeginOverlap.AddDynamic(this, &UGA_CommaParry::OnOverlap);
+		Comma->GetParryCollision()->OnComponentBeginOverlap.AddDynamic(this, &UGA_CommaSkill::OnOverlap);
 	}
 	
 	Comma->RotateToMouse();
@@ -58,26 +59,26 @@ void UGA_CommaParry::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	
 	// Dash Tick Curve Task
 	UAT_TickCurve* DashTickCurve = UAT_TickCurve::CreateTask(this, DashCurve);
-	DashTickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaParry::OnDashCurveTick);
+	DashTickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaSkill::OnDashCurveTick);
 	DashTickCurve->ReadyForActivation();
 	
 	// 투세차 반사 확정 전까지 미사용
 	//Deflect(Comma);
 }
 
-void UGA_CommaParry::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+void UGA_CommaSkill::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
 }
 
-void UGA_CommaParry::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+void UGA_CommaSkill::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
-void UGA_CommaParry::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+void UGA_CommaSkill::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	bHitStopApplied = false;
@@ -107,7 +108,7 @@ void UGA_CommaParry::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void UGA_CommaParry::OnDashCurveTick(float Alpha)
+void UGA_CommaSkill::OnDashCurveTick(float Alpha)
 {
 	FVector CurrentPos = FMath::Lerp(BasePos, TargetPos, Alpha);
 
@@ -135,11 +136,11 @@ void UGA_CommaParry::OnDashCurveTick(float Alpha)
 	GetAvatarActorFromActorInfo()->SetActorLocation(CurrentPos);
 }
 
-void UGA_CommaParry::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+void UGA_CommaSkill::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	// Collision에 Overlap된 대상이 있다면
-	if (OtherActor)
+	if (APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(OtherActor))
 	{
 		LOG_SCREEN("%s", *OtherActor->GetName());
 
@@ -149,12 +150,18 @@ void UGA_CommaParry::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 			FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 			EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
 
+			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SweepResult.GetActor());
+			
 			// 대미지 적용
 			FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SkillDamageEffect, 1.f, EffectContextHandle);
 			FGameplayAbilityTargetDataHandle DataHandle;
 			FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(SweepResult);
 			DataHandle.Add(TargetData);
 			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, DataHandle);
+
+			// 피격 이펙트, 사운드 출력
+			TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemySkillHit);
+			TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SkillDamagingSound);
 
 			// 히트스탑 적용
 			if (!bHitStopApplied)
@@ -167,7 +174,7 @@ void UGA_CommaParry::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 }
 
 // 투사체 반사 함수
-void UGA_CommaParry::Deflect(AComma* Comma)
+void UGA_CommaSkill::Deflect(AComma* Comma)
 {
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldDynamic));
@@ -198,7 +205,7 @@ void UGA_CommaParry::Deflect(AComma* Comma)
 	}
 }
 
-void UGA_CommaParry::HitStop()
+void UGA_CommaSkill::HitStop()
 {
 	// 기존 히트스탑이 진행 중인 상황이라면 타이머 초기화
 	if (GetWorld()->GetTimerManager().IsTimerActive(HitStopTimerHandle))
@@ -219,13 +226,13 @@ void UGA_CommaParry::HitStop()
 	GetWorld()->GetTimerManager().SetTimer(
 		HitStopTimerHandle,
 		this,
-		&UGA_CommaParry::EndHitStop,
+		&UGA_CommaSkill::EndHitStop,
 		HitStopDuration * HitStopTimeScale,
 		false
 	);
 }
 
-void UGA_CommaParry::EndHitStop()
+void UGA_CommaSkill::EndHitStop()
 {
 	// 시간 속도 복구
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);

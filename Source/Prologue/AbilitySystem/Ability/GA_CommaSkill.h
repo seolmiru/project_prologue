@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GA_MontageAbility.h"
-#include "GA_CommaParry.generated.h"
+#include "GA_CommaSkill.generated.h"
 
 class AComma;
 /**
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_CommaParry : public UGA_MontageAbility
+class PROLOGUE_API UGA_CommaSkill : public UGA_MontageAbility
 {
 	GENERATED_BODY()
 

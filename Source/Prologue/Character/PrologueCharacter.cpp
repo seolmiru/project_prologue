@@ -106,7 +106,7 @@ void APrologueCharacter::InputGAS(const FGameplayTag Tag)
 	{
 		static TArray<FGameplayTag> CancelableTags = {
 			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")),
-			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Parry"))
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Skill"))
 		};
 		
 		static TArray<FGameplayTag> NonBufferTags = {
