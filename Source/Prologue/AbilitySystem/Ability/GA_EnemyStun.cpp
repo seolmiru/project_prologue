@@ -15,6 +15,7 @@ void UGA_EnemyStun::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
 
 	Enemy->GetCharacterMovement()->SetMovementMode(MOVE_None);
+	Enemy->GetCharacterMovement()->bOrientRotationToMovement = false;
 }
 
 void UGA_EnemyStun::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -25,4 +26,5 @@ void UGA_EnemyStun::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
 
 	Enemy->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	Enemy->GetCharacterMovement()->bOrientRotationToMovement = true;
 }
