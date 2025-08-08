@@ -8,6 +8,7 @@
 #include "MoviePlayer.h"
 #include "PrologueGameInstance.generated.h"
 
+class UPrologueSaveGame;
 class AComma;
 /**
  * 
@@ -25,10 +26,19 @@ public:
 	bool bHasIntroDialoguePlayed = false;
 
 	UFUNCTION(BlueprintCallable, Category = "Dialogue")
-	void SetHasIntroDialoguePlayed(bool bPlayed) { bHasIntroDialoguePlayed = bPlayed; }
+	void SetHasIntroDialoguePlayed(bool bPlayed);
 
 	UFUNCTION(BlueprintCallable, Category = "Dialogue")
-	bool GetHasIntroDialoguePlayed() const { return bHasIntroDialoguePlayed; }
+	bool GetHasIntroDialoguePlayed() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	bool HasSavedGame() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void SaveGameProgress(const FString& LevelName);
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	FString GetSavedLevelName() const;
 	
 protected:
 	void OnPreLoadMap(const FString& MapName);
@@ -39,4 +49,10 @@ protected:
 
 private:
 	TSharedPtr<SWidget> CreateRandomLoadingWidget();
+
+	UPROPERTY()
+	UPrologueSaveGame* SaveGameData;
+
+	FString SaveSlotName = "savegame";
+	uint32 UserIndex = 0;
 };
