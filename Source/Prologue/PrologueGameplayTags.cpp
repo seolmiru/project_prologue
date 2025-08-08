@@ -40,6 +40,8 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_OverClock, "Comma.State.OverClock");
 
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_Intro, "Comma.State.Intro");
+
 	/** Comma Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_Sword, "Comma.Event.Sword");
 	

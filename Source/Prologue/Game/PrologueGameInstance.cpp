@@ -6,6 +6,7 @@
 #include "PrologueSaveGame.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "Prologue/Prologue.h"
 
 void UPrologueGameInstance::Init()
 {
