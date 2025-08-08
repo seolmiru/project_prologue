@@ -505,8 +505,10 @@ void AComma::OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) co
 
 void AComma::TriggerDamageEffect(float DamageAmount)
 {
-	if (!DamagePostProcessMID)
+	if (DamageAmount <= 0.f || !DamagePostProcessMID)
+	{
 		return;
+	}
 
 	DamageEffectStartTime = GetWorld()->GetTimeSeconds();
 

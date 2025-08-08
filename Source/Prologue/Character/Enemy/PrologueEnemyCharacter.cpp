@@ -160,7 +160,7 @@ bool APrologueEnemyCharacter::TryActivateRandomAbilityWithWeights(const TArray<F
 	float TotalWeight = 0.f;
 	for (const FWeightedAbilityInfo& Info : WeightedAbilities)
 	{
-		if (Info.AbilityTag.IsValid())
+		if (Info.AbilityTag.IsValid() && Info.AbilityTag != LastUsedAbility)
 		{
 			TotalWeight += Info.Weight;
 		}
@@ -172,19 +172,25 @@ bool APrologueEnemyCharacter::TryActivateRandomAbilityWithWeights(const TArray<F
 	}
 
 	float RandomValue = FMath::RandRange(0.f, TotalWeight);
-
 	float CurrentWeight = 0.f;
+	
 	for (const FWeightedAbilityInfo& Info : WeightedAbilities)
 	{
-		if (!Info.AbilityTag.IsValid())
+		if (!Info.AbilityTag.IsValid() || Info.AbilityTag == LastUsedAbility)
 		{
 			continue;
 		}
 
 		CurrentWeight += Info.Weight;
+
 		if (RandomValue <= CurrentWeight)
 		{
-			return TryActivateAbilityByTag(Info.AbilityTag);
+			bool bActivated = TryActivateAbilityByTag(Info.AbilityTag);
+			if (bActivated)
+			{
+				LastUsedAbility = Info.AbilityTag;
+			}
+			return bActivated;
 		}
 	}
 

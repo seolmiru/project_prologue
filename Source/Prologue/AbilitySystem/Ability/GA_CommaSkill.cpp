@@ -22,6 +22,7 @@ void UGA_CommaSkill::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	HitActors.Reset();
 	bHitStopApplied = false;
 	
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
@@ -139,37 +140,44 @@ void UGA_CommaSkill::OnDashCurveTick(float Alpha)
 void UGA_CommaSkill::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	// Collision에 Overlap된 대상이 있다면
-	if (APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(OtherActor))
+	// Overlap된 대상이 적이 아니거나 HitActors에 들어있다면 제외
+	APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(OtherActor);
+	if (!Enemy || HitActors.Contains(OtherActor))
 	{
-		LOG_SCREEN("%s", *OtherActor->GetName());
+		return;
+	}
 
-		// Overlap된 대상 Actor 가져오기
-		if (SweepResult.GetActor())
-		{
-			FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-			EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
+	HitActors.Add(OtherActor);
 
-			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SweepResult.GetActor());
+	// Overlap된 Actor 이름 디버깅
+	LOG_SCREEN("%s", *OtherActor->GetName());
+	
+	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
+	
+	UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
+	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SweepResult.GetActor());
 			
-			// 대미지 적용
-			FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SkillDamageEffect, 1.f, EffectContextHandle);
-			FGameplayAbilityTargetDataHandle DataHandle;
-			FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(SweepResult);
-			DataHandle.Add(TargetData);
-			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, DataHandle);
+	// 대미지 적용
+	FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SkillDamageEffect, 1.f, EffectContextHandle);
+	FGameplayAbilityTargetDataHandle DataHandle;
+	FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(SweepResult);
+	DataHandle.Add(TargetData);
+	ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, DataHandle);
 
-			// 피격 이펙트, 사운드 출력
-			TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemySkillHit);
-			TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SkillDamagingSound);
+	// 경직 적용
+	FGameplayEventData PlayData;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(SweepResult.GetActor(), PrologueGameplayTags::Enemy_Event_Stun, PlayData);
+			
+	// 피격 이펙트, 사운드 출력
+	TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemySkillHit);
+	SourceASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SkillDamagingSound);
 
-			// 히트스탑 적용
-			if (!bHitStopApplied)
-			{
-				HitStop();
-				bHitStopApplied = true;
-			}
-		}
+	// 히트스탑 1회만 적용
+	if (!bHitStopApplied)
+	{
+		HitStop();
+		bHitStopApplied = true;
 	}
 }
 
@@ -200,7 +208,7 @@ void UGA_CommaSkill::Deflect(AComma* Comma)
 		{
 			Projectile->Deflected(Comma);
 
-			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Parried);
+			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Stun);
 		}
 	}
 }

@@ -5,6 +5,7 @@
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Prologue/Character/Player/Comma.h"
 
 void UGA_CommaIntro::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -16,6 +17,8 @@ void UGA_CommaIntro::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
 	{
 		Comma->HideCommaUI();
+
+		Comma->GetCharacterMovement()->SetMovementMode(MOVE_None);
 	}
 }
 
@@ -32,5 +35,7 @@ void UGA_CommaIntro::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 		}
 		
 		Comma->ShowCommaUI();
+
+		Comma->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	}	
 }
