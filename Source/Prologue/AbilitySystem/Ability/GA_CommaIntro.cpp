@@ -38,11 +38,6 @@ void UGA_CommaIntro::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 
 	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
 	{
-		if (UCommaWidget* CommaWidget = Comma->GetCommaWidget())
-		{
-			CommaWidget->SetVisibility(ESlateVisibility::Visible);
-		}
-		
 		Comma->ShowCommaUI();
 
 		if (UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
