@@ -16,6 +16,8 @@ class PROLOGUE_API UCommaWidget : public UPrologueUserWidget
 	GENERATED_BODY()
 
 public:
+	virtual void NativeConstruct() override;
+	
 	virtual void SetAbilitySystemComponent(AActor* InOwner) override;
 
 	virtual void OnCurrentHealthChanged(const FOnAttributeChangeData& ChangeData);
