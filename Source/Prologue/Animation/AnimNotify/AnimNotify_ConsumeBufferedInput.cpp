@@ -11,11 +11,33 @@ void UAnimNotify_ConsumeBufferedInput::Notify(USkeletalMeshComponent* MeshComp, 
 	{
 		if (UInputBufferComponent* InputBuffer = MeshComp->GetOwner()->FindComponentByClass<UInputBufferComponent>())
 		{
-			if (bConsumeSpecificTag && SpecificInputTag.IsValid())
+			if (bConsumeSpecificTag && !SpecificInputTag.IsEmpty())
 			{
-				if (InputBuffer->HasBufferedInput(SpecificInputTag))
+				if (bConsumeFirst)
 				{
-					InputBuffer->ConsumeBufferedInput();
+					for (const FGameplayTag& Tag : SpecificInputTag)
+					{
+						if (InputBuffer->HasBufferedInput(Tag))
+						{
+							InputBuffer->ConsumeBufferedInput();
+							break;
+						}
+					}
+				}
+				else
+				{
+					bool bConsumeAny = false;
+					for (const FGameplayTag& Tag : SpecificInputTag)
+					{
+						while (InputBuffer->HasBufferedInput(Tag))
+						{
+							InputBuffer->ConsumeBufferedInput();
+							bConsumeAny = true;
+						}
+
+						if (bConsumeAny)
+							break;
+					}
 				}
 			}
 			else
