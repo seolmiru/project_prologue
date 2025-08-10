@@ -112,7 +112,8 @@ void APrologueCharacter::InputGAS(const FGameplayTag Tag)
 		// 선입력에서 제외시킬 어빌리티
 		static TArray<FGameplayTag> NonBufferTags = {
 			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Sword")),
-			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Bow"))
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Bow")),
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Skill"))
 		};
 
 		bool bShouldBuffer = !NonBufferTags.Contains(Tag);
