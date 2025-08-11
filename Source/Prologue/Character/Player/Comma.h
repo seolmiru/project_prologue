@@ -11,7 +11,6 @@ class UWidgetComponent;
 class UPostProcessComponent;
 class UCommaWidget;
 class UComboSwordData;
-//class UComboBowData;
 class UInputAction;
 class UInputMappingContext;
 class UCommaCombatComponent;
@@ -155,7 +154,7 @@ private:
 	float DamageEffectDuration = 1.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
-	float DamageEffectIntensity = 0.5f;
+	float DamageEffectIntensity = 1.f;
 	
 public:
 	FORCEINLINE FVector2D GetDirection() const { return Direction; }

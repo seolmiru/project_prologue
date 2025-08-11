@@ -544,14 +544,14 @@ void AComma::UpdateDamageEffect()
 	float ElapsedTime = CurrentTime - DamageEffectStartTime;
 	float Alpha = ElapsedTime / DamageEffectDuration;
 
-	if (Alpha >= 1.f)
+	if (Alpha >= 5.f)
 	{
 		DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), 0.f);
 		GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
 		return;
 	}
 
-	float CurrentIntensity = DamageEffectIntensity * (1.f - Alpha);
+	float CurrentIntensity = DamageEffectIntensity * (5.f - Alpha);
 	DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), CurrentIntensity);
 }
 

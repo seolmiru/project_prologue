@@ -22,5 +22,8 @@ public:
 	bool bConsumeSpecificTag = false;
 
 	UPROPERTY(EditAnywhere, Category = "Input Buffer", meta = (EditCondition = "bConsumeSpecificTag"))
-	FGameplayTag SpecificInputTag;
+	FGameplayTagContainer SpecificInputTag;
+
+	UPROPERTY(EditAnywhere, Category = "Input Buffer", meta = (EditCondition = "bConsumeSpecificTag"))
+	bool bConsumeFirst = true;
 };
