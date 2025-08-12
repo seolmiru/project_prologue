@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ProgressBar.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Prologue/UI/PrologueUserWidget.h"
 #include "EnemyWidget.generated.h"
 

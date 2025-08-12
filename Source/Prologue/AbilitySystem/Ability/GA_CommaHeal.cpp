@@ -5,7 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "Prologue/PrologueGameplayTags.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 
 UGA_CommaHeal::UGA_CommaHeal()
 {

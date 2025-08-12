@@ -4,7 +4,8 @@
 #include "SwitchAttackExecutionCalc.h"
 
 #include "AbilitySystemComponent.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueSkillAttributeSet.h"
 
 void USwitchAttackExecutionCalc::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
                                                         FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
@@ -21,7 +22,7 @@ void USwitchAttackExecutionCalc::Execute_Implementation(const FGameplayEffectCus
 
 		if (SourceActor && TargetActor)
 		{
-			const float MaxDamageRange = SourceASC->GetNumericAttributeBase(UPrologueAttributeSet::GetSwordSwitchAttackRangeAttribute());
+			const float MaxDamageRange = SourceASC->GetNumericAttributeBase(UPrologueSkillAttributeSet::GetSwordSwitchAttackRangeAttribute());
 			const float Distance = SourceActor->GetDistanceTo(TargetActor);
 
 			float Damage = 0.f;

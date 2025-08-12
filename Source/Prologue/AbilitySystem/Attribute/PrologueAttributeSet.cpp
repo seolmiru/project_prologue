@@ -5,20 +5,14 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
-#include "../PrologueGameplayTags.h"
+#include "../../PrologueGameplayTags.h"
 #include "Prologue/Prologue.h"
 #include "Prologue/Character/Player/Comma.h"
 
-UPrologueAttributeSet::UPrologueAttributeSet() :
-	SwordSwitchAttackDamage(80.f),
-	MaxSwordSwitchAttackDamage(300.f),
-	SwordSwitchAttackRange(500.f),
-	MaxSwordSwitchAttackRange(800.f)
+UPrologueAttributeSet::UPrologueAttributeSet()
 {
 	InitCurrentHealth(1.f);
 	InitMaxHealth(1.f);
-	InitCurrentGauge(1.f);
-	InitMaxGauge(1.f);
 	InitDamage(1.f);
 	InitCurrentToughness(1.f);
 	InitMaxToughness(1.f);
@@ -35,14 +29,6 @@ void UPrologueAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribu
 	else if (Attribute == GetDamageAttribute())
 	{
 		NewValue = NewValue < 0.0f ? 0.0f : NewValue;
-	}
-	else if (Attribute == GetSwordSwitchAttackRangeAttribute())
-	{
-		NewValue = FMath::Clamp(NewValue, 0.1f, GetMaxSwordSwitchAttackRange());
-	}
-	else if (Attribute == GetSwordSwitchAttackDamageAttribute())
-	{
-		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxSwordSwitchAttackDamage());
 	}
 }
 

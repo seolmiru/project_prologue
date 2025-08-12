@@ -6,7 +6,7 @@
 #include "NiagaraComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueSkillAttributeSet.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/Controller/CommaController.h"
@@ -27,17 +27,17 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	const UPrologueAttributeSet* AttributeSet = ASC->GetSet<UPrologueAttributeSet>();
+	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
 
 	// 오버클락 게이지가 100이 아닐 때에는 시전 불가
-	if (AttributeSet->GetCurrentGauge() < AttributeSet->GetMaxGauge())
+	if (SkillAttributeSet->GetCurrentGauge() < SkillAttributeSet->GetMaxGauge())
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
 
 	// 게이지 초기화
-	ASC->SetNumericAttributeBase(UPrologueAttributeSet::GetCurrentGaugeAttribute(), 0.0f);
+	ASC->SetNumericAttributeBase(UPrologueSkillAttributeSet::GetCurrentGaugeAttribute(), 0.0f);
 	
 	bIsOverClockActive = true;
 	OverClockTimeScale = TimeScale;
