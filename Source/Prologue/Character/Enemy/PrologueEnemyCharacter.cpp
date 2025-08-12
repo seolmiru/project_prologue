@@ -11,7 +11,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Prologue/PrologueGameplayTags.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Prologue/Component/EnemyWidgetComponent.h"
 #include "Prologue/Controller/PrologueAIController.h"
 #include "Prologue/UI/Enemy/EnemyWidget.h"

@@ -5,7 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 
 void UGA_EnemyHitReact::ActivateAbility(const FGameplayAbilitySpecHandle Handle,

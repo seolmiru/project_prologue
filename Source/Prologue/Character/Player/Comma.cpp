@@ -78,7 +78,7 @@ AComma::AComma()
 
 	CooldownWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("CooldownWidgetComponent"));
 	CooldownWidgetComponent->SetupAttachment(RootComponent);
-	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, -130.f));
+	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 15.f));
 	CooldownWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
