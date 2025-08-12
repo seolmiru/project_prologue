@@ -72,4 +72,7 @@ private:
 	FDelegateHandle DamageAttributeChangedHandle;
 
 	bool bHealthBarVisible = false;
+
+	UPROPERTY()
+	FGameplayTag LastUsedAbility;
 };

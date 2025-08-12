@@ -36,7 +36,7 @@ protected:
 	float ExplosionRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
-	float TimeToExplode;	
+	float TimeToExplode;
 
 	bool bIsStuck = false;
 	float ElapsedTime = 0.f;

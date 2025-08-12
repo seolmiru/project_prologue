@@ -3,6 +3,22 @@
 
 #include "CommaWidget.h"
 
+#include "Prologue/PrologueGameplayTags.h"
+
+void UCommaWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Intro))
+	{
+		SetVisibility(ESlateVisibility::Hidden);
+	}
+	else
+	{
+		SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
 void UCommaWidget::SetAbilitySystemComponent(AActor* InOwner)
 {
 	Super::SetAbilitySystemComponent(InOwner);

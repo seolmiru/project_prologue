@@ -5,7 +5,10 @@
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Prologue/Character/Player/Comma.h"
+#include "Prologue/Game/PrologueGameInstance.h"
 
 void UGA_CommaIntro::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                      const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
@@ -13,6 +16,15 @@ void UGA_CommaIntro::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	if (UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		if (GameInstance->GetHasIntroDialoguePlayed())
+		{
+			EndAbility(Handle, ActorInfo, ActivationInfo, false, true);
+			return;
+		}
+	}
+	
 	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
 	{
 		Comma->HideCommaUI();
@@ -26,11 +38,11 @@ void UGA_CommaIntro::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 
 	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
 	{
-		if (UCommaWidget* CommaWidget = Comma->GetCommaWidget())
-		{
-			CommaWidget->SetVisibility(ESlateVisibility::Visible);
-		}
-		
 		Comma->ShowCommaUI();
+
+		if (UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+		{
+			GameInstance->SetHasIntroDialoguePlayed(true);
+		}
 	}	
 }

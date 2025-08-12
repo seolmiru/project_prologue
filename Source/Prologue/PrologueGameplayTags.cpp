@@ -24,6 +24,8 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Skill, "Comma.Ability.Skill");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_SmashAttack, "Comma.Ability.SmashAttack");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Ability_Heal, "Comma.Ability.Heal");
 	
 	/** Comma State Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_SwitchAttack_Sword, "Comma.State.SwitchAttack.Sword");
@@ -38,6 +40,8 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_OverClock, "Comma.State.OverClock");
 
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_Intro, "Comma.State.Intro");
+
 	/** Comma Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_Sword, "Comma.Event.Sword");
 	
@@ -48,6 +52,8 @@ namespace PrologueGameplayTags
 	/** Comma Cooldown Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Parry, "Comma.Cooldown.Parry");
 	
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Heal, "Comma.Cooldown.Heal");
+
 	/** Effect Tags */
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Damaging, "GameplayCue.Effect.Damaging");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_SmashAttackDamaging, "GameplayCue.Effect.SmashAttackDamaging");
@@ -63,7 +69,9 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_EnemySmashHit, "GameplayCue.Effect.EnemySmashHit");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_EnemySkillHit, "GameplayCue.Effect.EnemySKillHit");
 
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Parried, "GameplayCue.Effect.Parried");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Stun, "GameplayCue.Effect.Stun");
+	
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Heal, "GameplayCue.Effect.Heal");
 
 	/** Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AttackHitCheck, "Event.Character.AttackHitCheck");
@@ -111,7 +119,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_LastCombo, "Enemy.Event.LastCombo");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_LaserHitCheck, "Enemy.Event.LaserHitCheck");
 
-	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_Parried, "Enemy.Event.Parried");
+	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_Stun, "Enemy.Event.Stun");
 	
 	/** Shared Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Ability_Death, "Shared.Ability.Death");
