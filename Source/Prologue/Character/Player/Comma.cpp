@@ -9,7 +9,6 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Prologue/PrologueGameplayTags.h"
-#include "Prologue/Component/Combat/CommaCombatComponent.h"
 #include "Prologue/Controller/CommaController.h"
 #include "Prologue/DataAsset/Input/DataAsset_InputConfig.h"
 #include "EnhancedInputComponent.h"
@@ -20,6 +19,7 @@
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/AbilitySystem/Ability/GA_CommaAttackSword.h"
+#include "Prologue/Component/InputBufferComponent.h"
 #include "Prologue/Player/ProloguePlayerState.h"
 #include "Prologue/UI/Comma/CommaWidget.h"
 
@@ -51,6 +51,12 @@ AComma::AComma()
 	FollowCamera->FieldOfView = 50.f;
 	FollowCamera->bUsePawnControlRotation = false;
 
+	ParryCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("ParryCollision"));
+	ParryCollision->SetupAttachment(GetMesh());
+	ParryCollision->SetCapsuleHalfHeight(96.f);
+	ParryCollision->SetCapsuleRadius(42.f);
+	ParryCollision->SetActive(false);
+
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
@@ -58,11 +64,6 @@ AComma::AComma()
 
 	SwordWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SwordWeaponMesh"));
 	SwordWeaponMesh->SetupAttachment(GetMesh(),TEXT("SwordSocket"));
-
-	BowWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BowWeaponMesh"));
-	BowWeaponMesh->SetupAttachment(GetMesh(),TEXT("BowSocket"));
-
-	CommaCombatComponent = CreateDefaultSubobject<UCommaCombatComponent>(TEXT("CommaCombatComponent"));
 
 	UIAnchorComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("UIAnchorComponent"));
 	UIAnchorComponent->SetupAttachment(GetRootComponent());
@@ -80,12 +81,16 @@ AComma::AComma()
 	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, -130.f));
 	CooldownWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 
+	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
+
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
+	
+	SwordWeaponMesh->SetVisibility(true);
 
-	SwitchAttackBowTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Bow"));
-
-	SwordWeaponMesh->SetVisibility(false);
-
+	CameraBoom->TargetArmLength = 1200.f;
+	DefaultZoomDist = CameraBoom->TargetArmLength;
+	TargetZoomDist = DefaultZoomDist;
+	
 	/** Sejin */
 
 	// 대쉬 위치 오브젝트 소환
@@ -93,18 +98,13 @@ AComma::AComma()
 	UWorld* World = GetWorld();
 
 	static ConstructorHelpers::FClassFinder<APlayerDashPoint> DashRef(
-		TEXT("/Script/Engine.Blueprint'/Game/Characters/Comma/Dash/DashPoint.DashPoint_C'"));
+		TEXT("/Script/Engine.Blueprint'/Game/Characters/Comma/Dash/BP_DashPoint.BP_DashPoint_C'"));
 
 	if (World && DashRef.Class)
 	{
 		DashPoint = World->SpawnActor<APlayerDashPoint>(DashRef.Class, GetActorLocation(), FRotator::ZeroRotator,
 		                                                SpawnParams);
 	}
-}
-
-UPawnCombatComponent* AComma::GetPawnCombatComponent() const
-{
-	return CommaCombatComponent;
 }
 
 void AComma::Tick(float DeltaSeconds)
@@ -120,16 +120,6 @@ void AComma::Tick(float DeltaSeconds)
 
 	Direction = FVector2D(ForwardDot, RightDot);
 
-	if (CameraBoom)
-	{
-		FVector TargetLocation = GetActorLocation();
-		TargetLocation.Z += 100.f;
-
-		FVector CurrentLocation = CameraBoom->GetComponentLocation();
-		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
-		CameraBoom->SetWorldLocation(NewLocation);
-	}
-
 	if (bIsUsingSmoothRotation && !TargetRotation.IsZero())
 	{
 		FRotator CurrentRotation = GetActorRotation();
@@ -137,6 +127,22 @@ void AComma::Tick(float DeltaSeconds)
 		SetActorRotation(NewRotation);
 	}
 
+	if (CameraBoom)
+	{
+		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, TargetZoomDist))
+		{
+			float NewArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, TargetZoomDist, DeltaSeconds, ZoomOutInterpSpeed);
+			CameraBoom->TargetArmLength = NewArmLength;
+		}
+		
+		FVector TargetLocation = GetActorLocation();
+		TargetLocation.Z += 100.f;
+
+		FVector CurrentLocation = CameraBoom->GetComponentLocation();
+		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
+		CameraBoom->SetWorldLocation(NewLocation);
+	}
+	
 	if (UIAnchorComponent)
 	{
 		FRotator FixedRotation = FRotator::ZeroRotator;
@@ -175,12 +181,6 @@ void AComma::PossessedBy(AController* NewController)
 		if (ASC && SwitchAttackSwordTag.IsValid())
 		{
 			ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(
-				this, &AComma::OnSwitchAttackUI);
-		}
-
-		if (ASC && SwitchAttackBowTag.IsValid())
-		{
-			ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).AddUObject(
 				this, &AComma::OnSwitchAttackUI);
 		}
 	}
@@ -261,12 +261,7 @@ void AComma::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 	}
-
-	if (ASC && SwitchAttackBowTag.IsValid())
-	{
-		ASC->RegisterGameplayTagEvent(SwitchAttackBowTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
-	}
-
+	
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -296,6 +291,14 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 	CachedMovementInput = MovementVector;
 
+	/** Sejin */
+
+	// 대쉬 위치 오브젝트에 입력 방향 전달
+	if (DashPoint != nullptr)
+	{
+		DashPoint->SetDirection(FVector(MovementVector.X, MovementVector.Y, 0.f).GetSafeNormal());
+	}
+	
 	if (ASC)
 	{
 		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
@@ -330,14 +333,6 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 			SetActorRotation(NewRotation);
 		}
 	}
-
-	/** Sejin */
-
-	// 대쉬 위치 오브젝트에 입력 방향 전달
-	if (DashPoint != nullptr)
-	{
-		DashPoint->SetDirection(FVector(MovementVector.X, MovementVector.Y, 0.f).GetSafeNormal());
-	}
 }
 
 UStaticMeshComponent* AComma::GetSwordWeaponMesh() const
@@ -345,9 +340,46 @@ UStaticMeshComponent* AComma::GetSwordWeaponMesh() const
 	return SwordWeaponMesh;
 }
 
-UStaticMeshComponent* AComma::GetBowWeaponMesh() const
+void AComma::SetUIVisibility(bool bVisible)
 {
-	return BowWeaponMesh;
+	if (CommaWidget)
+	{
+		ESlateVisibility NewVisibility = bVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+		CommaWidget->SetVisibility(NewVisibility);
+	}
+
+	if (CooldownWidgetComponent)
+	{
+		CooldownWidgetComponent->SetVisibility(bVisible);
+	}
+}
+
+void AComma::HideCommaUI()
+{
+	if (CommaWidget)
+	{
+		bCommaWidgetVisibility = (CommaWidget->GetVisibility() == ESlateVisibility::Visible);
+		CommaWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	if (CooldownWidgetComponent)
+	{
+		bCommaWidgetVisibility = CooldownWidgetComponent->IsVisible();
+		CooldownWidgetComponent->SetVisibility(false);
+	}
+}
+
+void AComma::ShowCommaUI()
+{
+	if (CommaWidget && bCommaWidgetVisibility)
+	{
+		CommaWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+
+	if (CooldownWidgetComponent && bCooldownWidgetVisibility)
+	{
+		CooldownWidgetComponent->SetVisibility(true);
+	}
 }
 
 // 활 공격 시에 사용되는 마우스 방향으로 회전하는 함수
@@ -469,24 +501,14 @@ void AComma::OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) co
 			SwitchAttackWidgetComponent->SetVisibility(false);
 		}
 	}
-
-	if (CallbackTag == SwitchAttackBowTag && SwitchAttackWidgetComponent)
-	{
-		if (NewCount > 0)
-		{
-			SwitchAttackWidgetComponent->SetVisibility(true);
-		}
-		else
-		{
-			SwitchAttackWidgetComponent->SetVisibility(false);
-		}
-	}
 }
 
 void AComma::TriggerDamageEffect(float DamageAmount)
 {
-	if (!DamagePostProcessMID)
+	if (DamageAmount <= 0.f || !DamagePostProcessMID)
+	{
 		return;
+	}
 
 	DamageEffectStartTime = GetWorld()->GetTimeSeconds();
 
@@ -494,6 +516,23 @@ void AComma::TriggerDamageEffect(float DamageAmount)
 
 	GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
 	GetWorld()->GetTimerManager().SetTimer(DamageEffectTimerHandle, this, &AComma::UpdateDamageEffect, 0.05f, true);
+}
+
+void AComma::ZoomIn(float ZoomDist)
+{
+	CameraBoom->TargetArmLength = ZoomDist;
+	TargetZoomDist = ZoomDist;
+}
+
+void AComma::ZoomOut()
+{
+	TargetZoomDist = DefaultZoomDist;
+}
+
+void AComma::ResetZoom()
+{
+	CameraBoom->TargetArmLength = DefaultZoomDist;
+	TargetZoomDist = DefaultZoomDist;
 }
 
 void AComma::UpdateDamageEffect()
@@ -505,14 +544,14 @@ void AComma::UpdateDamageEffect()
 	float ElapsedTime = CurrentTime - DamageEffectStartTime;
 	float Alpha = ElapsedTime / DamageEffectDuration;
 
-	if (Alpha >= 1.f)
+	if (Alpha >= 5.f)
 	{
 		DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), 0.f);
 		GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
 		return;
 	}
 
-	float CurrentIntensity = DamageEffectIntensity * (1.f - Alpha);
+	float CurrentIntensity = DamageEffectIntensity * (5.f - Alpha);
 	DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), CurrentIntensity);
 }
 

@@ -39,6 +39,12 @@ public:
 
 protected:
 	UPROPERTY(meta = (BindWidget))
+	UImage* HourHand;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* MinuteHand;
+	
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* SpeakerNameText;
 
 	UPROPERTY(meta = (BindWidget))
@@ -62,6 +68,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	float TypewriterSpeed = 0.05f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	FLinearColor ActiveColor = FLinearColor(1.f, 1.f, 1.f, 1.f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	FLinearColor InactiveColor = FLinearColor(0.1f, 0.1f, 0.1f, 1.f);
+	
 	FTimerHandle TypewriterTimerHandle;
 	FString FullDialogueText;
 	int32 CurrentCharIndex;
@@ -70,4 +82,7 @@ protected:
 	void TypewriterEffect();
 
 	void CompleteTypewriter();
+
+private:
+	void UpdateCharacterIconStates(const FString& SpeakerName);
 };

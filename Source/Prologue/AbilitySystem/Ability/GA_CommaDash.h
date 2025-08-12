@@ -14,7 +14,7 @@ class PROLOGUE_API UGA_CommaDash : public UGameplayAbility
 	GENERATED_BODY()
 
 public:
-	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const override;
+	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	
@@ -27,7 +27,7 @@ protected:
 
 	UFUNCTION()
 	void OnInterrupted();
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Dash|GroundCheck")
 	bool IsSafeLandingZone(const FVector& CandidateLocation, const TArray<AActor*>& IgnoreActors, FVector& OutAdjustedLocation) const;
 
@@ -104,7 +104,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TEnumAsByte<ECollisionChannel> TraceChannel;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bIgnoreCancelRestriction = false;
 	
 	FVector TargetPos;

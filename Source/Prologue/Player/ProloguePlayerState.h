@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerState.h"
 #include "ProloguePlayerState.generated.h"
 
+class UPrologueAbilitySystemComponent;
 class UAbilitySystemComponent;
 
 /**

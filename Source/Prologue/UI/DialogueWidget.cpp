@@ -3,6 +3,7 @@
 
 #include "DialogueWidget.h"
 
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Prologue/Prologue.h"
 
@@ -15,6 +16,16 @@ void UDialogueWidget::NativeConstruct()
 		ContinueText->SetText(FText::FromString(TEXT("Press E")));
 	}
 
+	if (HourHand)
+	{
+		HourHand->SetColorAndOpacity(InactiveColor);
+	}
+
+	if (MinuteHand)
+	{
+		MinuteHand->SetColorAndOpacity(InactiveColor);
+	}
+	
 	SetVisibility(ESlateVisibility::Collapsed);
 }
 
@@ -117,6 +128,8 @@ void UDialogueWidget::SetCurrentDialogue(const FDialogueData& DialogueData)
 	{
 		SpeakerNameText->SetText(FText::FromString(DialogueData.SpeakerName));
 
+		UpdateCharacterIconStates(DialogueData.SpeakerName);
+		
 		FullDialogueText = DialogueData.DialogueText.ToString();
 
 		FullDialogueText = FullDialogueText.Replace(TEXT("<br>"), TEXT("\n"));
@@ -160,4 +173,20 @@ void UDialogueWidget::CompleteTypewriter()
 	}
 
 	CurrentCharIndex = FullDialogueText.Len();
+}
+
+void UDialogueWidget::UpdateCharacterIconStates(const FString& SpeakerName)
+{
+	bool bIsLeftSpeaker = SpeakerName.Contains(TEXT("분침"));
+
+	if (bIsLeftSpeaker)
+	{
+		MinuteHand->SetColorAndOpacity(ActiveColor);
+		HourHand->SetColorAndOpacity(InactiveColor);
+	}
+	else
+	{
+		MinuteHand->SetColorAndOpacity(InactiveColor);
+		HourHand->SetColorAndOpacity(ActiveColor);
+	}
 }

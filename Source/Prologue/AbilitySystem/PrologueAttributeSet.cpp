@@ -27,8 +27,12 @@ UPrologueAttributeSet::UPrologueAttributeSet() :
 void UPrologueAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
-	
-	if (Attribute == GetDamageAttribute())
+
+	if (Attribute == GetCurrentHealthAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHealth());
+	}
+	else if (Attribute == GetDamageAttribute())
 	{
 		NewValue = NewValue < 0.0f ? 0.0f : NewValue;
 	}
@@ -65,16 +69,6 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 
 			return false;
 		}
-
-		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_JustParrying))
-		{
-			FGameplayEventData PlayData;
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.Target.GetAvatarActor(), PrologueGameplayTags::Comma_Event_JustParry, PlayData);
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.EffectSpec.GetContext().GetEffectCauser(), PrologueGameplayTags::Enemy_Event_Parried, PlayData);
-			LOG_SCREEN_R("%s", *Data.EffectSpec.GetContext().GetEffectCauser()->GetName());
-
-			return false;
-		}
 	}
 
 	if (Data.EvaluatedData.Attribute == GetCurrentToughnessAttribute())
@@ -97,13 +91,18 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
 	{
 		LOG_SCREEN("Direct Health Access : %f", GetCurrentHealth());
+		
 		SetCurrentHealth(FMath::Clamp(GetCurrentHealth(), MinimumHealth, GetMaxHealth()));
 
 		if (AActor* TargetActor = Data.Target.GetAvatarActor())
 		{
 			if (AComma* Comma = Cast<AComma>(TargetActor))
 			{
-				Comma->TriggerDamageEffect();
+				float HealthChange = Data.EvaluatedData.Magnitude;
+				if (HealthChange < 0.f)
+				{
+					Comma->TriggerDamageEffect(FMath::Abs(HealthChange));
+				}
 			}
 		}
 	}

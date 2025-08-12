@@ -54,7 +54,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_EnemyWidget;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UEnemyWidget> MangoHpBarWidget;	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_MangoWidget;
+
 protected:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	bool TryActivateAbilityByTag(FGameplayTag AbilityTagToActivate);
@@ -66,4 +72,7 @@ private:
 	FDelegateHandle DamageAttributeChangedHandle;
 
 	bool bHealthBarVisible = false;
+
+	UPROPERTY()
+	FGameplayTag LastUsedAbility;
 };

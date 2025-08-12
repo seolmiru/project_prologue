@@ -30,79 +30,108 @@ void UGA_AttackHitCheck::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 
 void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
-	if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, 0))
-	{
-		FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, 0);
-		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
-		FGameplayEffectSpecHandle HitReactEffectSpecHandle = MakeOutgoingGameplayEffectSpec(ToughnessDamageEffect);
+    bool bHitDetected = false;
+    
+    for (int32 i = 0; i < TargetDataHandle.Num(); i++)
+    {
+        if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, i))
+        {
+            FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, i);
+            
+            UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor());
+            if (!TargetASC)
+            {
+                continue;
+            }
 
-		// HiReact 호출을 위해 Target에게 Effect 부여
-		if (HitReactEffectSpecHandle.IsValid())
-		{
-			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, HitReactEffectSpecHandle, TargetDataHandle);
-		}
-		
-		if (EffectSpecHandle.IsValid())
-		{
-			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EffectSpecHandle, TargetDataHandle);
+            bHitDetected = true;
+            
+            FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
+            FGameplayEffectSpecHandle HitReactEffectSpecHandle = MakeOutgoingGameplayEffectSpec(ToughnessDamageEffect);
+            
+            if (HitReactEffectSpecHandle.IsValid())
+            {
+                // 강인도 감소 적용
+                TargetASC->ApplyGameplayEffectSpecToSelf(*HitReactEffectSpecHandle.Data.Get());
+            }
+            
+            if (EffectSpecHandle.IsValid())
+            {
+                // 대미지 적용
+                TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+                
+                // VFX용 GameplayCue
+                FGameplayEffectContextHandle CueContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(EffectSpecHandle);
+                CueContextHandle.AddHitResult(HitResult);
+                FGameplayCueParameters CueParam;
+                CueParam.EffectContext = CueContextHandle;
 
-			// 공격이 적중했을 때, 카메라 쉐이킹, VFX 연출용 GameplayCue
-			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
-			
-			FGameplayEffectContextHandle CueContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(EffectSpecHandle);
-			CueContextHandle.AddHitResult(HitResult);
-			FGameplayCueParameters CueParam;
-			CueParam.EffectContext = CueContextHandle;
-			if (Cast<AComma>(GetAvatarActorFromActorInfo()))
-			{
-				UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor())->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
-			}
-			else
-			{
-				UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor())->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_PlayerHit, CueParam);
-			}
-		}
-	}
-	else if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, 0))
-	{
-		UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo_Checked();
+                // 피격 이펙트 출력
+                if (Cast<AComma>(GetAvatarActorFromActorInfo()))
+                {
+                    TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
+                }
+                else
+                {
+                    TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_PlayerHit, CueParam);
+                }
+            }
+            
+            // 일반 공격 카메라 쉐이킹, 피격 사운드 출력
+            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
+        }
+        else if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, i))
+        {
+            TArray<AActor*> Actors = UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(TargetDataHandle, i);
 
-		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
-		FGameplayEffectSpecHandle HitReactEffectSpecHandle = MakeOutgoingGameplayEffectSpec(ToughnessDamageEffect);
+            for (AActor* TargetActor : Actors)
+            {
+                UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 
-		if (HitReactEffectSpecHandle.IsValid())
-		{
-			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, HitReactEffectSpecHandle, TargetDataHandle);
-		}
-		
-		if (EffectSpecHandle.IsValid())
-		{
-			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EffectSpecHandle, TargetDataHandle);
+                FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
+                FGameplayEffectSpecHandle HitReactEffectSpecHandle = MakeOutgoingGameplayEffectSpec(ToughnessDamageEffect);
 
-			// 공격이 적중했을 때, 카메라 쉐이킹, VFX 연출용 GameplayCue
-			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SwitchAttackDamaging);
+                if (HitReactEffectSpecHandle.IsValid())
+                {
+                    ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, HitReactEffectSpecHandle, TargetDataHandle);
+                }
 
-			FGameplayEffectContextHandle CueContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(EffectSpecHandle);
-			CueContextHandle.AddActors(TargetDataHandle.Data[0].Get()->GetActors(), false);
-			FGameplayCueParameters CueParam;
-			CueParam.EffectContext = CueContextHandle;
+                if (EffectSpecHandle.IsValid())
+                {
+                    TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+                    
+                    FGameplayEffectContextHandle CueContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(EffectSpecHandle);
+                    CueContextHandle.AddActors({TargetActor}, false);
+                    FGameplayCueParameters CueParam;
+                    CueParam.EffectContext = CueContextHandle;
 
-			SourceASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
-		}
+                    // 피격 이펙트 출력
+                    TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemySmashHit, CueParam);
+                }
+            }
 
-		// 오버클락 게이지 증가 이펙트 부여
-		if (IncreaseGaugeEffect)
-		{
-			FGameplayEffectSpecHandle GaugeEffectSpecHandle = MakeOutgoingGameplayEffectSpec(IncreaseGaugeEffect);
-			if (GaugeEffectSpecHandle.IsValid())
-			{
-				UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-				ASC->ApplyGameplayEffectSpecToSelf(*GaugeEffectSpecHandle.Data.Get());
-			}
-		}
-	}
+            // 스매위 공격 전용 카메라 쉐이킹, 피격 사운드
+            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SmashAttackDamaging);
+            GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SmashDamagingSound);
 
-	bool bReplicatedEndAbility = true;
-	bool bWasCancelled = false;
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
+            // 오버클락 게이지 증가
+            if (IncreaseGaugeEffect)
+            {
+                FGameplayEffectSpecHandle GaugeEffectSpecHandle = MakeOutgoingGameplayEffectSpec(IncreaseGaugeEffect);
+                if (GaugeEffectSpecHandle.IsValid())
+                {
+                    GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*GaugeEffectSpecHandle.Data.Get());
+                }
+            }
+        }
+    }
+
+    if (bHitDetected)
+    {
+        GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_DamagingSound);
+    }
+    
+    bool bReplicatedEndAbility = true;
+    bool bWasCancelled = false;
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
 }
