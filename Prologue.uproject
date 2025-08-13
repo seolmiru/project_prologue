@@ -44,6 +44,10 @@
 		{
 			"Name": "AnimatedTexturePlugin",
 			"Enabled": false
+		},
+		{
+			"Name": "MovieRenderPipeline",
+			"Enabled": true
 		}
 	]
 }
