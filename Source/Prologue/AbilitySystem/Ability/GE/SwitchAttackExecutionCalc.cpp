@@ -31,7 +31,7 @@ void USwitchAttackExecutionCalc::Execute_Implementation(const FGameplayEffectCus
 			{
 				if (Distance <= 300.f)
 				{
-					Damage = 100.f;
+					Damage = 70.f;
 				}
 				else
 				{
