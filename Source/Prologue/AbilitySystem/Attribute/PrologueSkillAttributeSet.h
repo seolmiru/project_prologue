@@ -30,6 +30,8 @@ public:
 	ATTRIBUTE_ACCESSORS(UPrologueSkillAttributeSet, MaxSwordSwitchAttackRange);
 	ATTRIBUTE_ACCESSORS(UPrologueSkillAttributeSet, CurrentGauge);
 	ATTRIBUTE_ACCESSORS(UPrologueSkillAttributeSet, MaxGauge);
+	ATTRIBUTE_ACCESSORS(UPrologueSkillAttributeSet, CurrentHealPotion);
+	ATTRIBUTE_ACCESSORS(UPrologueSkillAttributeSet, MaxHealPotion);
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual bool PreGameplayEffectExecute(struct FGameplayEffectModCallbackData& Data) override;
@@ -53,4 +55,10 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = "OverClock", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData MaxGauge;
+
+	UPROPERTY(BlueprintReadOnly, Category = "OverClock", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData CurrentHealPotion;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "OverClock", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData MaxHealPotion;
 };

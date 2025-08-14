@@ -27,12 +27,17 @@ public:
 	virtual void OnCurrentGaugeChanged(const FOnAttributeChangeData& ChangeData);
 	virtual void OnMaxGaugeChanged(const FOnAttributeChangeData& ChangeData);
 
+	virtual void OnCurrentHealPotionChanged(const FOnAttributeChangeData& ChangeData);
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	class UImage* GaugeImage;
 
 	UPROPERTY(meta = (BindWidget))
 	class UImage* RainbowGaugeImage;
+
+	UPROPERTY(meta = (BindWidget))
+	class UImage* PlayerIconOverClock;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMaterialInterface* GaugeMaterial;
@@ -58,6 +63,11 @@ protected:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	float CurrentMaxGauge = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	float CurrentHealPotion = 0.0f;
+
+	virtual void OnOverClockTagChanged(const FGameplayTag Tag, int32 NewCount);
 
 private:
 	void UpdateGaugePercent();

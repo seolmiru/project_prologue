@@ -23,6 +23,11 @@ void UCommaWidget::NativeConstruct()
 		RainbowGaugeImage->SetBrush(UWidgetBlueprintLibrary::MakeBrushFromMaterial(RainbowGaugeMaterialInstance));
 		RainbowGaugeImage->SetVisibility(ESlateVisibility::Hidden);
 	}
+
+	if (PlayerIconOverClock)
+	{
+		PlayerIconOverClock->SetVisibility(ESlateVisibility::Hidden);
+	}
 	
 	if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Intro))
 	{
@@ -44,7 +49,23 @@ void UCommaWidget::SetAbilitySystemComponent(AActor* InOwner)
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetMaxHealthAttribute()).AddUObject(this, &UCommaWidget::OnMaxHealthChanged);
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueSkillAttributeSet::GetCurrentGaugeAttribute()).AddUObject(this, &UCommaWidget::OnCurrentGaugeChanged);
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueSkillAttributeSet::GetMaxGaugeAttribute()).AddUObject(this, &UCommaWidget::OnMaxGaugeChanged);
+		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueSkillAttributeSet::GetCurrentHealPotionAttribute()).AddUObject(this, &UCommaWidget::OnCurrentHealPotionChanged);
+		
+		ASC->RegisterGameplayTagEvent(PrologueGameplayTags::Comma_State_OverClock, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &UCommaWidget::OnOverClockTagChanged);
 
+		const bool bIsOverClock = ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_OverClock);
+		const ESlateVisibility OverClockVisibility = bIsOverClock ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+		
+		if (RainbowGaugeImage)
+		{
+			RainbowGaugeImage->SetVisibility(OverClockVisibility);
+		}
+
+		if (PlayerIconOverClock)
+		{
+			PlayerIconOverClock->SetVisibility(OverClockVisibility);
+		}
+		
 		if (const UPrologueAttributeSet* CurrentAttributeSet = ASC->GetSet<UPrologueAttributeSet>())
 		{
 			if (const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>())
@@ -79,6 +100,27 @@ void UCommaWidget::OnMaxGaugeChanged(const FOnAttributeChangeData& ChangeData)
 {
 	CurrentMaxGauge = ChangeData.NewValue;
 	UpdateGaugePercent();
+}
+
+void UCommaWidget::OnCurrentHealPotionChanged(const FOnAttributeChangeData& ChangeData)
+{
+	CurrentHealPotion = ChangeData.NewValue;
+}
+
+void UCommaWidget::OnOverClockTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	const bool bIsOverClock = NewCount > 0;
+	const ESlateVisibility OverClockVisibility = bIsOverClock ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+		
+	if (RainbowGaugeImage)
+	{
+		RainbowGaugeImage->SetVisibility(OverClockVisibility);
+	}
+
+	if (PlayerIconOverClock)
+	{
+		PlayerIconOverClock->SetVisibility(OverClockVisibility);
+	}
 }
 
 void UCommaWidget::UpdateGaugePercent()

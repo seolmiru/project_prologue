@@ -24,7 +24,6 @@ APrologueCharacter::APrologueCharacter()
 	GetMesh()->bReceivesDecals = false;
 
 	GetCharacterMovement()->bCanWalkOffLedges = false;
-	GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
 }
 
 UPawnCombatComponent* APrologueCharacter::GetPawnCombatComponent() const

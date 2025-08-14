@@ -28,7 +28,6 @@ APrologueEnemyCharacter::APrologueEnemyCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 180.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 250.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 1000.f;
 
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	Attributes = CreateDefaultSubobject<UPrologueAttributeSet>(TEXT("Attributes"));

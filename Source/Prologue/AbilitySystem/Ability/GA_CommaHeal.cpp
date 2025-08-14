@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueSkillAttributeSet.h"
 
 UGA_CommaHeal::UGA_CommaHeal()
 {
@@ -23,12 +24,18 @@ bool UGA_CommaHeal::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	const UPrologueAttributeSet* AttributeSet = ASC->GetSet<UPrologueAttributeSet>();
+	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
 
 	if (AttributeSet->GetCurrentHealth() >= AttributeSet->GetMaxHealth())
 	{
 		return false;
 	}
 
+	if (SkillAttributeSet->GetCurrentHealPotion() < 1.f)
+	{
+		return false;
+	}
+	
 	return true;
 }
 
@@ -44,6 +51,11 @@ void UGA_CommaHeal::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	FGameplayEffectSpecHandle HealEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(HealAmountEffect, 0.f, HealEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*HealEffectSpecHandle.Data.Get());
 
+	FGameplayEffectContextHandle CostEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	CostEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle CostEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(HealPotionCostEffect, 0.f, CostEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*CostEffectSpecHandle.Data.Get());
+	
 	// 힐 VFX 출력
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Heal);
 

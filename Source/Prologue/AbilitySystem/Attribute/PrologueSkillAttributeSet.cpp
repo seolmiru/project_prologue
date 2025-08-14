@@ -11,6 +11,8 @@ UPrologueSkillAttributeSet::UPrologueSkillAttributeSet() :
 {
 	InitCurrentGauge(1.f);
 	InitMaxGauge(1.f);
+	InitCurrentHealPotion(1.f);
+	InitMaxHealPotion(1.f);
 }
 
 void UPrologueSkillAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)

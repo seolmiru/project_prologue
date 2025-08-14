@@ -21,12 +21,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Music")
 	void SetAndPlayMusic(UMetaSoundSource* MusicAsset);
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Music")
 	void EnterCombatZone();
 
 	UFUNCTION(BlueprintCallable, Category = "Music")
 	void EnterSafeZone();
+
+	UFUNCTION(BlueprintCallable, Category = "Music")
+	void EnterEliteZone();
 
 private:
 	void UpdateMusicState();
@@ -35,4 +38,6 @@ private:
 	TObjectPtr<UAudioComponent> MusicAudioComponent;
 
 	bool bIsInCombatZone = false;
+
+	bool bIsEliteZone = false;
 };

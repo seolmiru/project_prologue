@@ -83,10 +83,20 @@ void UBackgroundMusicSubsystem::EnterSafeZone()
 	}
 }
 
+void UBackgroundMusicSubsystem::EnterEliteZone()
+{
+	if (!bIsEliteZone)
+	{
+		bIsEliteZone = true;
+		UpdateMusicState();
+	}
+}
+
 void UBackgroundMusicSubsystem::UpdateMusicState()
 {
 	if (MusicAudioComponent && MusicAudioComponent->IsPlaying())
 	{
 		MusicAudioComponent->SetBoolParameter(FName("CombatState"), bIsInCombatZone);
+		MusicAudioComponent->SetBoolParameter(FName("EliteZone"), bIsEliteZone);
 	}
 }
