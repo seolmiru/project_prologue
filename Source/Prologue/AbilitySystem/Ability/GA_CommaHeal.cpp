@@ -51,6 +51,7 @@ void UGA_CommaHeal::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	FGameplayEffectSpecHandle HealEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(HealAmountEffect, 0.f, HealEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*HealEffectSpecHandle.Data.Get());
 
+	// 힐 포션 이펙트
 	FGameplayEffectContextHandle CostEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 	CostEffectContextHandle.AddSourceObject(this);
 	FGameplayEffectSpecHandle CostEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(HealPotionCostEffect, 0.f, CostEffectContextHandle);

@@ -76,6 +76,8 @@ void UGA_CommaSkill::InputPressed(const FGameplayAbilitySpecHandle Handle, const
 void UGA_CommaSkill::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
+	EndHitStop();
+	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
@@ -105,6 +107,8 @@ void UGA_CommaSkill::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 		Comma->GetParryCollision()->SetActive(false);
 		Comma->GetParryCollision()->OnComponentBeginOverlap.Clear();
 	}
+
+	EndHitStop();
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
