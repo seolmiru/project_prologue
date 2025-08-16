@@ -281,9 +281,11 @@ void APlayerDashPoint::SetDashCool()
 	if (bPlayerHit)
 	{
 		AActor* PlayerGround = HitResult.GetActor();
+		// UE_LOG(LogTemp, Log, TEXT("Player Ground: (%s), Dash Point Ground: (%s)"), *PlayerGround->GetName(), *GroundActor->GetName());
 		// 같은 지면 대시 = 쿨타임 부여
 		if (PlayerGround == GroundActor)
 		{
+			UE_LOG(LogTemp, Log, TEXT("Start Cool Down"));
 			CurrentDashCool = DashCool;
 		}
 	}
@@ -291,6 +293,7 @@ void APlayerDashPoint::SetDashCool()
 
 bool APlayerDashPoint::DashCoolDown()
 {
+			UE_LOG(LogTemp, Log, TEXT("Check Dash Cool!"));
 	return CurrentDashCool <= 0.0f;
 }
 
