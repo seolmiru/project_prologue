@@ -220,14 +220,6 @@ void UGA_CommaDash::OnDashAllowed()
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	Comma->DashPoint->SetDashCool(); // 대시 쿨타임 설정
 	
-	// Just Dash Effect 부여
-	FGameplayEffectContextHandle JustDashEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
-		MakeEffectContext();
-	JustDashEffectContextHandle.AddSourceObject(this);
-	FGameplayEffectSpecHandle JustDashEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
-		JustDashTimingEffect, 0.f, JustDashEffectContextHandle);
-	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*JustDashEffectSpecHandle.Data.Get());
-
 	// Invincible Effect 부여
 	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
 		MakeEffectContext();

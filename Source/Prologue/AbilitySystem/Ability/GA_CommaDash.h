@@ -96,9 +96,6 @@ protected:
 	TObjectPtr<class UCurveFloat> Curve;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	TSubclassOf<UGameplayEffect> JustDashTimingEffect;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	TSubclassOf<UGameplayEffect> InvincibleEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

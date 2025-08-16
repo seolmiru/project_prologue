@@ -50,8 +50,8 @@ void UGA_CommaHeal::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	HealEffectContextHandle.AddSourceObject(this);
 	FGameplayEffectSpecHandle HealEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(HealAmountEffect, 0.f, HealEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*HealEffectSpecHandle.Data.Get());
-
-	// 힐 포션 이펙트
+	
+	// 힐 포션 이펙트, 포션 수 차감
 	FGameplayEffectContextHandle CostEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 	CostEffectContextHandle.AddSourceObject(this);
 	FGameplayEffectSpecHandle CostEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(HealPotionCostEffect, 0.f, CostEffectContextHandle);
@@ -59,8 +59,6 @@ void UGA_CommaHeal::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	
 	// 힐 VFX 출력
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Heal);
-
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void UGA_CommaHeal::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,

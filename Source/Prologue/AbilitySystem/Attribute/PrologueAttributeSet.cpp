@@ -41,12 +41,14 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 
 	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
 	{
-		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
+		if (Data.EvaluatedData.Magnitude < 0.f)
 		{
-			return false;
-		}
-
-		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Dashing))
+			if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
+			{
+				return false;
+			}
+		}	
+		/*if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Dashing))
 		{
 			FGameplayEventData PlayData;
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.Target.GetAvatarActor(), PrologueGameplayTags::Comma_Event_JustDash, PlayData);
@@ -54,7 +56,7 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 			LOG_SCREEN("%s", *Data.EffectSpec.GetContext().GetEffectCauser()->GetName());
 
 			return false;
-		}
+		}*/
 	}
 
 	if (Data.EvaluatedData.Attribute == GetCurrentToughnessAttribute())
