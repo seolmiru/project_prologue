@@ -94,6 +94,7 @@ private:
 	float DashCool;
 	
 	// 현재 대시 쿨타임
+	UPROPERTY(VisibleAnywhere, Category="Dash")
 	float CurrentDashCool;
 
 	// 대시 위치
