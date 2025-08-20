@@ -22,11 +22,5 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UAnimMontage> SwordHitReactMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UAnimMontage> BowHitReactMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsSword = false;
+	TObjectPtr<UAnimMontage> HitReactMontage;
 };
