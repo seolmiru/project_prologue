@@ -27,11 +27,6 @@ void UGA_CommaSkill::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
 
-	if (UCapsuleComponent* CapsuleComponent = Comma->GetCapsuleComponent())
-	{
-		CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Overlap);
-	}
-
 	if (UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement())
 	{
 		MovementComp->bEnablePhysicsInteraction = false;
@@ -78,6 +73,14 @@ void UGA_CommaSkill::CancelAbility(const FGameplayAbilitySpecHandle Handle, cons
 {
 	EndHitStop();
 	
+	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
+
+	if (ActorInfo && ActorInfo->AvatarActor.Get())
+	{
+		Comma->GetParryCollision()->SetActive(false);
+		Comma->GetParryCollision()->OnComponentBeginOverlap.Clear();
+	}
+	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
@@ -89,11 +92,6 @@ void UGA_CommaSkill::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
 
 	Comma->GetDashPoint()->SetCursorDirectionState(true);
-
-	if (UCapsuleComponent* CapsuleComp = Comma->GetCapsuleComponent())
-	{
-		CapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Block);
-	}
 
 	if (UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement())
 	{

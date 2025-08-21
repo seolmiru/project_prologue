@@ -46,16 +46,6 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
-
-	// 오버클락 게이지가 100이 아닐 때에는 시전 불가
-	if (SkillAttributeSet->GetCurrentGauge() < SkillAttributeSet->GetMaxGauge())
-	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-		return;
-	}
-
-	// 게이지 초기화
-	ASC->SetNumericAttributeBase(UPrologueSkillAttributeSet::GetCurrentGaugeAttribute(), 0.0f);
 	
 	bIsOverClockActive = true;
 	OverClockTimeScale = TimeScale;
