@@ -102,6 +102,14 @@ void APrologueEnemyCharacter::PossessedBy(AController* NewController)
 		ASC->GiveAbility(Ability);
 	}
 
+	for (auto& Ability : OnGiveAbilities)
+	{
+		FGameplayAbilitySpec GameplayAbilitySpec(Ability);
+		FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(GameplayAbilitySpec);
+
+		ASC->TryActivateAbility(SpecHandle);
+	}
+
 	if (!StartEffect.IsEmpty())
 	{
 		for (const TSubclassOf<UGameplayEffect> &EffectClass : StartEffect)

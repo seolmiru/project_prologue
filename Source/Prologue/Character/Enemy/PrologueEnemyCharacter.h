@@ -39,6 +39,9 @@ protected:
 	virtual void PossessedBy(AController* NewController) override;
 	
 	void OnDamageAttributeChanged(const FOnAttributeChangeData& Data);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StartUpData", meta = (AllowPrivateAccess = "true"))
+	TArray<TSubclassOf<class UGameplayAbility>> OnGiveAbilities;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "StartUpData", meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;

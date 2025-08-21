@@ -134,6 +134,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Shared_State_IsAttacking, "Shared.State.IsAttacking");
 	UE_DEFINE_GAMEPLAY_TAG(Shared_State_IsMoving, "Shared.State.IsMoving");
 	UE_DEFINE_GAMEPLAY_TAG(Shared_State_IsOutOfToughness, "Shared.State.IsOutOfToughness");
+	UE_DEFINE_GAMEPLAY_TAG(Shared_State_NoHitEffect, "Shared.State.NoHitEffect");
 
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Cooldown_Attack, "Shared.Cooldown.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Cooldown_Attack_Laser, "Shared.Cooldown.Attack.Laser");
