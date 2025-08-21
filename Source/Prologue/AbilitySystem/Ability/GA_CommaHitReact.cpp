@@ -10,11 +10,6 @@
 #include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Prologue/Character/Player/Comma.h"
 
-UGA_CommaHitReact::UGA_CommaHitReact()
-{
-	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-}
-
 void UGA_CommaHitReact::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                         const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
                                         const FGameplayEventData* TriggerEventData)
@@ -34,9 +29,9 @@ void UGA_CommaHitReact::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 	// 강인도 초기화
 	ASC->SetNumericAttributeBase(UPrologueAttributeSet::GetCurrentToughnessAttribute(), 100.0f);
 	
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
 
 	Comma->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
