@@ -14,7 +14,7 @@
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOutOfHealthDelegate);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOutOfToughnessDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOutOfBrokenGaugeDelegate);
 
 /**
  * 
@@ -30,15 +30,15 @@ public:
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentHealth);
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxHealth);
 	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, Damage);
-	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentToughness);
-	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxToughness);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, CurrentBrokenGauge);
+	ATTRIBUTE_ACCESSORS(UPrologueAttributeSet, MaxBrokenGauge);
 	
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual bool PreGameplayEffectExecute(struct FGameplayEffectModCallbackData& Data) override;
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
 
 	mutable FOutOfHealthDelegate OnOutOfHealth;
-	mutable FOutOfToughnessDelegate OnOutOfToughness;
+	mutable FOutOfBrokenGaugeDelegate OnOutOfBrokenGauge;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = true))
@@ -51,12 +51,12 @@ protected:
 	FGameplayAttributeData Damage;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = true))
-	FGameplayAttributeData CurrentToughness;
+	FGameplayAttributeData CurrentBrokenGauge;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = true))
-	FGameplayAttributeData MaxToughness;
+	FGameplayAttributeData MaxBrokenGauge;
 	
 	bool bOutOfHealth = false;
 
-	bool bOutOfToughness = false;
+	bool bOutOfBrokenGauge = false;
 };

@@ -54,7 +54,8 @@ void UGA_CommaSkillHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetD
             bHitDetected = true;
             
             FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(AttackDamageEffect);
-            
+            FGameplayEffectSpecHandle BrokenEffectSpecHandle = MakeOutgoingGameplayEffectSpec(BrokenDamageEffect);
+
             if (EffectSpecHandle.IsValid())
             {
                 // 대미지 적용
@@ -71,6 +72,11 @@ void UGA_CommaSkillHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetD
                     // 피격 이펙트 출력
                     TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
                 }
+            }
+
+            if (BrokenEffectSpecHandle.IsValid())
+            {
+                TargetASC->ApplyGameplayEffectSpecToSelf(*BrokenEffectSpecHandle.Data.Get());
             }
         }
     }

@@ -24,11 +24,6 @@ void UGA_CommaHitReact::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 void UGA_CommaHitReact::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-
-	// 강인도 초기화
-	ASC->SetNumericAttributeBase(UPrologueAttributeSet::GetCurrentToughnessAttribute(), 100.0f);
-	
 	AComma* Comma = CastChecked<AComma>(ActorInfo->AvatarActor.Get());
 
 	Comma->GetCharacterMovement()->SetMovementMode(MOVE_Walking);

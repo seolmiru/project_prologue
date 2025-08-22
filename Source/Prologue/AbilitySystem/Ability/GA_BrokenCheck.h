@@ -4,27 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GA_CommaSkillHitCheck.generated.h"
+#include "GA_BrokenCheck.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_CommaSkillHitCheck : public UGameplayAbility
+class PROLOGUE_API UGA_BrokenCheck : public UGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-	UGA_CommaSkillHitCheck();
+	UGA_BrokenCheck();
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
 protected:
 	UFUNCTION()
 	void OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle);
-
-	UPROPERTY(EditAnywhere, Category = "Effect")
-	TSubclassOf<UGameplayEffect> AttackDamageEffect;
 
 	UPROPERTY(EditAnywhere, Category = "Effect")
 	TSubclassOf<UGameplayEffect> BrokenDamageEffect;
