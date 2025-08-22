@@ -39,6 +39,9 @@ void UGA_CommaSkill::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	
 	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
 	TargetPos = Comma->GetDashPoint()->GetParryPoint();
+
+	// Z축 보정
+	TargetPos.Z += Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	
 	// Dash Tick Curve Task
 	UAT_TickCurve* DashTickCurve = UAT_TickCurve::CreateTask(this, DashCurve);
@@ -70,6 +73,8 @@ void UGA_CommaSkill::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 	Comma->GetDashPoint()->SetCursorDirectionState(true);
 	
 	EndHitStop();
+
+	Comma->GetCharacterMovement()->UpdateFloorFromAdjustment();
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
