@@ -105,7 +105,7 @@ private:
 	TObjectPtr<UCommaWidget> CommaWidget;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	class USceneComponent* UIAnchorComponent;
+	TObjectPtr<USceneComponent> UIAnchorComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWidgetComponent> SwitchAttackWidgetComponent;

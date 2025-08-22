@@ -45,10 +45,10 @@ protected:
 	TObjectPtr<UAbilitySystemComponent> ASC;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MotionWarping")
-	UMotionWarpingComponent* MotionWarpingComponent;
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UInputBufferComponent* InputBufferComponent;
+	TObjectPtr<UInputBufferComponent> InputBufferComponent;
 	
 	FDelegateHandle ToughnessTagHandle;
 
