@@ -26,19 +26,6 @@ void UGA_CommaSkill::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	bHitStopApplied = false;
 	
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
-
-	if (UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement())
-	{
-		MovementComp->bEnablePhysicsInteraction = false;
-
-		MovementComp->bPushForceUsingZOffset = false;
-	}
-
-	if (Comma)
-	{
-		Comma->GetParryCollision()->SetActive(true);
-		Comma->GetParryCollision()->OnComponentBeginOverlap.AddDynamic(this, &UGA_CommaSkill::OnOverlap);
-	}
 	
 	Comma->RotateToMouse();
 
@@ -52,14 +39,14 @@ void UGA_CommaSkill::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	
 	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
 	TargetPos = Comma->GetDashPoint()->GetParryPoint();
+
+	// Z축 보정
+	TargetPos.Z += Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	
 	// Dash Tick Curve Task
 	UAT_TickCurve* DashTickCurve = UAT_TickCurve::CreateTask(this, DashCurve);
 	DashTickCurve->OnCurveTick.AddDynamic(this, &UGA_CommaSkill::OnDashCurveTick);
 	DashTickCurve->ReadyForActivation();
-	
-	// 투세차 반사 확정 전까지 미사용
-	//Deflect(Comma);
 }
 
 void UGA_CommaSkill::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -73,14 +60,6 @@ void UGA_CommaSkill::CancelAbility(const FGameplayAbilitySpecHandle Handle, cons
 {
 	EndHitStop();
 	
-	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
-
-	if (ActorInfo && ActorInfo->AvatarActor.Get())
-	{
-		Comma->GetParryCollision()->SetActive(false);
-		Comma->GetParryCollision()->OnComponentBeginOverlap.Clear();
-	}
-	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
@@ -92,126 +71,21 @@ void UGA_CommaSkill::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
 
 	Comma->GetDashPoint()->SetCursorDirectionState(true);
-
-	if (UCharacterMovementComponent* MovementComp = Comma->GetCharacterMovement())
-	{
-		MovementComp->bEnablePhysicsInteraction = true;
-
-		MovementComp->bPushForceUsingZOffset = true;
-	}
-
-	if (ActorInfo && ActorInfo->AvatarActor.Get())
-	{
-		Comma->GetParryCollision()->SetActive(false);
-		Comma->GetParryCollision()->OnComponentBeginOverlap.Clear();
-	}
-
+	
 	EndHitStop();
+
+	Comma->GetCharacterMovement()->UpdateFloorFromAdjustment();
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void UGA_CommaSkill::OnDashCurveTick(float Alpha)
 {
-	FVector CurrentPos = FMath::Lerp(BasePos, TargetPos, Alpha);
-
-	if (AComma* Comma = Cast<AComma>(GetAvatarActorFromActorInfo()))
+	AActor* AvatarActor = GetAvatarActorFromActorInfo();
+	if (AvatarActor)
 	{
-		FHitResult HitResult;
-		FVector TraceStart = CurrentPos + FVector(0.f, 0.f, 100.f);
-		FVector TraceEnd = CurrentPos - FVector(0.f, 0.f, 200.f);
-
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(Comma);
-
-		if (GetWorld()->LineTraceSingleByChannel(
-			HitResult,
-			TraceStart,
-			TraceEnd,
-			ECC_WorldStatic,
-			QueryParams
-		))
-		{
-			CurrentPos.Z = HitResult.ImpactPoint.Z + Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-		}
-	}
-
-	GetAvatarActorFromActorInfo()->SetActorLocation(CurrentPos);
-}
-
-void UGA_CommaSkill::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	// Overlap된 대상이 적이 아니거나 HitActors에 들어있다면 제외
-	APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(OtherActor);
-	if (!Enemy || HitActors.Contains(OtherActor))
-	{
-		return;
-	}
-
-	HitActors.Add(OtherActor);
-
-	// Overlap된 Actor 이름 디버깅
-	LOG_SCREEN("%s", *OtherActor->GetName());
-	
-	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
-	
-	UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
-	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SweepResult.GetActor());
-			
-	// 대미지 적용
-	FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SkillDamageEffect, 1.f, EffectContextHandle);
-	FGameplayAbilityTargetDataHandle DataHandle;
-	FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(SweepResult);
-	DataHandle.Add(TargetData);
-	ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, DataHandle);
-
-	// 경직 적용
-	FGameplayEventData PlayData;
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(SweepResult.GetActor(), PrologueGameplayTags::Enemy_Event_Stun, PlayData);
-			
-	// 피격 이펙트, 사운드 출력
-	TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemySkillHit);
-	SourceASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SkillDamagingSound);
-
-	// 히트스탑 1회만 적용
-	if (!bHitStopApplied)
-	{
-		HitStop();
-		bHitStopApplied = true;
-	}
-}
-
-// 투사체 반사 함수
-void UGA_CommaSkill::Deflect(AComma* Comma)
-{
-	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
-	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldDynamic));
-
-	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(Comma);
-
-	// ParryRadius 범위 내에 투사체 탐지
-	TArray<AActor*> OverlappedActors;
-	UKismetSystemLibrary::SphereOverlapActors(
-		GetWorld(),
-		Comma->GetActorLocation(),
-		DeflectRadius,
-		ObjectTypes,
-		ABazierProjectile::StaticClass(),
-		IgnoreActors,
-		OverlappedActors
-	);
-	
-	for (AActor* Actor : OverlappedActors)
-	{
-		if (ABazierProjectile* Projectile = Cast<ABazierProjectile>(Actor))
-		{
-			Projectile->Deflected(Comma);
-
-			GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Stun);
-		}
+		FVector InterpolatedLocation = FMath::Lerp(BasePos, TargetPos, Alpha);
+		AvatarActor->SetActorLocation(InterpolatedLocation);
 	}
 }
 
