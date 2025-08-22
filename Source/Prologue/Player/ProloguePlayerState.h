@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerState.h"
 #include "ProloguePlayerState.generated.h"
 
+class UPrologueAbilitySystemComponent;
 class UAbilitySystemComponent;
 
 /**
@@ -28,4 +29,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class UPrologueAttributeSet> AttributeSet;
+
+	UPROPERTY()
+	TObjectPtr<class UPrologueSkillAttributeSet> SkillAttributeSet;
 };

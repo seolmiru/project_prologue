@@ -11,7 +11,8 @@
 			"AdditionalDependencies": [
 				"GameplayAbilities",
 				"EnhancedInput",
-				"AIModule"
+				"AIModule",
+				"Engine"
 			]
 		}
 	],
@@ -38,6 +39,14 @@
 		},
 		{
 			"Name": "Volumetrics",
+			"Enabled": true
+		},
+		{
+			"Name": "AnimatedTexturePlugin",
+			"Enabled": false
+		},
+		{
+			"Name": "MovieRenderPipeline",
 			"Enabled": true
 		}
 	]

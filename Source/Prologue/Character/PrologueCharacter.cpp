@@ -2,14 +2,12 @@
 
 #include "PrologueCharacter.h"
 #include "Engine/LocalPlayer.h"
-#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "AbilitySystemComponent.h"
-#include "Player/Comma.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
 #include "MotionWarpingComponent.h"
+#include "Prologue/Component/InputBufferComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -26,8 +24,6 @@ APrologueCharacter::APrologueCharacter()
 	GetMesh()->bReceivesDecals = false;
 
 	GetCharacterMovement()->bCanWalkOffLedges = false;
-	GetCharacterMovement()->PerchRadiusThreshold = 100.f;
-	GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
 }
 
 UPawnCombatComponent* APrologueCharacter::GetPawnCombatComponent() const
@@ -106,6 +102,31 @@ void APrologueCharacter::InputGAS(const FGameplayTag Tag)
 	GameplayTags.AddTag(Tag);
 	if (ASC)
 	{
+		// 캔슬 가능 어빌리티
+		static TArray<FGameplayTag> CancelableTags = {
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")),
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Skill")),
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Heal"))
+		};
+
+		// 선입력에서 제외시킬 어빌리티
+		static TArray<FGameplayTag> NonBufferTags = {
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Sword")),
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Attack.Bow")),
+			FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Heal"))
+		};
+
+		bool bShouldBuffer = !NonBufferTags.Contains(Tag);
+
+		bool bCanCancel = CancelableTags.Contains(Tag) && ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);
+
+		// NonBufferTags이고 캔슬 가능한 어빌리티가 아닐 때에만 선입력 배열에 저장
+		if (bShouldBuffer && ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking) && !bCanCancel)
+		{
+			InputBufferComponent->BufferInput(Tag);
+			return;
+		}
+		
 		TArray<FGameplayAbilitySpec*> AbilitiesToActivatePtrs;
 		ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(GameplayTags, AbilitiesToActivatePtrs);
 		if (AbilitiesToActivatePtrs.Num() < 1)

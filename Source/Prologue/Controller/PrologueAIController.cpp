@@ -18,7 +18,7 @@ APrologueAIController::APrologueAIController(const FObjectInitializer& ObjectIni
 	AISenseConfig_Sight->DetectionByAffiliation.bDetectEnemies = true;
 	AISenseConfig_Sight->DetectionByAffiliation.bDetectFriendlies = false;
 	AISenseConfig_Sight->DetectionByAffiliation.bDetectNeutrals = false;
-	AISenseConfig_Sight->SightRadius = 1000.f;
+	AISenseConfig_Sight->SightRadius = 1500.f;
 	AISenseConfig_Sight->LoseSightRadius = 0.f;
 	AISenseConfig_Sight->PeripheralVisionAngleDegrees = 360.f;
 

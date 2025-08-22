@@ -3,7 +3,10 @@
 
 #include "PrologueGameInstance.h"
 
+#include "PrologueSaveGame.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "Prologue/Prologue.h"
 
 void UPrologueGameInstance::Init()
 {
@@ -14,16 +17,59 @@ void UPrologueGameInstance::Init()
 
 	if (LoadingScreenWidgets.Num() == 0)
 	{
-		LoadingScreenWidgets.Add(TSoftClassPtr<UUserWidget>(FSoftObjectPath(TEXT("/Game/UI/WBP_LoadingScreen_First.WBP_LoadingScreen_First_C"))));
-		LoadingScreenWidgets.Add(TSoftClassPtr<UUserWidget>(FSoftObjectPath(TEXT("/Game/UI/WBP_LoadingScreen_Second.WBP_LoadingScreen_Second_C"))));
+		LoadingScreenWidgets.Add(TSoftClassPtr<UUserWidget>(FSoftObjectPath(TEXT("/Game/UI/Widget/WBP_LoadingScreen_First.WBP_LoadingScreen_First_C"))));
+		LoadingScreenWidgets.Add(TSoftClassPtr<UUserWidget>(FSoftObjectPath(TEXT("/Game/UI/Widget/WBP_LoadingScreen_Second.WBP_LoadingScreen_Second_C"))));
 	}
+
+	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+	{
+		SaveGameData = Cast<UPrologueSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+	}
+	else
+	{
+		SaveGameData = Cast<UPrologueSaveGame>(UGameplayStatics::CreateSaveGameObject(UPrologueSaveGame::StaticClass()));
+	}
+}
+
+void UPrologueGameInstance::SetHasIntroDialoguePlayed(bool bPlayed)
+{
+	if (SaveGameData)
+	{
+		SaveGameData->bHasIntroDialoguePlayed = bPlayed;
+		UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
+	}
+}
+
+bool UPrologueGameInstance::GetHasIntroDialoguePlayed() const
+{
+	return SaveGameData ? SaveGameData->bHasIntroDialoguePlayed : false;
+}
+
+bool UPrologueGameInstance::HasSavedGame() const
+{
+	return SaveGameData ? SaveGameData->bHasGameProgress : false;
+}
+
+void UPrologueGameInstance::SaveGameProgress(const FString& LevelName)
+{
+	if (SaveGameData)
+	{
+		SaveGameData->bHasGameProgress = true;
+		SaveGameData->SavedLevelName = LevelName;
+		UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
+	}
+}
+
+FString UPrologueGameInstance::GetSavedLevelName() const
+{
+	return SaveGameData ? SaveGameData->SavedLevelName : FString();
 }
 
 void UPrologueGameInstance::OnPreLoadMap(const FString& MapName)
 {
 	FLoadingScreenAttributes LoadingScreenAttributes;
 	LoadingScreenAttributes.bAutoCompleteWhenLoadingCompletes = true;
-	LoadingScreenAttributes.MinimumLoadingScreenDisplayTime = 2.f;
+	LoadingScreenAttributes.MinimumLoadingScreenDisplayTime = 10.f;
 	LoadingScreenAttributes.WidgetLoadingScreen = CreateRandomLoadingWidget();
 
 	GetMoviePlayer()->SetupLoadingScreen(LoadingScreenAttributes);

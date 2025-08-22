@@ -55,10 +55,30 @@ void ABazierProjectile::FireInDirection(const FVector& ShootDirection)
 	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (PlayerCharacter)
 	{
+		OriginalTarget = PlayerCharacter;
 		FVector TargetLocation = PlayerCharacter->GetActorLocation();
 		TargetLocation.Z -= GroundOffset;
 		SetBazierPoint(MyLocation, TargetLocation);
 	}
+}
+
+void ABazierProjectile::Deflected(AActor* DeflectingActor)
+{
+	if (bIsDeflected || !GetInstigator())
+		return;
+
+	bIsDeflected = true;
+
+	// 패링 당한 위치에서 투사체 발사한 Actor로 경로 설정
+	FVector MyLocation = GetActorLocation();
+	FVector ShooterLocation = GetInstigator()->GetActorLocation();
+	ShooterLocation.Z -= GroundOffset;
+
+	// 배지어 경로 재지정
+	SetBazierPoint(MyLocation, ShooterLocation);
+
+	// 타겟 변경
+	OriginalTarget = GetInstigator();
 }
 
 void ABazierProjectile::BeginPlay()
@@ -182,24 +202,37 @@ void ABazierProjectile::Explode()
 		2.f
 		);
 	}
-	
-	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-	if (PlayerPawn == nullptr)
+
+	// 패링 당한 투사체라면 투사체를 발사한 Actor를 타겟으로 지정
+	AActor* TargetActor = bIsDeflected ? GetInstigator() : UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+
+	if (!TargetActor)
 	{
 		Destroy();
 		return;
 	}
+	
+	/*APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	if (PlayerPawn == nullptr)
+	{
+		Destroy();
+		return;
+	}*/
 
-	const float DistSq = FVector::DistSquared(PlayerPawn->GetActorLocation(), GetActorLocation());
+	const float DistSq = FVector::DistSquared(TargetActor->GetActorLocation(), GetActorLocation());
 	if (DistSq > FMath::Square(ExplosionRadius))
 	{
 		Destroy();
 		return;
 	}
 
-	if (PlayerPawn->Implements<UAbilitySystemInterface>() && AttackDamageEffect)
+	if (TargetActor->Implements<UAbilitySystemInterface>() && AttackDamageEffect)
 	{
-		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PlayerPawn);
+		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
+
+		// 패링된 투사체는 발사자를 플레이어로 지정함
+		AActor* SourceActor = bIsDeflected ? UGameplayStatics::GetPlayerPawn(GetWorld(), 0) : GetInstigator();
+		
 		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
 
 		if (TargetASC && SourceASC)

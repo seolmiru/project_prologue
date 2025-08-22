@@ -4,7 +4,8 @@
 #include "SwitchAttackExecutionCalc.h"
 
 #include "AbilitySystemComponent.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueSkillAttributeSet.h"
 
 void USwitchAttackExecutionCalc::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
                                                         FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
@@ -21,11 +22,22 @@ void USwitchAttackExecutionCalc::Execute_Implementation(const FGameplayEffectCus
 
 		if (SourceActor && TargetActor)
 		{
-			const float MaxDamageRange = SourceASC->GetNumericAttributeBase(UPrologueAttributeSet::GetSwordSwitchAttackRangeAttribute());
-			const float MaxDamage = SourceASC->GetNumericAttributeBase(UPrologueAttributeSet::GetSwordSwitchAttackDamageAttribute());
-			const float Distance = FMath::Clamp(SourceActor->GetDistanceTo(TargetActor), 0.0f, MaxDamageRange);
-			const float InvDamageRatio = 1.0f - Distance / MaxDamageRange;
-			float Damage = FMath::RoundToFloat(InvDamageRatio * MaxDamage * 10.f) / 10.f;
+			const float MaxDamageRange = SourceASC->GetNumericAttributeBase(UPrologueSkillAttributeSet::GetSwordSwitchAttackRangeAttribute());
+			const float Distance = SourceActor->GetDistanceTo(TargetActor);
+
+			float Damage = 0.f;
+
+			if (Distance <= MaxDamageRange)
+			{
+				if (Distance <= 300.f)
+				{
+					Damage = 100.f;
+				}
+				else
+				{
+					Damage = 40.f;
+				}
+			}
 
 			OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(UPrologueAttributeSet::GetDamageAttribute(), EGameplayModOp::Additive, Damage));
 		}

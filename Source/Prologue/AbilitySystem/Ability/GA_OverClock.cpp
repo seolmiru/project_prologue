@@ -6,7 +6,8 @@
 #include "NiagaraComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/PrologueGameplayTags.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueSkillAttributeSet.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/Controller/CommaController.h"
@@ -21,31 +22,33 @@ UGA_OverClock::UGA_OverClock()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
+bool UGA_OverClock::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
+	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
+	{
+		return false;
+	}
+	
+	if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Skill))
+	{
+		return false;
+	}
+	
+	return true;
+}
+
 void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+                                    const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	const UPrologueAttributeSet* AttributeSet = ASC->GetSet<UPrologueAttributeSet>();
-
-	// 오버클락 게이지가 100이 아닐 때에는 시전 불가
-	if (AttributeSet->GetCurrentGauge() < AttributeSet->GetMaxGauge())
-	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-		return;
-	}
-
-	// 게이지 초기화
-	ASC->SetNumericAttributeBase(UPrologueAttributeSet::GetCurrentGaugeAttribute(), 0.0f);
+	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
 	
 	bIsOverClockActive = true;
 	OverClockTimeScale = TimeScale;
-
-	if (AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get()))
-	{
-		Comma->SetOverClockEffectActive(true);
-	}
 	
 	ApplySlowToEnemies();
 	
@@ -61,11 +64,6 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	if (AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get()))
-	{
-		Comma->SetOverClockEffectActive(false);
-	}
-	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
 	GetWorld()->GetTimerManager().ClearTimer(OverClockTimerHandle);
@@ -78,14 +76,6 @@ void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 void UGA_OverClock::OnOverClockFinished()
 {
 	LOG_SCREEN_R("End OverClock. Restoring time.");
-
-	if (CurrentActorInfo && CurrentActorInfo->AvatarActor.IsValid())
-	{
-		if (AComma* Comma = Cast<AComma>(CurrentActorInfo->AvatarActor.Get()))
-		{
-			Comma->SetOverClockEffectActive(false);
-		}
-	}
 	
 	RestoreEnemyTime();
 	

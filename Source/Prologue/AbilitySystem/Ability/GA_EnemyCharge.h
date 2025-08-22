@@ -21,6 +21,9 @@ public:
 	virtual void CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
+	UFUNCTION()
+	void OnCurveTick(float Alpha);
+		
 protected:
 	UFUNCTION()
 	virtual void OnComplete();
@@ -30,4 +33,14 @@ protected:
 	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAnimMontage> AnimMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timeline")
+	TObjectPtr<class UCurveFloat> ChargeCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MoveLength = 300.f;
+
+private:
+	FVector BasePos;
+	FVector TargetPos;
 };
