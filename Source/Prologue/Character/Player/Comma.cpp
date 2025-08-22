@@ -51,12 +51,6 @@ AComma::AComma()
 	FollowCamera->FieldOfView = 50.f;
 	FollowCamera->bUsePawnControlRotation = false;
 
-	ParryCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("ParryCollision"));
-	ParryCollision->SetupAttachment(GetMesh());
-	ParryCollision->SetCapsuleHalfHeight(96.f);
-	ParryCollision->SetCapsuleRadius(42.f);
-	ParryCollision->SetActive(false);
-
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;

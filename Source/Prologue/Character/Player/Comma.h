@@ -59,9 +59,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCapsuleComponent* ParryCollision;
 	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
@@ -172,8 +169,6 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	UStaticMeshComponent* GetSwordWeaponMesh() const;
-
-	FORCEINLINE UCapsuleComponent* GetParryCollision() const { return ParryCollision; }
 
 	FORCEINLINE UCommaWidget* GetCommaWidget() const { return CommaWidget; }
 	FORCEINLINE UWidgetComponent* GetCooldownWidget() const { return CooldownWidgetComponent; }
