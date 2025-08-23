@@ -156,16 +156,6 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
             // 스매쉬 공격 전용 카메라 쉐이킹, 피격 사운드
             GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SmashAttackDamaging);
             GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SmashDamagingSound);
-            
-            // 오버클락 게이지 증가
-            if (IncreaseGaugeEffect)
-            {
-                FGameplayEffectSpecHandle GaugeEffectSpecHandle = MakeOutgoingGameplayEffectSpec(IncreaseGaugeEffect);
-                if (GaugeEffectSpecHandle.IsValid())
-                {
-                    GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*GaugeEffectSpecHandle.Data.Get());
-                }
-            }
         }
     }
     

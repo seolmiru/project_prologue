@@ -31,7 +31,4 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Trace")
 	TSubclassOf<class ATA_Trace> TargetActorClass;
-
-	UPROPERTY(EditAnywhere, Category = "Effect")
-	TSubclassOf<UGameplayEffect> IncreaseGaugeEffect;
 };

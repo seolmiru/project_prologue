@@ -12,6 +12,7 @@
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/Controller/CommaController.h"
 #include "Prologue/Weapon/Projectile/BazierProjectile.h"
+#include "Prologue/Weapon/Projectile/PrologueProjectileBase.h"
 
 bool UGA_OverClock::bIsOverClockActive = false;
 float UGA_OverClock::OverClockTimeScale = 1.0f;
@@ -44,14 +45,24 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
-	
 	bIsOverClockActive = true;
 	OverClockTimeScale = TimeScale;
-	
-	ApplySlowToEnemies();
-	
+	CenterLocation = ActorInfo->AvatarActor->GetActorLocation();
+
+	// OverClock 영역 Debug
+	DrawDebugBox(
+		GetWorld(),
+		CenterLocation,
+		FVector(Radius, Radius, HalfHeight),
+		FQuat::Identity,
+		FColor::Cyan,
+		false,
+		bShowDebug ? OverClockDuration : EDrawDebugTrace::None,
+		0,
+		3.f
+	);
+
+	// OverClock 종료 Timer
 	GetWorld()->GetTimerManager().SetTimer(
 		OverClockTimerHandle,
 		this,
@@ -59,91 +70,97 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		OverClockDuration,
 		false
 	);
+
+	// Tick마다 영역 검사하는 Timer
+	GetWorld()->GetTimerManager().SetTimer(
+		CheckAreaTimerHandle,
+		this,
+		&UGA_OverClock::CheckActorsInArea,
+		CheckInterval,
+		true,
+		0.f
+	);
 }
 
 void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
+	// Timer 정리
 	GetWorld()->GetTimerManager().ClearTimer(OverClockTimerHandle);
-
-	bIsOverClockActive = false;
+	GetWorld()->GetTimerManager().ClearTimer(CheckAreaTimerHandle);
 	
+	bIsOverClockActive = false;
+
+	// 시간 복구
 	RestoreEnemyTime();
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void UGA_OverClock::OnOverClockFinished()
 {
 	LOG_SCREEN_R("End OverClock. Restoring time.");
 	
-	RestoreEnemyTime();
-	
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-// 월드 내에 존재하는 모든 적과 적이 발사한 투사체에 TimeScale만큼 시간이 느려지도록 적용
-void UGA_OverClock::ApplySlowToEnemies()
+void UGA_OverClock::CheckActorsInArea()
 {
-	AffectedEnemies.Empty();
-	AffectedProjectiles.Empty();
+	// 현재 프레임에서 OverClock 영역 내에 있는 Actor 저장
+	TSet<TWeakObjectPtr<AActor>> ActorsInAreaNow;
+	TArray<AActor*> OverlappingActors;
 
-	// EnemyCharacter를 상속 받은 모든 액터 찾기
-	TArray<AActor*> Found;
-	UGameplayStatics::GetAllActorsOfClass(
+	// OverClock 영역 검사
+	UKismetSystemLibrary::BoxOverlapActors(
 		GetWorld(),
-		APrologueEnemyCharacter::StaticClass(),
-		Found
+		CenterLocation,
+		FVector(Radius, Radius, HalfHeight),
+		TArray<TEnumAsByte<EObjectTypeQuery>>(),
+		AActor::StaticClass(),
+		TArray<AActor*>(),
+		OverlappingActors
 	);
 
-	for (AActor* Actor : Found)
+	for (AActor* Actor : OverlappingActors)
 	{
-		if (auto* Enemy = Cast<APrologueEnemyCharacter>(Actor))
+		// OverClock의 영향을 받을 대상인지 검사
+		if (Cast<APrologueEnemyCharacter>(Actor) || Cast<ABazierProjectile>(Actor) || Cast<APrologueProjectileBase>(Actor))
 		{
-			// 시간 배율 적용, AffectedEnemies 목록에 추가
-			Enemy->CustomTimeDilation = TimeScale;
-			AffectedEnemies.Add(Enemy);
+			// 영향을 받고 있지 않은 새로운 Actor일 때 OverClock 효과 적용
+			if (!AffectedActors.Contains(Actor))
+			{
+				Actor->CustomTimeDilation = TimeScale;
+				AffectedActors.Add(Actor);
+			}
+
+			// 현재 OverClock 영역에 있는 Actor 목록에 추가
+			ActorsInAreaNow.Add(Actor);
 		}
 	}
 
-	// BazierProjectile을 상속 받은 모든 액터 찾기
-	TArray<AActor*> FoundProjectiles;
-	UGameplayStatics::GetAllActorsOfClass(
-		GetWorld(),
-		ABazierProjectile::StaticClass(),
-		FoundProjectiles
-	);
-
-	for (AActor* Actor : FoundProjectiles)
+	// 이전에 영향을 받았지만 OverClock 영역을 벗어난 Actor 찾기
+	TSet<TWeakObjectPtr<AActor>> ExitedActors = AffectedActors.Difference(ActorsInAreaNow);
+	for (const auto& ActorPtr : ExitedActors)
 	{
-		if (auto* Projectile = Cast<ABazierProjectile>(Actor))
+		if (ActorPtr.IsValid())
 		{
-			// 시간 배율 적용, AffectedProjectiles 목록에 추가
-			Projectile->CustomTimeDilation = TimeScale;
-			AffectedProjectiles.Add(Projectile);
+			ActorPtr->CustomTimeDilation = 1.f;
 		}
+		
+		AffectedActors.Remove(ActorPtr);
 	}
 }
 
 // 원래 속도로 복구
 void UGA_OverClock::RestoreEnemyTime()
 {
-	for (auto* Enemy : AffectedEnemies)
+	for (const auto& ActorPtr : AffectedActors)
 	{
-		if (IsValid(Enemy))
+		if (ActorPtr.IsValid())
 		{
-			Enemy->CustomTimeDilation = 1.0f;
+			ActorPtr->CustomTimeDilation = 1.f;
 		}
 	}
 
-	for (auto* Projectile : AffectedProjectiles)
-	{
-		if (IsValid(Projectile))
-		{
-			Projectile->CustomTimeDilation = 1.0f;
-		}
-	}
-	
-	AffectedEnemies.Empty();
-	AffectedProjectiles.Empty();
+	AffectedActors.Empty();
 }
