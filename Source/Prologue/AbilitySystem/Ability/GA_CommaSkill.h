@@ -32,23 +32,9 @@ protected:
 	UFUNCTION()
 	void OnDashCurveTick(float Alpha);
 	
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitStop")
-	float HitStopDuration = 0.1f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitStop")
-	float HitStopTimeScale = 0.01f;
-	
 private:
 	FVector BasePos;
 	FVector TargetPos;
-
-	FTimerHandle HitStopTimerHandle;
-
-	void HitStop();
-	void EndHitStop();
-
-	bool bHitStopApplied = false;
 
 	UPROPERTY()
 	TSet<AActor*> HitActors;
