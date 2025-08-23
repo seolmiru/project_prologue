@@ -51,6 +51,8 @@ namespace PrologueGameplayTags
 	
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_SwitchAttackSword, "Comma.Event.SwitchAttackSword");
 
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_HitStop, "Comma.Event.HitStop");
+
 	/** Comma Cooldown Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Parry, "Comma.Cooldown.Parry");
 	

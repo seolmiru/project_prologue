@@ -61,6 +61,10 @@ void UGA_CommaSkillHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetD
                 // 대미지 적용
                 TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
 
+                // 경직 적용
+                FGameplayEventData StunEventData;
+                UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), PrologueGameplayTags::Enemy_Event_Stun, StunEventData);
+
                 if (!TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_NoHitEffect))
                 {
                     // VFX용 GameplayCue
@@ -93,6 +97,10 @@ void UGA_CommaSkillHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetD
             
             // 카메라 쉐이킹
             GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
+
+            // HitStopEventData 전송
+            FGameplayEventData HitStopEventData;
+            UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActorFromActorInfo(), PrologueGameplayTags::Comma_Event_HitStop, HitStopEventData);
         }
     }
     

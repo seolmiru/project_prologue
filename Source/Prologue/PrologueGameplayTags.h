@@ -51,6 +51,8 @@ namespace PrologueGameplayTags
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_SwitchAttackSword);
 
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_HitStop);
+
 	/** Comma Cooldown Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Cooldown_Parry);
 	
