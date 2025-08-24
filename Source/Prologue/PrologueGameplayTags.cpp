@@ -58,6 +58,8 @@ namespace PrologueGameplayTags
 	
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Heal, "Comma.Cooldown.Heal");
 
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_OverClock, "Comma.Cooldown.OverClock");
+
 	/** Effect Tags */
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Damaging, "GameplayCue.Effect.Damaging");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_SmashAttackDamaging, "GameplayCue.Effect.SmashAttackDamaging");

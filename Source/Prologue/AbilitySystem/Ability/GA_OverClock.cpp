@@ -95,6 +95,8 @@ void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	RestoreEnemyTime();
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	CommitAbilityCooldown(Handle, ActorInfo, ActivationInfo, false);
 }
 
 void UGA_OverClock::OnOverClockFinished()
