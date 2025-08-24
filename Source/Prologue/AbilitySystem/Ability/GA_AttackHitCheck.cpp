@@ -81,7 +81,9 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                     // 피격 이펙트 출력
                     if (Cast<AComma>(GetAvatarActorFromActorInfo()))
                     {
+                        FGameplayEventData FxEventData;
                         TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
+                        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), PrologueGameplayTags::Shared_Event_HitFx, FxEventData);
                     }
                     else
                     {
@@ -131,7 +133,9 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                         CueParam.EffectContext = CueContextHandle;
 
                         // 피격 이펙트 출력
+                        FGameplayEventData FxEventData;
                         TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemySmashHit, CueParam);
+                        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetActor, PrologueGameplayTags::Shared_Event_HitFx, FxEventData);
                     }
                 }
             }

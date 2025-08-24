@@ -74,7 +74,9 @@ void UGA_CommaSkillHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetD
                     CueParam.EffectContext = CueContextHandle;
 
                     // 피격 이펙트 출력
+                    FGameplayEventData FxEventData;
                     TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
+                    UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), PrologueGameplayTags::Shared_Event_HitFx, FxEventData);
                 }
             }
 
