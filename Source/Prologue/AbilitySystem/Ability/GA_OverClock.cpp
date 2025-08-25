@@ -133,6 +133,32 @@ void UGA_OverClock::CheckActorsInArea()
 			{
 				Actor->CustomTimeDilation = TimeScale;
 				AffectedActors.Add(Actor);
+
+				// MaterialInstanceDynamic 생성
+				TArray<UMaterialInstanceDynamic*> MDIs;
+				TArray<UPrimitiveComponent*> PrimitiveComponents;
+				Actor->GetComponents<UPrimitiveComponent>(PrimitiveComponents);
+
+				for (UPrimitiveComponent* Comp : PrimitiveComponents)
+				{
+					// OverClock에 영향을 받고 있는 Actor들에게 Material 효과 적용
+					if (USkeletalMeshComponent* MeshComp = Cast<USkeletalMeshComponent>(Comp))
+					{
+						for (int32 i = 0; i < MeshComp->GetNumMaterials(); ++i)
+						{
+							UMaterialInstanceDynamic* MDI = MeshComp->CreateDynamicMaterialInstance(i, MeshComp->GetMaterial(i));
+							if (MDI)
+							{
+								MDI->SetScalarParameterValue(FName("OverClockFxPower"), 1.f);
+								MDIs.Add(MDI);
+							}
+						}
+					}
+				}
+				if (MDIs.Num() > 0)
+				{
+					AffectedActorMaterial.Add(Actor, MDIs);
+				}
 			}
 
 			// 현재 OverClock 영역에 있는 Actor 목록에 추가
@@ -146,14 +172,28 @@ void UGA_OverClock::CheckActorsInArea()
 	{
 		if (ActorPtr.IsValid())
 		{
+			// 시간 복구
 			ActorPtr->CustomTimeDilation = 1.f;
+
+			// Material 복구
+			if (AffectedActorMaterial.Contains(ActorPtr))
+			{
+				for (UMaterialInstanceDynamic* MDI : AffectedActorMaterial[ActorPtr])
+				{
+					if (MDI)
+					{
+						MDI->SetScalarParameterValue(FName("OverClockFxPower"), 0.f);
+					}
+				}
+				AffectedActorMaterial.Remove(ActorPtr);
+			}
 		}
 		
 		AffectedActors.Remove(ActorPtr);
 	}
 }
 
-// 원래 속도로 복구
+// 원래 속도, Material로 복구
 void UGA_OverClock::RestoreEnemyTime()
 {
 	for (const auto& ActorPtr : AffectedActors)
@@ -161,8 +201,20 @@ void UGA_OverClock::RestoreEnemyTime()
 		if (ActorPtr.IsValid())
 		{
 			ActorPtr->CustomTimeDilation = 1.f;
+
+			if (AffectedActorMaterial.Contains(ActorPtr))
+			{
+				for (UMaterialInstanceDynamic* MDI : AffectedActorMaterial[ActorPtr])
+				{
+					if (MDI)
+					{
+						MDI->SetScalarParameterValue(FName("OverClockFxPower"), 0.f);
+					}
+				}
+			}
 		}
 	}
 
 	AffectedActors.Empty();
+	AffectedActorMaterial.Empty();
 }

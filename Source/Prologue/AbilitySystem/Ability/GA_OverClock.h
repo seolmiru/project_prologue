@@ -65,4 +65,6 @@ protected:
 	FVector CenterLocation;
 	
 	void RestoreEnemyTime();
+
+	TMap<TWeakObjectPtr<AActor>, TArray<UMaterialInstanceDynamic*>> AffectedActorMaterial;
 };
