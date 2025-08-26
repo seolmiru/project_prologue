@@ -34,7 +34,7 @@ void UGA_CommaSkillHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetD
 
     bool bHitNormalTarget = false;
     
-    for (int32 i = 0; i < TargetDataHandle.Num(); i++)
+    for (int32 i = 0; i < TargetDataHandle.Num(); ++i)
     {
         if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, i))
         {
