@@ -4,6 +4,7 @@
 #include "GA_OverClock.h"
 
 #include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Components/PostProcessComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
@@ -80,6 +81,39 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		true,
 		0.f
 	);
+
+	FVector OverClockLocation = GetAvatarActorFromActorInfo()->GetActorLocation();
+
+	FVector StartLocation = OverClockLocation;
+	FVector EndLocation = OverClockLocation - FVector(0.f, 0.f, 1000.f);
+
+	FHitResult HitResult;
+
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(GetAvatarActorFromActorInfo());
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		StartLocation,
+		EndLocation,
+		ECC_GameTraceChannel7,
+		CollisionParams
+	);
+
+	FVector OverClockSpawnLocation = bHit ? HitResult.ImpactPoint : OverClockLocation;
+	
+	if (OverClockNiagaraSystem)
+	{
+		UNiagaraComponent* OverClockNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			OverClockNiagaraSystem,
+			OverClockSpawnLocation,
+			FRotator::ZeroRotator,
+			FVector(1.f, 1.f, 1.f),
+			true,
+			true
+		);
+	}
 }
 
 void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,

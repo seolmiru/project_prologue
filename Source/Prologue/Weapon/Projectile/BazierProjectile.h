@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "BazierProjectile.generated.h"
 
+class UNiagaraComponent;
+class UBoxComponent;
 class UNiagaraSystem;
 
 UCLASS()
@@ -27,10 +29,10 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	class UBoxComponent* ProjectileCollisionBox;
+	TObjectPtr<UBoxComponent> ProjectileCollisionBox;
 	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	class UNiagaraComponent* ProjectileNiagaraComponent;
+	TObjectPtr<UNiagaraComponent> ProjectileNiagaraComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 	float ExplosionRadius;
@@ -48,7 +50,7 @@ protected:
 	TSubclassOf<class UGameplayEffect> AttackDamageEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UNiagaraSystem* ExplosionEffect;
+	TObjectPtr<UNiagaraSystem> ExplosionEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USoundBase> ExplosionSound;
