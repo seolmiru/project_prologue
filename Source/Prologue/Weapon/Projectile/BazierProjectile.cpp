@@ -14,7 +14,6 @@
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/AbilitySystem/Ability/GA_OverClock.h"
 #include "NiagaraFunctionLibrary.h"
-#include "Prologue/Prologue.h"
 
 // Sets default values
 ABazierProjectile::ABazierProjectile()

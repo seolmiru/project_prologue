@@ -51,10 +51,14 @@ namespace PrologueGameplayTags
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_SwitchAttackSword);
 
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_HitStop);
+
 	/** Comma Cooldown Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Cooldown_Parry);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Cooldown_Heal);
+	
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Cooldown_OverClock);
 
 	/** Effect Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_Damaging);
@@ -130,6 +134,7 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_Ability_Cooldown);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_Event_HitReact);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_Event_HitFx);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_State_IsDead);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_State_IsAttacking);

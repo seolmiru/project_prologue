@@ -34,7 +34,7 @@ void UGA_CommaSkillHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetD
 
     bool bHitNormalTarget = false;
     
-    for (int32 i = 0; i < TargetDataHandle.Num(); i++)
+    for (int32 i = 0; i < TargetDataHandle.Num(); ++i)
     {
         if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, i))
         {
@@ -61,6 +61,10 @@ void UGA_CommaSkillHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetD
                 // 대미지 적용
                 TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
 
+                // 경직 적용
+                FGameplayEventData StunEventData;
+                UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), PrologueGameplayTags::Enemy_Event_Stun, StunEventData);
+
                 if (!TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_NoHitEffect))
                 {
                     // VFX용 GameplayCue
@@ -70,7 +74,9 @@ void UGA_CommaSkillHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetD
                     CueParam.EffectContext = CueContextHandle;
 
                     // 피격 이펙트 출력
+                    FGameplayEventData FxEventData;
                     TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
+                    UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), PrologueGameplayTags::Shared_Event_HitFx, FxEventData);
                 }
             }
 
@@ -93,6 +99,10 @@ void UGA_CommaSkillHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetD
             
             // 카메라 쉐이킹
             GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
+
+            // HitStopEventData 전송
+            FGameplayEventData HitStopEventData;
+            UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActorFromActorInfo(), PrologueGameplayTags::Comma_Event_HitStop, HitStopEventData);
         }
     }
     
