@@ -695,8 +695,39 @@ void APlayerDashPoint::CheckSkillDirectionPoint()
 	}
 
 	FVector PlayerLocation = Player->GetActorLocation(); // 플레이어 위치
-	FVector CurrentCheckLocation = PlayerLocation + SkillDirection * SkillMaxDistance; // 라인 트레이스 검사 시작 위치
-	float UnitDistance = SkillMaxDistance / SkillPartialUnit; // 유닛 거리 단위
+
+	// 문 라인 트레이스 검사 시작
+	float SearchDistance = SkillMaxDistance; // MaxDistance 거리 만큼 문 검사
+	FHitResult GateHitResult;
+	const TArray<AActor*> IgnoreActors = { Player };
+
+	bool bHitGate = UKismetSystemLibrary::LineTraceSingleForObjects(
+		GetWorld(),
+		PlayerLocation,
+		PlayerLocation + SkillDirection * SkillMaxDistance,
+		GateObjectType,
+		false,
+		IgnoreActors,
+		bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+		GateHitResult,
+		true
+	);
+	
+	// 라인 트레이스가 문을 감지했다면 실제 대시 검사 거리를 제한
+	if (bHitGate)
+	{
+		SearchDistance = FVector::Dist(PlayerLocation, GateHitResult.ImpactPoint) - GateSafetyOffset;
+	}
+
+	// SkillMaxDistance->SearchDistance로 수정
+	FVector CurrentCheckLocation = PlayerLocation + SkillDirection * SearchDistance; // 라인 트레이스 검사 시작 위치
+	float UnitDistance = SearchDistance / SkillPartialUnit; // 유닛 거리 단위
+
+	// SkillPartialUnit 값이 0이 되는 걸 방지
+	if (SkillPartialUnit <= 0 || UnitDistance <= 0.f)
+	{
+		return;
+	}
 
 	// =======================================
 	// 플레이어 지면 검사
