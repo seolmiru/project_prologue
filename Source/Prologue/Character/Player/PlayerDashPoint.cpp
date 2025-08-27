@@ -390,17 +390,20 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	// 문 라인 트레이스 검사 시작
 	float SearchDistance = MaxDistance; // MaxDistance 거리 만큼 문 검사
 	FHitResult GateHitResult;
-	FCollisionQueryParams GateParams;
-	GateParams.AddIgnoredActor(Player);
+	const TArray<AActor*> IgnoreActors = { Player };
 
-	bool bHitGate = GetWorld()->LineTraceSingleByChannel(
-		GateHitResult,
+	bool bHitGate = UKismetSystemLibrary::LineTraceSingleForObjects(
+		GetWorld(),
 		PlayerLocation,
 		PlayerLocation + CurrentDirection * MaxDistance,
-		GateTraceChannel,
-		GateParams
+		GateObjectType,
+		false,
+		IgnoreActors,
+		bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+		GateHitResult,
+		true
 	);
-
+	
 	// 라인 트레이스가 문을 감지했다면 실제 대시 검사 거리를 제한
 	if (bHitGate)
 	{

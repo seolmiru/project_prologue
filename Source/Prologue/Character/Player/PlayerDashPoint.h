@@ -88,9 +88,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	int32 PartialUnitCount = 64;
 
-	// 문 트레이스 채널
+	// 문 오브젝트 타입
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
-	TEnumAsByte<ECollisionChannel> GateTraceChannel;
+	TArray<TEnumAsByte<EObjectTypeQuery>> GateObjectType;
 	
 	// 문에 막혔을 때의 안전거리 오프셋
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
