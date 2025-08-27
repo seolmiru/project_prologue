@@ -88,6 +88,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
 	int32 PartialUnitCount = 64;
 
+	// 문 트레이스 채널
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	TEnumAsByte<ECollisionChannel> GateTraceChannel;
+	
+	// 문에 막혔을 때의 안전거리 오프셋
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float GateSafetyOffset = 50.f;
+
 private:
 	// 대쉬 방향
 	UPROPERTY(EditAnywhere, Category = "Dash")
@@ -115,11 +123,11 @@ private:
 
 	/*=======Parry Section=======*/
 public:
-	// 패리 위치 리턴 함수
-	FVector GetParryPoint();
+	// 스킬 위치 리턴 함수
+	FVector GetSkillPoint();
 
-	// 패리 방향 동기화 여부 리턴
-	bool GetIsParrySync();
+	// 스킬 방향 동기화 여부 리턴
+	bool GetIsSkillSync();
 
 	// 방향업데이트 중지 여부
 	void SetCursorDirectionState(bool bState);
@@ -127,33 +135,33 @@ public:
 protected:
 	// 최대 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parry")
-	float ParryMaxDistance = 800.0f;
+	float SkillMaxDistance = 800.0f;
 
 	// 회전 검사 최대 각
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parry")
-	float ParryRotationMaxDelta = 15.0f;
+	float SkillRotationMaxDelta = 15.0f;
 
 	// 검사 단위
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parry")
-	int32 ParryPartialUnit = 32;
+	int32 SkillPartialUnit = 32;
 
 private:
-	// 패리 방향 업데이트 불리언
-	bool bParrySync;
+	// 스킬 방향 업데이트 불리언
+	bool bSkillSync;
 
-	// 패리 방향
+	// 스킬 방향
 	UPROPERTY(VisibleAnywhere, Category = "Parry")
-	FVector ParryCursorDirection;
+	FVector SkillCursorDirection;
 	UPROPERTY(VisibleAnywhere, Category = "Parry")
-	FVector ParryDirection;
+	FVector SkillDirection;
 
-	// 패리 돌진 위치
-	FVector ParryPoint;
+	// 스킬 돌진 위치
+	FVector SkillPoint;
 
-	// 이전 패리 대상 지면
-	AActor* ParryGroundActor;
+	// 이전 스킬 대상 지면
+	AActor* SkillGroundActor;
 
-	void CheckParryDirectionPoint();
+	void CheckSkillDirectionPoint();
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug")

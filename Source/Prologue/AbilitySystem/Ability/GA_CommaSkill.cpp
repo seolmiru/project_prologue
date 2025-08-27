@@ -37,7 +37,7 @@ void UGA_CommaSkill::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
 	
 	BasePos = GetAvatarActorFromActorInfo()->GetActorLocation();
-	TargetPos = Comma->GetDashPoint()->GetParryPoint();
+	TargetPos = Comma->GetDashPoint()->GetSkillPoint();
 
 	// Z축 보정
 	TargetPos.Z += Comma->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
