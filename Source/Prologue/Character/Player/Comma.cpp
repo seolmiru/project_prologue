@@ -51,16 +51,9 @@ AComma::AComma()
 	FollowCamera->FieldOfView = 50.f;
 	FollowCamera->bUsePawnControlRotation = false;
 
-	ParryCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("ParryCollision"));
-	ParryCollision->SetupAttachment(GetMesh());
-	ParryCollision->SetCapsuleHalfHeight(96.f);
-	ParryCollision->SetCapsuleRadius(42.f);
-	ParryCollision->SetActive(false);
-
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
 	SwordWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SwordWeaponMesh"));
 	SwordWeaponMesh->SetupAttachment(GetMesh(),TEXT("SwordSocket"));
@@ -78,7 +71,7 @@ AComma::AComma()
 
 	CooldownWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("CooldownWidgetComponent"));
 	CooldownWidgetComponent->SetupAttachment(RootComponent);
-	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, -130.f));
+	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 15.f));
 	CooldownWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));

@@ -11,7 +11,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Prologue/PrologueGameplayTags.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Prologue/Component/EnemyWidgetComponent.h"
 #include "Prologue/Controller/PrologueAIController.h"
 #include "Prologue/UI/Enemy/EnemyWidget.h"
@@ -28,7 +28,6 @@ APrologueEnemyCharacter::APrologueEnemyCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 180.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 250.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 1000.f;
 
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	Attributes = CreateDefaultSubobject<UPrologueAttributeSet>(TEXT("Attributes"));
@@ -101,6 +100,14 @@ void APrologueEnemyCharacter::PossessedBy(AController* NewController)
 	for (auto Ability : StartAbilities)
 	{
 		ASC->GiveAbility(Ability);
+	}
+
+	for (auto& Ability : OnGiveAbilities)
+	{
+		FGameplayAbilitySpec GameplayAbilitySpec(Ability);
+		FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(GameplayAbilitySpec);
+
+		ASC->TryActivateAbility(SpecHandle);
 	}
 
 	if (!StartEffect.IsEmpty())

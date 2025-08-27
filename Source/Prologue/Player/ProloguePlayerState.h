@@ -29,4 +29,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class UPrologueAttributeSet> AttributeSet;
+
+	UPROPERTY()
+	TObjectPtr<class UPrologueSkillAttributeSet> SkillAttributeSet;
 };

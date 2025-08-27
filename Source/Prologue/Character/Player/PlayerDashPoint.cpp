@@ -7,6 +7,7 @@
 #include "NavigationSystem.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Prologue/Controller/CommaController.h"
 
 // Sets default values
@@ -85,6 +86,74 @@ void APlayerDashPoint::Tick(float DeltaTime)
 	}
 }
 
+FVector APlayerDashPoint::GetNoMonsterGround(FVector OriginPoint)
+{
+	UNavigationSystemV1* NavSystem = UNavigationSystemV1::GetCurrent(GetWorld());
+	if (!NavSystem) return Player->GetActorLocation();
+
+	const float StepRadius = 30.0f;
+	const float StepAngleDegree = 60.0f;
+	const float MaxRadius = SearchRadius;
+	for (float r = StepRadius; r <= MaxRadius; r += StepRadius)
+	{
+		for (float angle = 0.f; angle < 360.f; angle += StepAngleDegree)
+		{
+			FRotator Rot(0.f, angle, 0.f);
+			FVector Direction = Rot.RotateVector(Player->GetActorForwardVector());
+			Direction *= r;
+
+			FHitResult HitResult;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(Player);
+			FVector StartLocation = OriginPoint + Direction;
+			FVector EndLocation = StartLocation;
+			StartLocation.Z += VerticalOffset;
+			EndLocation.Z -= VerticalOffset;
+
+			bool bHit = GetWorld()->LineTraceSingleByChannel(
+				HitResult,
+				StartLocation,
+				EndLocation,
+				ECC_GameTraceChannel8,
+				Params
+				);
+
+			if (bHit)
+			{
+				FNavLocation Projected;
+				bool bNavigationFloor = NavSystem->ProjectPointToNavigation(HitResult.ImpactPoint, Projected, FVector(50, 50, 300));
+				if (!bNavigationFloor)
+					continue;
+
+				StartLocation = Projected.Location;
+				EndLocation = StartLocation;
+				StartLocation.Z += VerticalOffset;
+				EndLocation.Z -= VerticalOffset;
+				const float CapsuleRadius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius();
+				const float CapsuleHalfHeight = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+				FCollisionShape CapsuleShape = FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight);
+
+				bool bMonsterSweep = GetWorld()->SweepSingleByChannel(
+					HitResult,
+					StartLocation,
+					EndLocation,
+					FQuat::Identity,
+					ECC_GameTraceChannel2,
+					CapsuleShape,
+					Params
+					);
+
+				if (bMonsterSweep)
+					continue;
+
+				return Projected.Location;
+			}			
+		}
+	}
+
+	return OriginPoint;
+}
+
 void APlayerDashPoint::SetDirection(FVector NewDirection, bool bConvertLocalToCameraDirection)
 {
 	// 카메라 회전을 기준으로 월드 좌표계 방향 계산
@@ -114,7 +183,7 @@ FVector APlayerDashPoint::GetPoint()
 	FVector Direction = DashPoint - Player->GetActorLocation();
 	Direction.Z = 0.0f;
 	Direction.Normalize();
-
+	
 	FHitResult ForwardResult;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Player);
@@ -122,7 +191,7 @@ FVector APlayerDashPoint::GetPoint()
 	FVector ForwardEndPoint = ForwardStartPoint;
 	ForwardStartPoint.Z += VerticalOffset;
 	ForwardEndPoint.Z -= VerticalOffset;
-
+	
 	bool bForward = GetWorld()->LineTraceSingleByChannel(
 		ForwardResult,
 		ForwardStartPoint,
@@ -130,13 +199,13 @@ FVector APlayerDashPoint::GetPoint()
 		ECC_GameTraceChannel8,
 		Params
 	);
-
+	
 	FHitResult RearResult;
 	FVector RearStartPoint = DashPoint - (Direction * SafeWeight);
 	FVector RearEndPoint = RearStartPoint;
 	RearStartPoint.Z += VerticalOffset;
 	RearEndPoint.Z -= VerticalOffset;
-
+	
 	bool bRear = GetWorld()->LineTraceSingleByChannel(
 		RearResult,
 		RearStartPoint,
@@ -144,7 +213,7 @@ FVector APlayerDashPoint::GetPoint()
 		ECC_GameTraceChannel8,
 		Params
 	);
-
+	
 	// 지면 끝에 걸쳐있다면 지면 안쪽으로 보정
 	if (bForward && !bRear) // 앞쪽으로 보정
 	{
@@ -155,7 +224,8 @@ FVector APlayerDashPoint::GetPoint()
 		ResultPoint = RearResult.ImpactPoint;
 	}
 
-	return ResultPoint;
+
+	return GetNoMonsterGround(ResultPoint);
 }
 
 bool APlayerDashPoint::GetIsDirectionSync()
@@ -281,9 +351,11 @@ void APlayerDashPoint::SetDashCool()
 	if (bPlayerHit)
 	{
 		AActor* PlayerGround = HitResult.GetActor();
+		// UE_LOG(LogTemp, Log, TEXT("Player Ground: (%s), Dash Point Ground: (%s)"), *PlayerGround->GetName(), *GroundActor->GetName());
 		// 같은 지면 대시 = 쿨타임 부여
 		if (PlayerGround == GroundActor)
 		{
+			UE_LOG(LogTemp, Log, TEXT("Start Cool Down"));
 			CurrentDashCool = DashCool;
 		}
 	}
@@ -291,6 +363,7 @@ void APlayerDashPoint::SetDashCool()
 
 bool APlayerDashPoint::DashCoolDown()
 {
+			UE_LOG(LogTemp, Log, TEXT("Check Dash Cool!"));
 	return CurrentDashCool <= 0.0f;
 }
 
@@ -553,7 +626,7 @@ FVector APlayerDashPoint::GetParryPoint()
 		ResultPoint = RearResult.ImpactPoint;
 	}
 
-	return ResultPoint;
+	return GetNoMonsterGround(ResultPoint);
 }
 
 bool APlayerDashPoint::GetIsParrySync()

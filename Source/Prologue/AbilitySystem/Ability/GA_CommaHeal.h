@@ -24,4 +24,7 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	TSubclassOf<UGameplayEffect> HealAmountEffect;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TSubclassOf<UGameplayEffect> HealPotionCostEffect;
 };

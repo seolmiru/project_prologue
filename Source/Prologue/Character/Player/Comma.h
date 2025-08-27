@@ -59,9 +59,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCapsuleComponent* ParryCollision;
 	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
@@ -105,7 +102,7 @@ private:
 	TObjectPtr<UCommaWidget> CommaWidget;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	class USceneComponent* UIAnchorComponent;
+	TObjectPtr<USceneComponent> UIAnchorComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWidgetComponent> SwitchAttackWidgetComponent;
@@ -172,8 +169,6 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	UStaticMeshComponent* GetSwordWeaponMesh() const;
-
-	FORCEINLINE UCapsuleComponent* GetParryCollision() const { return ParryCollision; }
 
 	FORCEINLINE UCommaWidget* GetCommaWidget() const { return CommaWidget; }
 	FORCEINLINE UWidgetComponent* GetCooldownWidget() const { return CooldownWidgetComponent; }

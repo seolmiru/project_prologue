@@ -19,9 +19,15 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+protected:
+	// 보정 범위
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Total")
+	float SearchRadius = 200.0f;
+
+	FVector GetNoMonsterGround(FVector OriginPoint);
+	
 	/*=======Shar Section=======*/
 protected:
 	// 수직 오프셋
@@ -94,6 +100,7 @@ private:
 	float DashCool;
 	
 	// 현재 대시 쿨타임
+	UPROPERTY(VisibleAnywhere, Category="Dash")
 	float CurrentDashCool;
 
 	// 대시 위치
