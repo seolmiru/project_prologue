@@ -20,10 +20,10 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* TriggerVolume;
 	
-	UPROPERTY(EditAnywhere, Category = "Dialogue")
+	UPROPERTY(EditAnywhere, Category = "DialogueData")
 	FName TriggerID;
 
-	UPROPERTY(EditAnywhere, Category = "Dialogue")
+	UPROPERTY(EditAnywhere, Category = "DialogueData")
 	FName StartDialogueID;
 
 	UFUNCTION()
