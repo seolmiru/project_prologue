@@ -51,6 +51,10 @@ AComma::AComma()
 	FollowCamera->FieldOfView = 50.f;
 	FollowCamera->bUsePawnControlRotation = false;
 
+	DashCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("DashCollision"));
+	DashCollision->SetupAttachment(RootComponent);
+	DashCollision->SetActive(false);
+	
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
