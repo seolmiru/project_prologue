@@ -31,6 +31,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Dialogue")
 	bool GetHasIntroDialoguePlayed() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	bool HasTriggerPlayed(FName TriggerID);
+
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	void MarkTriggerPlayed(FName TriggerID);	
+	
 	UFUNCTION(BlueprintCallable, Category = "Save System")
 	bool HasSavedGame() const;
 
@@ -55,4 +61,6 @@ private:
 
 	FString SaveSlotName = "savegame";
 	uint32 UserIndex = 0;
+
+	TSet<FName> PlayedTriggerIDs;
 };

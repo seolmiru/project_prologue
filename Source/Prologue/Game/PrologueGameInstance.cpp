@@ -29,6 +29,11 @@ void UPrologueGameInstance::Init()
 	{
 		SaveGameData = Cast<UPrologueSaveGame>(UGameplayStatics::CreateSaveGameObject(UPrologueSaveGame::StaticClass()));
 	}
+
+	if (SaveGameData)
+	{
+		PlayedTriggerIDs = TSet<FName>(SaveGameData->PlayedTriggerID);
+	}
 }
 
 void UPrologueGameInstance::SetHasIntroDialoguePlayed(bool bPlayed)
@@ -43,6 +48,25 @@ void UPrologueGameInstance::SetHasIntroDialoguePlayed(bool bPlayed)
 bool UPrologueGameInstance::GetHasIntroDialoguePlayed() const
 {
 	return SaveGameData ? SaveGameData->bHasIntroDialoguePlayed : false;
+}
+
+bool UPrologueGameInstance::HasTriggerPlayed(FName TriggerID)
+{
+	return PlayedTriggerIDs.Contains(TriggerID);
+}
+
+void UPrologueGameInstance::MarkTriggerPlayed(FName TriggerID)
+{
+	if (!SaveGameData || HasTriggerPlayed(TriggerID))
+	{
+		return; 
+	}
+
+	PlayedTriggerIDs.Add(TriggerID);
+
+	SaveGameData->PlayedTriggerID.Add(TriggerID);
+
+	UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
 }
 
 bool UPrologueGameInstance::HasSavedGame() const
