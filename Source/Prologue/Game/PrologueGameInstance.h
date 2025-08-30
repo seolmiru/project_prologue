@@ -36,6 +36,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Dialogue")
 	void MarkTriggerPlayed(FName TriggerID);	
+
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	bool HasPowerBankInteracted(FName PowerBankID) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void MarkPowerBankInteracted(FName PowerBankID);
 	
 	UFUNCTION(BlueprintCallable, Category = "Save System")
 	bool HasSavedGame() const;
@@ -63,4 +69,6 @@ private:
 	uint32 UserIndex = 0;
 
 	TSet<FName> PlayedTriggerIDs;
+
+	TSet<FName> InteractedPowerBankIDs;
 };

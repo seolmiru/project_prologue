@@ -27,5 +27,8 @@ public:
 	FString SavedLevelName = "";
 
 	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
-	TArray<FName> PlayedTriggerID;	
+	TArray<FName> PlayedTriggerID;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
+	TArray<FName> InteractedPowerBankID;	
 };

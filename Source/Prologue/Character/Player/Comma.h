@@ -120,10 +120,10 @@ private:
 	TSubclassOf<UUserWidget> BP_CooldownWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UWidgetComponent> SpaceBarWidgetComponent;
+	TObjectPtr<UWidgetComponent> GuideWidgetComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> BP_SpaceBarWidget;
+	TSubclassOf<UUserWidget> BP_GuideWidget;
 
 	void Input_Move(const FInputActionValue& InputActionValue);
 
@@ -178,6 +178,8 @@ public:
 
 	FORCEINLINE UCommaWidget* GetCommaWidget() const { return CommaWidget; }
 	FORCEINLINE UWidgetComponent* GetCooldownWidget() const { return CooldownWidgetComponent; }
+
+	FORCEINLINE UWidgetComponent* GetGuideWidget() const { return GuideWidgetComponent; }
 
 	void SetUIVisibility(bool bVisible);
 

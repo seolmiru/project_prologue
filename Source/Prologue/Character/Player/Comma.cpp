@@ -74,11 +74,11 @@ AComma::AComma()
 	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 15.f));
 	CooldownWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 
-	SpaceBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SpaceBarWidgetComponent"));
-	SpaceBarWidgetComponent->SetupAttachment(RootComponent);
-	SpaceBarWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
-	SpaceBarWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	SpaceBarWidgetComponent->SetVisibility(false);
+	GuideWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SpaceBarWidgetComponent"));
+	GuideWidgetComponent->SetupAttachment(RootComponent);
+	GuideWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	GuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	GuideWidgetComponent->SetVisibility(false);
 	
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 

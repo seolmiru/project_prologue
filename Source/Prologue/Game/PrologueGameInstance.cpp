@@ -33,6 +33,7 @@ void UPrologueGameInstance::Init()
 	if (SaveGameData)
 	{
 		PlayedTriggerIDs = TSet<FName>(SaveGameData->PlayedTriggerID);
+		InteractedPowerBankIDs = TSet<FName>(SaveGameData->InteractedPowerBankID);
 	}
 }
 
@@ -65,6 +66,24 @@ void UPrologueGameInstance::MarkTriggerPlayed(FName TriggerID)
 	PlayedTriggerIDs.Add(TriggerID);
 
 	SaveGameData->PlayedTriggerID.Add(TriggerID);
+
+	UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
+}
+
+bool UPrologueGameInstance::HasPowerBankInteracted(FName PowerBankID) const
+{
+	return InteractedPowerBankIDs.Contains(PowerBankID);
+}
+
+void UPrologueGameInstance::MarkPowerBankInteracted(FName PowerBankID)
+{
+	if (!SaveGameData || HasPowerBankInteracted(PowerBankID))
+	{
+		return;
+	}
+
+	InteractedPowerBankIDs.Add(PowerBankID);
+	SaveGameData->InteractedPowerBankID.Add(PowerBankID);
 
 	UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
 }
