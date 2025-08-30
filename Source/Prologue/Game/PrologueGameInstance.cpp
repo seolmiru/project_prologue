@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/Prologue.h"
+#include "Prologue/PrologueObject/CenterHub.h"
 
 void UPrologueGameInstance::Init()
 {
@@ -106,6 +107,40 @@ void UPrologueGameInstance::SaveGameProgress(const FString& LevelName)
 FString UPrologueGameInstance::GetSavedLevelName() const
 {
 	return SaveGameData ? SaveGameData->SavedLevelName : FString();
+}
+
+void UPrologueGameInstance::OnPowerBankActivated(FName PowerBankID)
+{
+	if (!SaveGameData || InteractedPowerBankIDs.Contains(PowerBankID))
+	{
+		return;
+	}
+
+	InteractedPowerBankIDs.Add(PowerBankID);
+	SaveGameData->InteractedPowerBankID.Add(PowerBankID);
+	SaveGameData->ActivatedPowerBankCount++;
+
+	if (WorldCenterHub)
+	{
+		LOG_SCREEN_R("CenterHub is Register");
+		WorldCenterHub->UpdateAppearance(SaveGameData->ActivatedPowerBankCount);
+	}
+	else
+	{
+		LOG_SCREEN_R("CenterHub is Null");
+	}
+	
+	UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
+}
+
+void UPrologueGameInstance::RegisterCenterHub(ACenterHub* Hub)
+{
+	WorldCenterHub = Hub;
+
+	if (WorldCenterHub && SaveGameData)
+	{
+		WorldCenterHub->UpdateAppearance(SaveGameData->ActivatedPowerBankCount);
+	}
 }
 
 void UPrologueGameInstance::OnPreLoadMap(const FString& MapName)

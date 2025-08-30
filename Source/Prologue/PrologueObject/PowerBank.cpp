@@ -49,6 +49,8 @@ void APowerBank::BeginPlay()
 		if (DynamicMaterial)
 		{
 			DynamicMaterial->SetScalarParameterValue(FName("PowerBankSwitch"), 1.f);
+			DynamicMaterial->SetScalarParameterValue(FName("Fresnel_Outline"), 0.5f);
+			DynamicMaterial->SetScalarParameterValue(FName("Fresnel_OutlineSide"), 1.f);
 		}
 
 		TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -72,13 +74,13 @@ void APowerBank::Interact()
 	UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	if (GameInstance && !GameInstance->HasPowerBankInteracted(PowerBankID))
 	{
-		GameInstance->MarkPowerBankInteracted(PowerBankID);
-
 		if (MaterialTimeline)
 		{
 			MaterialTimeline->PlayFromStart();
 		}
 
+		GameInstance->OnPowerBankActivated(PowerBankID);
+		
 		TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		Comma->GetGuideWidget()->SetVisibility(false);
@@ -87,11 +89,15 @@ void APowerBank::Interact()
 
 void APowerBank::TimelineProgress(float Value)
 {
-	float NewParamValue = FMath::Lerp(0.f, 1.f, Value);
+	float SwitchParamValue = FMath::Lerp(0.f, 1.f, Value);
+	float OutlineParamValue = FMath::Lerp(0.f, 0.5f, Value);
+	float OutlineSideParamValue = FMath::Lerp(0.f, 1.f, Value);
 
 	if (DynamicMaterial)
 	{
-		DynamicMaterial->SetScalarParameterValue(FName("PowerBankSwitch"), NewParamValue);
+		DynamicMaterial->SetScalarParameterValue(FName("PowerBankSwitch"), SwitchParamValue);
+		DynamicMaterial->SetScalarParameterValue(FName("Fresnel_Outline"), OutlineParamValue);
+		DynamicMaterial->SetScalarParameterValue(FName("Fresnel_OutlineSide"), OutlineSideParamValue);
 	}
 }
 

@@ -30,5 +30,8 @@ public:
 	TArray<FName> PlayedTriggerID;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
-	TArray<FName> InteractedPowerBankID;	
+	TArray<FName> InteractedPowerBankID;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
+	int32 ActivatedPowerBankCount = 0;
 };
