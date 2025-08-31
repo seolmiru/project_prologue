@@ -8,6 +8,7 @@
 #include "MoviePlayer.h"
 #include "PrologueGameInstance.generated.h"
 
+class ACenterHub;
 class UPrologueSaveGame;
 class AComma;
 /**
@@ -31,6 +32,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Dialogue")
 	bool GetHasIntroDialoguePlayed() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	bool HasTriggerPlayed(FName TriggerID);
+
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	void MarkTriggerPlayed(FName TriggerID);	
+
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	bool HasPowerBankInteracted(FName PowerBankID) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void MarkPowerBankInteracted(FName PowerBankID);
+	
 	UFUNCTION(BlueprintCallable, Category = "Save System")
 	bool HasSavedGame() const;
 
@@ -39,6 +52,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Save System")
 	FString GetSavedLevelName() const;
+
+	UFUNCTION(BlueprintCallable, Category = "PowerBank")
+	void OnPowerBankActivated(FName PowerBankID);
+
+	UFUNCTION(BlueprintCallable, Category = "PowerBank")
+	void RegisterCenterHub(ACenterHub* Hub);
 	
 protected:
 	void OnPreLoadMap(const FString& MapName);
@@ -51,8 +70,15 @@ private:
 	TSharedPtr<SWidget> CreateRandomLoadingWidget();
 
 	UPROPERTY()
-	UPrologueSaveGame* SaveGameData;
+	TObjectPtr<UPrologueSaveGame> SaveGameData;
 
 	FString SaveSlotName = "savegame";
 	uint32 UserIndex = 0;
+
+	TSet<FName> PlayedTriggerIDs;
+
+	TSet<FName> InteractedPowerBankIDs;
+
+	UPROPERTY()
+	TObjectPtr<ACenterHub> WorldCenterHub;
 };
