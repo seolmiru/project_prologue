@@ -11,6 +11,8 @@
 
 class UEnemyWidgetComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedDelegate, float, OldValue, float, NewValue);
+
 USTRUCT(BlueprintType)
 struct FWeightedAbilityInfo
 {
@@ -34,6 +36,9 @@ class PROLOGUE_API APrologueEnemyCharacter : public APrologueCharacter
 public:
 	APrologueEnemyCharacter();
 
+	UPROPERTY(BlueprintAssignable, Category = "Attributes")
+	FOnHealthChangedDelegate OnHealthChanged;
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
@@ -71,6 +76,8 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	bool TryActivateRandomAbilityWithWeights(const TArray<FWeightedAbilityInfo>& WeightedAbilities);
 
+	virtual void HealthAttributeChanged(const FOnAttributeChangeData& Data);
+	
 private:
 	FDelegateHandle DamageAttributeChangedHandle;
 

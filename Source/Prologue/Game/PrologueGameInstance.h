@@ -66,12 +66,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loading Screen")
 	TArray<TSoftClassPtr<UUserWidget>> LoadingScreenWidgets;
 
-private:
-	TSharedPtr<SWidget> CreateRandomLoadingWidget();
-
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UPrologueSaveGame> SaveGameData;
 
+private:
+	TSharedPtr<SWidget> CreateRandomLoadingWidget();
+	
 	FString SaveSlotName = "savegame";
 	uint32 UserIndex = 0;
 
