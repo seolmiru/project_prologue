@@ -121,7 +121,13 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_CooldownWidget;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> GuideWidgetComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_GuideWidget;
+
 	void Input_Move(const FInputActionValue& InputActionValue);
 
 private:
@@ -177,6 +183,8 @@ public:
 	FORCEINLINE UWidgetComponent* GetCooldownWidget() const { return CooldownWidgetComponent; }
 
 	FORCEINLINE UCapsuleComponent* GetDashCollision() const { return DashCollision; }
+
+	FORCEINLINE UWidgetComponent* GetGuideWidget() const { return GuideWidgetComponent; }
 
 	void SetUIVisibility(bool bVisible);
 

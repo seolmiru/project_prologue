@@ -78,6 +78,12 @@ AComma::AComma()
 	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 15.f));
 	CooldownWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 
+	GuideWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SpaceBarWidgetComponent"));
+	GuideWidgetComponent->SetupAttachment(RootComponent);
+	GuideWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	GuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	GuideWidgetComponent->SetVisibility(false);
+	
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
