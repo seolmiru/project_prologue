@@ -144,7 +144,7 @@ void UGA_CommaSkill::HandleTargetHit(AActor* TargetActor, const FHitResult& Swee
 		FGameplayAbilityTargetDataHandle DataHandle;
 		FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(SweepResult);
 		DataHandle.Add(TargetData);
-		ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, DataHandle);
+		TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
 		if (!TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_NoHitEffect))
 		{
