@@ -33,4 +33,14 @@ void UTutorialWidget::OnAbilityActivated(UGameplayAbility* ActivatedAbility)
 	{
 		RightClickText->SetOpacity(0.5f);
 	}
+
+	if (ActivatedAbility->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Comma.State.OverClock")))
+	{
+		ShiftText->SetOpacity(0.5f);
+	}
+
+	if (ActivatedAbility->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Comma.Ability.SmashAttack")))
+	{
+		SmashText->SetOpacity(0.5f);
+	}
 }
