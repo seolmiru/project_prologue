@@ -10,6 +10,7 @@
 #include "Prologue/Interface/PawnCombatInterface.h"
 #include "PrologueCharacter.generated.h"
 
+struct FOnAttributeChangeData;
 class UGameplayEffect;
 class UPawnCombatComponent;
 class UDataAsset_StartUpDataBase;
@@ -18,6 +19,7 @@ class UPrologueAbilitySystemComponent;
 class UInputBufferComponent;
 class UMotionWarpingComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageChangedDelegate, float, OldValue, float, NewValue);
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
@@ -38,6 +40,8 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	void OnToughnessTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+
+	virtual void DamageAttributeChanged(const FOnAttributeChangeData& Data);
 
 	void RecoverToughness();
 	
@@ -66,5 +70,8 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable, Category = "GAS")
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UPROPERTY(BlueprintAssignable, Category = "Attributes")
+	FOnDamageChangedDelegate OnDamageChanged;
 };
 
