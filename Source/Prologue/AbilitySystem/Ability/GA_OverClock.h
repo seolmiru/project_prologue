@@ -71,4 +71,27 @@ protected:
 	void RestoreEnemyTime();
 
 	TMap<TWeakObjectPtr<AActor>, TArray<UMaterialInstanceDynamic*>> AffectedActorMaterial;
+
+	// Sejin
+public:
+	UFUNCTION()
+	void OnHitActor(float OldValue, float NewValue);
+
+private:
+	UFUNCTION()
+	float GetFinishDamage();
+	
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OverClock")
+	TSubclassOf<UGameplayEffect> FinishDamageEffect;
+	UPROPERTY(EditAnywhere, Category = "OverClock")
+	float FinishDefaultDamage = 10.0f;
+	UPROPERTY(EditAnywhere, Category = "OverClock")
+	float FinishMultiValue = 0.5f;
+
+	
+	TSet<TWeakObjectPtr<APrologueEnemyCharacter>> AffectedMonsters;
+	float TotalDamage;
+	// end Sejin
+
 };
