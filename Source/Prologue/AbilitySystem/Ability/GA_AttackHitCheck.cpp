@@ -81,7 +81,9 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                     // 피격 이펙트 출력
                     if (Cast<AComma>(GetAvatarActorFromActorInfo()))
                     {
+                        FGameplayEventData FxEventData;
                         TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParam);
+                        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), PrologueGameplayTags::Shared_Event_HitFx, FxEventData);
                     }
                     else
                     {
@@ -131,7 +133,9 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                         CueParam.EffectContext = CueContextHandle;
 
                         // 피격 이펙트 출력
+                        FGameplayEventData FxEventData;
                         TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemySmashHit, CueParam);
+                        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetActor, PrologueGameplayTags::Shared_Event_HitFx, FxEventData);
                     }
                 }
             }
@@ -156,16 +160,6 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
             // 스매쉬 공격 전용 카메라 쉐이킹, 피격 사운드
             GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SmashAttackDamaging);
             GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_SmashDamagingSound);
-            
-            // 오버클락 게이지 증가
-            if (IncreaseGaugeEffect)
-            {
-                FGameplayEffectSpecHandle GaugeEffectSpecHandle = MakeOutgoingGameplayEffectSpec(IncreaseGaugeEffect);
-                if (GaugeEffectSpecHandle.IsValid())
-                {
-                    GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*GaugeEffectSpecHandle.Data.Get());
-                }
-            }
         }
     }
     

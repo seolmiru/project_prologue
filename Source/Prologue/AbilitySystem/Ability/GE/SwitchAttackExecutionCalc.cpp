@@ -25,7 +25,7 @@ void USwitchAttackExecutionCalc::Execute_Implementation(const FGameplayEffectCus
 			const float MaxDamageRange = SourceASC->GetNumericAttributeBase(UPrologueSkillAttributeSet::GetSwordSwitchAttackRangeAttribute());
 			const float Distance = SourceActor->GetDistanceTo(TargetActor);
 
-			float Damage = 0.f;
+			float Damage = 10.f;
 
 			if (Distance <= MaxDamageRange)
 			{
