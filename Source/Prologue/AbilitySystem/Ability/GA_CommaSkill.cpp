@@ -162,6 +162,12 @@ void UGA_CommaSkill::HandleTargetHit(AActor* TargetActor, const FHitResult& Swee
 				HitStop();
 				bHitStopApplied = true;
 			}
+
+			// 카메라 쉐이킹 적용
+			if (bHitNormalTarget)
+			{
+				GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_Damaging);
+			}
 		}
 	}
 }

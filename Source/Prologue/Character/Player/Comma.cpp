@@ -130,6 +130,7 @@ void AComma::Tick(float DeltaSeconds)
 		SetActorRotation(NewRotation);
 	}
 
+	// 카메라 보정
 	if (CameraBoom)
 	{
 		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, TargetZoomDist))
@@ -317,10 +318,10 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector ForwardDirection = FVector(1.f, 0.f, 0.f);
 
 		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		const FVector RightDirection = FVector(0.f, 1.f, 0.f);
 
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
