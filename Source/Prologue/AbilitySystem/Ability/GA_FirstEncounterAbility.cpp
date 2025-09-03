@@ -17,7 +17,7 @@ void UGA_FirstEncounterAbility::ActivateAbility(const FGameplayAbilitySpecHandle
 
 	APrologueEnemyCharacter* Enemy = CastChecked<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
 
-	Enemy->GetCharacterMovement()->SetMovementMode(MOVE_None);
+	//Enemy->GetCharacterMovement()->SetMovementMode(MOVE_None);
 	
 	if (APawn* AvatarPawn = Cast<APawn>(CurrentActorInfo->AvatarActor.Get()))
 	{
@@ -39,5 +39,5 @@ void UGA_FirstEncounterAbility::EndAbility(const FGameplayAbilitySpecHandle Hand
 
 	APrologueEnemyCharacter* Enemy = CastChecked<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
 
-	Enemy->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	//Enemy->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 }
