@@ -5,7 +5,6 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/Weapon/Projectile/ExplodingMangoProjectile.h"
-#include "Prologue/Weapon/Projectile/MangoProjectile.h"
 
 UGA_SpawnSkyProjectile::UGA_SpawnSkyProjectile()
 {
@@ -17,7 +16,7 @@ void UGA_SpawnSkyProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
+	
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	if (!PlayerPawn)
 	{
@@ -26,14 +25,16 @@ void UGA_SpawnSkyProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	}
 	
 	const FVector TargetLocation = PlayerPawn->GetActorLocation();
-
+	
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetAvatarActorFromActorInfo();
 	SpawnParams.Instigator = Cast<APawn>(GetAvatarActorFromActorInfo());
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+	// SpawnProjectiles 수만큼 투사체 소환
 	for (int32 i = 0; i < SpawnProjectiles; ++i)
 	{
+		// 플레이어 주변에 랜덤하게 투사체 소환
 		FVector2D RandomOffset2D = FMath::RandPointInCircle(RandomSpawnRadius);
 		FVector RandomOffset = FVector(RandomOffset2D.X, RandomOffset2D.Y, 0.f);
 
