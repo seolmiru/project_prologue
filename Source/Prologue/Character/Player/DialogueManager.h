@@ -30,7 +30,6 @@ public:
 	void EndDialogue();
 
 	void SetupInputComponent();
-	void CleanUpInputComponent();
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")

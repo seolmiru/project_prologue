@@ -59,6 +59,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCapsuleComponent> DashCollision;
 	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
@@ -118,7 +121,13 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_CooldownWidget;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> GuideWidgetComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_GuideWidget;
+
 	void Input_Move(const FInputActionValue& InputActionValue);
 
 private:
@@ -172,6 +181,10 @@ public:
 
 	FORCEINLINE UCommaWidget* GetCommaWidget() const { return CommaWidget; }
 	FORCEINLINE UWidgetComponent* GetCooldownWidget() const { return CooldownWidgetComponent; }
+
+	FORCEINLINE UCapsuleComponent* GetDashCollision() const { return DashCollision; }
+
+	FORCEINLINE UWidgetComponent* GetGuideWidget() const { return GuideWidgetComponent; }
 
 	void SetUIVisibility(bool bVisible);
 

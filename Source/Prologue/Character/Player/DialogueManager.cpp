@@ -79,8 +79,6 @@ void ADialogueManager::EndDialogue()
 			PlayerPawn->EnableInput(PlayerController);
 		}
 	}
-
-	CleanUpInputComponent();
 }
 
 void ADialogueManager::SetupInputComponent()
@@ -95,23 +93,6 @@ void ADialogueManager::SetupInputComponent()
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
 			DialogueInputBindingHandle = EnhancedInputComponent->BindAction(DialogueInputAction, ETriggerEvent::Started, this, &ADialogueManager::HandleDialogueInput).GetHandle();
-		}
-	}
-}
-
-void ADialogueManager::CleanUpInputComponent()
-{
-	if (!PlayerController || !DialogueInputAction)
-	{
-		return;
-	}
-
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
-	{
-		if (DialogueInputBindingHandle != 0)
-		{
-			EnhancedInputComponent->RemoveBindingByHandle(DialogueInputBindingHandle);
-			DialogueInputBindingHandle = 0;
 		}
 	}
 }
