@@ -55,7 +55,4 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<UGameplayEffect> ToughnessDamageEffect;
-
-	UPROPERTY(EditAnywhere, Category = "GAS")
-	TSubclassOf<UGameplayEffect> IncreaseGaugeEffect;
 };
