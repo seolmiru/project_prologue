@@ -7,6 +7,7 @@
 #include "Prologue/PrologueGameplayTags.h"
 #include "AbilitySystemComponent.h"
 #include "MotionWarpingComponent.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Prologue/Component/InputBufferComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -34,6 +35,11 @@ UPawnCombatComponent* APrologueCharacter::GetPawnCombatComponent() const
 void APrologueCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	if (ASC)
+	{
+		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetDamageAttribute()).AddUObject(this, &APrologueCharacter::DamageAttributeChanged);
+	}
 }
 
 void APrologueCharacter::BeginPlay()
@@ -78,6 +84,11 @@ void APrologueCharacter::OnToughnessTagChanged(const FGameplayTag CallbackTag, i
 		// 1초의 딜레이를 주고 Shared_State_IsOutOfToughness 태그 제거
 		GetWorld()->GetTimerManager().SetTimer(ToughnessRecoveryTimerHandle, this, &APrologueCharacter::RecoverToughness, 1.0f, false);
 	}
+}
+
+void APrologueCharacter::DamageAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	OnDamageChanged.Broadcast(Data.OldValue, Data.NewValue);
 }
 
 void APrologueCharacter::RecoverToughness()

@@ -8,7 +8,6 @@
 #include "Prologue/UI/PrologueUserWidget.h"
 #include "PrologueEnemyCharacter.generated.h"
 
-
 class UEnemyWidgetComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedDelegate, float, OldValue, float, NewValue);
@@ -38,7 +37,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Attributes")
 	FOnHealthChangedDelegate OnHealthChanged;
-	
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;

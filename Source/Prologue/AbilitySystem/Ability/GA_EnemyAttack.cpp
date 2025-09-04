@@ -46,7 +46,7 @@ void UGA_EnemyAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	
 	APrologueEnemyCharacter* Enemy = CastChecked<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
 
-	Enemy->GetCharacterMovement()->SetMovementMode(MOVE_None);
+	//Enemy->GetCharacterMovement()->SetMovementMode(MOVE_None);
 }
 
 void UGA_EnemyAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -56,5 +56,5 @@ void UGA_EnemyAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, const 
 	
 	APrologueEnemyCharacter* Enemy = CastChecked<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
 
-	Enemy->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	//Enemy->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 }

@@ -13,7 +13,7 @@ UPrologueAttributeSet::UPrologueAttributeSet()
 {
 	InitCurrentHealth(1.f);
 	InitMaxHealth(1.f);
-	InitDamage(1.f);
+	InitDamage(0.f);
 	InitCurrentBrokenGauge(1.f);
 	InitMaxBrokenGauge(1.f);
 }
