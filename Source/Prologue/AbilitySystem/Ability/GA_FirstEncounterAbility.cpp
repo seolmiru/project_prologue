@@ -14,10 +14,6 @@ void UGA_FirstEncounterAbility::ActivateAbility(const FGameplayAbilitySpecHandle
                                                 const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
-	APrologueEnemyCharacter* Enemy = CastChecked<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
-
-	//Enemy->GetCharacterMovement()->SetMovementMode(MOVE_None);
 	
 	if (APawn* AvatarPawn = Cast<APawn>(CurrentActorInfo->AvatarActor.Get()))
 	{
@@ -36,8 +32,4 @@ void UGA_FirstEncounterAbility::EndAbility(const FGameplayAbilitySpecHandle Hand
 	bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
-	APrologueEnemyCharacter* Enemy = CastChecked<APrologueEnemyCharacter>(ActorInfo->AvatarActor.Get());
-
-	//Enemy->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 }
