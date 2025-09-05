@@ -1,6 +1,5 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ExplodingMangoProjectile.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
@@ -42,7 +41,6 @@ AExplodingMangoProjectile::AExplodingMangoProjectile()
 void AExplodingMangoProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void AExplodingMangoProjectile::Tick(float DeltaTime)
@@ -122,9 +120,7 @@ void AExplodingMangoProjectile::Explode()
 		);
 	}
 
-	AActor* TargetActor = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-
-	if (!TargetActor)
+	if (!IsValid(TargetActor))
 	{
 		Destroy();
 		return;
@@ -140,7 +136,6 @@ void AExplodingMangoProjectile::Explode()
 	if (TargetActor->Implements<UAbilitySystemInterface>() && DamageEffect)
 	{
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
-
 		
 		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
 

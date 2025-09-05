@@ -27,6 +27,9 @@ public:
 	APrologueProjectileBase();
 
 	void FireInDirection(const FVector& ShootDirection) const;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Explosion|Target")
+	TObjectPtr<AActor> TargetActor;
 	
 protected:
 	virtual void BeginPlay() override;

@@ -21,6 +21,10 @@ class PROLOGUE_API AExplodingMangoProjectile : public AActor
 public:
 	AExplodingMangoProjectile();
 
+	// GA_SpawnSkyProjectile을 통해서 Blackboard에서 TargetActor를 가져오기 위한 변수
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Explosion|Target")
+	TObjectPtr<AActor> TargetActor;
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;

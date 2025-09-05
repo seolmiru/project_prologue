@@ -3,7 +3,8 @@
 
 #include "GA_SpawnSkyProjectile.h"
 
-#include "Kismet/GameplayStatics.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Prologue/Controller/PrologueAIController.h"
 #include "Prologue/Weapon/Projectile/ExplodingMangoProjectile.h"
 
 UGA_SpawnSkyProjectile::UGA_SpawnSkyProjectile()
@@ -17,14 +18,24 @@ void UGA_SpawnSkyProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	
-	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-	if (!PlayerPawn)
+	APrologueAIController* AIController = Cast<APrologueAIController>(ActorInfo->OwnerActor->GetInstigatorController());
+	if (!AIController)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	// Blackboard에서 TargetActor 가져오기
+	UBlackboardComponent* BlackboardComponent = AIController->GetBlackboardComponent();
+	AActor* TargetActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(FName("TargetActor")));
+
+	if (!TargetActor)
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
 	
-	const FVector TargetLocation = PlayerPawn->GetActorLocation();
+	const FVector TargetLocation = TargetActor->GetActorLocation();
 	
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetAvatarActorFromActorInfo();
@@ -40,8 +51,21 @@ void UGA_SpawnSkyProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 		const FVector SpawnLocation = TargetLocation + RandomOffset + FVector(0.f, 0.f, SpawnHeightOffset);
 		const FRotator SpawnRotation = FRotator::ZeroRotator;
-		
-		GetWorld()->SpawnActor<AExplodingMangoProjectile>(MangoProjectile, SpawnLocation, SpawnRotation, SpawnParams);
+
+		AExplodingMangoProjectile* Projectile = GetWorld()->SpawnActorDeferred<AExplodingMangoProjectile>(
+			MangoProjectile,
+			FTransform(SpawnRotation, SpawnLocation),
+			SpawnParams.Owner,
+			SpawnParams.Instigator,
+			SpawnParams.SpawnCollisionHandlingOverride
+		);
+
+		if (Projectile)
+		{
+			Projectile->TargetActor = TargetActor;
+
+			Projectile->FinishSpawning(FTransform(SpawnRotation, SpawnLocation));
+		}
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);

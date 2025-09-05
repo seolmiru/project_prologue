@@ -21,6 +21,8 @@ public:
 protected:
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 
+	virtual FString GetNotifyName_Implementation() const override;
+
 protected:
 	UPROPERTY(EditAnywhere, Category = "Event")
 	FGameplayTag TriggerGameplayTag;
