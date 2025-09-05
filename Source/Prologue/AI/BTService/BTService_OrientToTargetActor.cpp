@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "../AI/BTService_OrientToTargetActor.h"
+#include "Prologue/AI/BTService/BTService_OrientToTargetActor.h"
 
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
