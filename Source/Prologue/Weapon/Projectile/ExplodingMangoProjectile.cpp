@@ -1,6 +1,5 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ExplodingMangoProjectile.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
@@ -137,7 +136,6 @@ void AExplodingMangoProjectile::Explode()
 	if (TargetActor->Implements<UAbilitySystemInterface>() && DamageEffect)
 	{
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
-
 		
 		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
 
