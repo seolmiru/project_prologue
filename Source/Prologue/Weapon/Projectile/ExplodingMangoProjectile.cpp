@@ -42,7 +42,6 @@ AExplodingMangoProjectile::AExplodingMangoProjectile()
 void AExplodingMangoProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void AExplodingMangoProjectile::Tick(float DeltaTime)
@@ -122,9 +121,7 @@ void AExplodingMangoProjectile::Explode()
 		);
 	}
 
-	AActor* TargetActor = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-
-	if (!TargetActor)
+	if (!IsValid(TargetActor))
 	{
 		Destroy();
 		return;
