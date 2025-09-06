@@ -8,6 +8,7 @@
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Character/Player/Comma.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 
 void UGA_EnemyCharge::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                       const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
@@ -15,26 +16,10 @@ void UGA_EnemyCharge::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	APrologueEnemyCharacter* EnemyCharacter = Cast<APrologueEnemyCharacter>(GetAvatarActorFromActorInfo());
-	if (!EnemyCharacter)
-	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-		return;
-	}
-	
-	UCapsuleComponent* CapsuleComponent = EnemyCharacter->GetCapsuleComponent();
-	
-	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+	UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, OverlapCheckDelay);
+	DelayTask->OnFinish.AddDynamic(this, &UGA_EnemyCharge::OnDelayFinished);
 
-	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &UGA_EnemyCharge::OnOverlap);
-
-	TArray<AActor*> OverlappingActors;
-	CapsuleComponent->GetOverlappingActors(OverlappingActors);
-
-	for (AActor* OverlappingActor : OverlappingActors)
-	{
-		HandleTargetHit(OverlappingActor, FHitResult());
-	}
+	DelayTask->ReadyForActivation();
 }
 
 void UGA_EnemyCharge::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -91,5 +76,29 @@ void UGA_EnemyCharge::HandleTargetHit(AActor* TargetActor, const FHitResult& Swe
 		TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
 		TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_PlayerHit);
+	}
+}
+
+void UGA_EnemyCharge::OnDelayFinished()
+{
+	APrologueEnemyCharacter* EnemyCharacter = Cast<APrologueEnemyCharacter>(GetAvatarActorFromActorInfo());
+	if (!EnemyCharacter)
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
+	}
+	
+	UCapsuleComponent* CapsuleComponent = EnemyCharacter->GetCapsuleComponent();
+	
+	CapsuleComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+
+	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &UGA_EnemyCharge::OnOverlap);
+
+	TArray<AActor*> OverlappingActors;
+	CapsuleComponent->GetOverlappingActors(OverlappingActors);
+
+	for (AActor* OverlappingActor : OverlappingActors)
+	{
+		HandleTargetHit(OverlappingActor, FHitResult());
 	}
 }

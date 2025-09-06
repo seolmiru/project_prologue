@@ -29,4 +29,10 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
 	TSubclassOf<UGameplayEffect> ChargeDamageEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Charge")
+	float OverlapCheckDelay = 0.3f;
+
+	UFUNCTION()
+	void OnDelayFinished();
 };
