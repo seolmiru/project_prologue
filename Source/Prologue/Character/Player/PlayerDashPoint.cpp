@@ -15,16 +15,16 @@ APlayerDashPoint::APlayerDashPoint()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	bParrySync = true;
+	bSkillSync = true;
 
 	TargetDirection = FVector::ForwardVector;
 	CurrentDirection = TargetDirection;
 	DashPoint = FVector::ForwardVector;
 	DashCool = 1.0f;
 
-	ParryCursorDirection = FVector::ForwardVector;
-	ParryDirection = ParryCursorDirection;
-	ParryPoint = FVector::ForwardVector;
+	SkillCursorDirection = FVector::ForwardVector;
+	SkillDirection = SkillCursorDirection;
+	SkillPoint = FVector::ForwardVector;
 }
 
 void APlayerDashPoint::BeginPlay()
@@ -62,11 +62,11 @@ void APlayerDashPoint::Tick(float DeltaTime)
 	CurrentDashCool -= DeltaTime; // 쿨타임 감소
 
 	// Parry Section
-	if (bParrySync && Player)
+	if (bSkillSync && Player)
 	{
-		ParryCursorDirection = Player->GetMouseDirection();
+		SkillCursorDirection = Player->GetMouseDirection();
 	}
-	CheckParryDirectionPoint();
+	CheckSkillDirectionPoint();
 
 	// 디버깅
 	if (bDrawDebug)
@@ -74,7 +74,7 @@ void APlayerDashPoint::Tick(float DeltaTime)
 		FColor DrawColor = FColor::Green;
 		DrawDebugSphere(
 			GetWorld(),
-			ParryPoint,
+			SkillPoint,
 			50.f,
 			12,
 			DrawColor,
@@ -386,9 +386,40 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	}
 
 	FVector PlayerLocation = Player->GetActorLocation(); // 플레이어 위치
-	FVector CurrentCheckLocation = PlayerLocation + CurrentDirection * MaxDistance; // 라인 트레이스 검사 시작 위치
-	float UnitDistance = MaxDistance / PartialUnitCount; // 유닛 거리 단위
 
+	// 문 라인 트레이스 검사 시작
+	float SearchDistance = MaxDistance; // MaxDistance 거리 만큼 문 검사
+	FHitResult GateHitResult;
+	const TArray<AActor*> IgnoreActors = { Player };
+
+	bool bHitGate = UKismetSystemLibrary::LineTraceSingleForObjects(
+		GetWorld(),
+		PlayerLocation,
+		PlayerLocation + CurrentDirection * MaxDistance,
+		GateObjectType,
+		false,
+		IgnoreActors,
+		bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+		GateHitResult,
+		true
+	);
+	
+	// 라인 트레이스가 문을 감지했다면 실제 대시 검사 거리를 제한
+	if (bHitGate)
+	{
+		SearchDistance = FVector::Dist(PlayerLocation, GateHitResult.ImpactPoint) - GateSafetyOffset;
+	}
+
+	// MaxDistance->SearchDistance로 수정
+	FVector CurrentCheckLocation = PlayerLocation + CurrentDirection * SearchDistance; // 라인 트레이스 검사 시작 위치
+	float UnitDistance = SearchDistance / PartialUnitCount; // 유닛 거리 단위
+
+	// UnitDistance 값이 0이 되는 걸 방지
+	if (PartialUnitCount <= 0 || UnitDistance <= 0.f)
+	{
+		return;
+	}
+	
 	// =======================================
 	// 플레이어 지면 검사
 	// =======================================
@@ -578,18 +609,18 @@ void APlayerDashPoint::CheckNewDirecionPoint()
 	}
 }
 
-FVector APlayerDashPoint::GetParryPoint()
+FVector APlayerDashPoint::GetSkillPoint()
 {
-	FVector ResultPoint = ParryPoint;
+	FVector ResultPoint = SkillPoint;
 
-	FVector Direction = ParryPoint - Player->GetActorLocation();
+	FVector Direction = SkillPoint - Player->GetActorLocation();
 	Direction.Z = 0.0f;
 	Direction.Normalize();
 
 	FHitResult ForwardResult;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Player);
-	FVector ForwardStartPoint = ParryPoint + (Direction * SafeWeight);
+	FVector ForwardStartPoint = SkillPoint + (Direction * SafeWeight);
 	FVector ForwardEndPoint = ForwardStartPoint;
 	ForwardStartPoint.Z += VerticalOffset;
 	ForwardEndPoint.Z -= VerticalOffset;
@@ -603,7 +634,7 @@ FVector APlayerDashPoint::GetParryPoint()
 	);
 
 	FHitResult RearResult;
-	FVector RearStartPoint = ParryPoint - (Direction * SafeWeight);
+	FVector RearStartPoint = SkillPoint - (Direction * SafeWeight);
 	FVector RearEndPoint = RearStartPoint;
 	RearStartPoint.Z += VerticalOffset;
 	RearEndPoint.Z -= VerticalOffset;
@@ -629,11 +660,11 @@ FVector APlayerDashPoint::GetParryPoint()
 	return GetNoMonsterGround(ResultPoint);
 }
 
-bool APlayerDashPoint::GetIsParrySync()
+bool APlayerDashPoint::GetIsSkillSync()
 {
 	float RadianAngle = FMath::Atan2(
-		FVector::CrossProduct(ParryDirection, ParryCursorDirection).Z,
-		FVector::DotProduct(ParryDirection, ParryCursorDirection)
+		FVector::CrossProduct(SkillDirection, SkillCursorDirection).Z,
+		FVector::DotProduct(SkillDirection, SkillCursorDirection)
 	);
 	float DegreeAngle = FMath::RadiansToDegrees(RadianAngle);
 	DegreeAngle = FMath::Abs(DegreeAngle);
@@ -642,30 +673,61 @@ bool APlayerDashPoint::GetIsParrySync()
 
 void APlayerDashPoint::SetCursorDirectionState(bool bState)
 {
-	bParrySync = bState;
+	bSkillSync = bState;
 }
 
-void APlayerDashPoint::CheckParryDirectionPoint()
+void APlayerDashPoint::CheckSkillDirectionPoint()
 {
 	// =======================================
 	// 목표 방향을 향해 회전
 	// =======================================
-	if (!GetIsParrySync())
+	if (!GetIsSkillSync())
 	{
 		// Quaternion 변환
-		FQuat MyQuat = FRotationMatrix::MakeFromX(ParryDirection).ToQuat();
-		FQuat TargetQuat = FRotationMatrix::MakeFromX(ParryCursorDirection).ToQuat();
+		FQuat MyQuat = FRotationMatrix::MakeFromX(SkillDirection).ToQuat();
+		FQuat TargetQuat = FRotationMatrix::MakeFromX(SkillCursorDirection).ToQuat();
 
 		// 최대 회전 각도 (라디안)
-		float MaxRadian = FMath::DegreesToRadians(ParryRotationMaxDelta);
+		float MaxRadian = FMath::DegreesToRadians(SkillRotationMaxDelta);
 
 		// 각도 계산
-		ParryDirection = RotateToWorld(MyQuat, TargetQuat, MaxRadian).GetForwardVector();
+		SkillDirection = RotateToWorld(MyQuat, TargetQuat, MaxRadian).GetForwardVector();
 	}
 
 	FVector PlayerLocation = Player->GetActorLocation(); // 플레이어 위치
-	FVector CurrentCheckLocation = PlayerLocation + ParryDirection * ParryMaxDistance; // 라인 트레이스 검사 시작 위치
-	float UnitDistance = ParryMaxDistance / ParryPartialUnit; // 유닛 거리 단위
+
+	// 문 라인 트레이스 검사 시작
+	float SearchDistance = SkillMaxDistance; // MaxDistance 거리 만큼 문 검사
+	FHitResult GateHitResult;
+	const TArray<AActor*> IgnoreActors = { Player };
+
+	bool bHitGate = UKismetSystemLibrary::LineTraceSingleForObjects(
+		GetWorld(),
+		PlayerLocation,
+		PlayerLocation + SkillDirection * SkillMaxDistance,
+		GateObjectType,
+		false,
+		IgnoreActors,
+		bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+		GateHitResult,
+		true
+	);
+	
+	// 라인 트레이스가 문을 감지했다면 실제 대시 검사 거리를 제한
+	if (bHitGate)
+	{
+		SearchDistance = FVector::Dist(PlayerLocation, GateHitResult.ImpactPoint) - GateSafetyOffset;
+	}
+
+	// SkillMaxDistance->SearchDistance로 수정
+	FVector CurrentCheckLocation = PlayerLocation + SkillDirection * SearchDistance; // 라인 트레이스 검사 시작 위치
+	float UnitDistance = SearchDistance / SkillPartialUnit; // 유닛 거리 단위
+
+	// SkillPartialUnit 값이 0이 되는 걸 방지
+	if (SkillPartialUnit <= 0 || UnitDistance <= 0.f)
+	{
+		return;
+	}
 
 	// =======================================
 	// 플레이어 지면 검사
@@ -696,13 +758,13 @@ void APlayerDashPoint::CheckParryDirectionPoint()
 		AActor* PlayerGround = HitResult.GetActor();
 
 		// 현재 설정 위치의 시야각 계산
-		FVector OldDirection = ParryPoint - PlayerLocation;
+		FVector OldDirection = SkillPoint - PlayerLocation;
 		OldDirection.Z = 0.0f;
 		OldDirection.Normalize();
 
 		float OldRadianAngle = FMath::Atan2(
-			FVector::CrossProduct(ParryDirection, OldDirection).Z,
-			FVector::DotProduct(ParryDirection, OldDirection)
+			FVector::CrossProduct(SkillDirection, OldDirection).Z,
+			FVector::DotProduct(SkillDirection, OldDirection)
 		);
 		float OldDegreeAngle = FMath::RadiansToDegrees(OldRadianAngle);
 		OldDegreeAngle = FMath::Abs(OldDegreeAngle);
@@ -710,7 +772,7 @@ void APlayerDashPoint::CheckParryDirectionPoint()
 		// 네비 관련 설정
 		UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
 
-		for (int i = 0; i < ParryPartialUnit; i++)
+		for (int i = 0; i < SkillPartialUnit; i++)
 		{
 			FVector Start = CurrentCheckLocation;
 			Start.Z += VerticalOffset;
@@ -744,7 +806,7 @@ void APlayerDashPoint::CheckParryDirectionPoint()
 					// 현재 이동 위치와 플레이어의 거리
 					// =======================================
 					float CurrentDistance = FVector2D::Distance((FVector2d)PlayerLocation,
-					                                            (FVector2d)ParryPoint);
+					                                            (FVector2d)SkillPoint);
 
 					// =======================================
 					// 새 위치 시야각
@@ -756,8 +818,8 @@ void APlayerDashPoint::CheckParryDirectionPoint()
 					NewDirection.Normalize();
 
 					float NewRadianAngle = FMath::Atan2(
-						FVector::CrossProduct(ParryDirection, NewDirection).Z,
-						FVector::DotProduct(ParryDirection, NewDirection)
+						FVector::CrossProduct(SkillDirection, NewDirection).Z,
+						FVector::DotProduct(SkillDirection, NewDirection)
 					);
 					float NewDegreeAngle = FMath::RadiansToDegrees(NewRadianAngle);
 					NewDegreeAngle = FMath::Abs(NewDegreeAngle);
@@ -768,25 +830,25 @@ void APlayerDashPoint::CheckParryDirectionPoint()
 					if (HitGround != PlayerGround)
 					{
 						// 현재 이동 대상 지면과 같은 지면일 경우 
-						if (ParryGroundActor != nullptr || HitGround == ParryGroundActor)
+						if (SkillGroundActor != nullptr || HitGround == SkillGroundActor)
 						{
 							float NewDistance = FVector2D::Distance((FVector2d)PlayerLocation,
 							                                        (FVector2d)HitResult.ImpactPoint);
 
-							if ((NewDistance > CurrentDistance && NewDistance <= ParryMaxDistance) //조건 1: 더 먼 거리로 이동
+							if ((NewDistance > CurrentDistance && NewDistance <= SkillMaxDistance) //조건 1: 더 먼 거리로 이동
 								|| NewDegreeAngle < OldDegreeAngle) // 조건 2: 정면이랑 더 가까운 방향으로 이동
 							{
 								//위치 재설정
-								ParryGroundActor = HitGround;
-								ParryPoint = HitResult.ImpactPoint;
+								SkillGroundActor = HitGround;
+								SkillPoint = HitResult.ImpactPoint;
 								break;
 							}
 						}
 						// 새로운 지면일 경우 해당 위치로 설정
 						else
 						{
-							ParryGroundActor = HitGround;
-							ParryPoint = HitResult.ImpactPoint;
+							SkillGroundActor = HitGround;
+							SkillPoint = HitResult.ImpactPoint;
 							break;
 						}
 					}
@@ -801,8 +863,8 @@ void APlayerDashPoint::CheckParryDirectionPoint()
 							|| (OldDegreeAngle > NewDegreeAngle && GroundActor == PlayerGround))
 						// 조건 3: 새로운 위치가 정면 방향에 더 가까울 경우 (플레이어와 같은 지면에 한하여)
 						{
-							ParryGroundActor = HitGround;
-							ParryPoint = HitResult.ImpactPoint;
+							SkillGroundActor = HitGround;
+							SkillPoint = HitResult.ImpactPoint;
 							break;
 						}
 					}

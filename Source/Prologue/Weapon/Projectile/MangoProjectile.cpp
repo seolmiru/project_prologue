@@ -6,60 +6,159 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Components/BoxComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Prologue/Prologue.h"
 #include "Prologue/PrologueGameplayTags.h"
+
+AMangoProjectile::AMangoProjectile()
+{
+	PrimaryActorTick.bCanEverTick = true;
+
+	ProjectileCollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ProjectileCollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore);
+	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Block);
+	ProjectileCollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnProjectileHit);
+
+	InitialLifeSpan = 0.f;
+	
+	if (ProjectileMovementComp)
+	{
+		ProjectileMovementComp->ProjectileGravityScale = 1.f;
+
+		ProjectileMovementComp->InitialSpeed = 100.f;
+		ProjectileMovementComp->MaxSpeed = 5000.f;
+ 
+		ProjectileMovementComp->Velocity = FVector(0.f, 0.f, -1.f);
+	}
+
+	ExplosionRadius = 300.f;
+	TimeToExplode = 3.f;
+}
+
+void AMangoProjectile::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	ElapsedTime += DeltaSeconds;
+
+	if (ElapsedTime > TimeToExplode)
+	{
+		Explode();
+		Destroy();
+		return;
+	}
+}
 
 void AMangoProjectile::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// 벽이나 바닥에 부딪혔을 때만 파괴
-	if (OtherActor && !OtherActor->GetClass()->IsChildOf(APawn::StaticClass()))
+	LOG_SCREEN_R("Called OnProjectile Hit");
+
+	if (OtherComp)
 	{
-		Destroy();
+		LOG_SCREEN_R("OnProjectileHit Hit Component");
+
+		if (OtherComp && OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel7)
+		{
+			LOG_SCREEN_R("Check Passed");
+			StickAndExplosion(Hit);
+		}
+		else
+		{
+			LOG_SCREEN_R("No");
+
+			Destroy();
+		}
 	}
 }
 
-void AMangoProjectile::OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AMangoProjectile::StickAndExplosion(const FHitResult& Hit)
 {
-	// 투사체를 발사한 Actor 충돌 무시
-	if (OtherActor == GetInstigator())
+	SetActorLocation(Hit.ImpactPoint);
+	SetActorRotation(Hit.ImpactNormal.Rotation());
+	
+	ProjectileCollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	ElapsedTime = 0.f;
+	
+	GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &AMangoProjectile::Explode, TimeToExplode, false);
+}
+
+void AMangoProjectile::Explode()
+{
+	FVector ExplosionLocation = GetActorLocation();
+
+	if (ExplosionEffect)
 	{
-		return;
+		UNiagaraComponent* ExplosionComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			ExplosionEffect,
+			ExplosionLocation,
+			FRotator::ZeroRotator,
+			FVector(1.f, 1.f, 1.f),
+			true,
+			true
+		);
 	}
 
-	// 투사체끼리의 충돌 무시
-	if (Cast<APrologueProjectileBase>(OtherActor))
+	if (ExplosionSound)
 	{
-		return;
+		UGameplayStatics::PlaySoundAtLocation(
+			GetWorld(),
+			ExplosionSound,
+			ExplosionLocation,
+			1.f,
+			1.f
+		);
+	}
+
+	if (bShowDebug)
+	{
+		DrawDebugSphere(
+			GetWorld(),
+			GetActorLocation(),
+			ExplosionRadius,
+			32,
+			FColor::Red,
+			false,
+			2.f,
+			0.f,
+			2.f
+		);
 	}
 
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	if (PlayerPawn == nullptr)
 	{
+		Destroy();
 		return;
 	}
-	
+
+	const float DistSq = FVector::DistSquared(PlayerPawn->GetActorLocation(), GetActorLocation());
+	if (DistSq > FMath::Square(ExplosionRadius))
+	{
+		Destroy();
+		return;
+	}
+
 	if (PlayerPawn->Implements<UAbilitySystemInterface>() && AttackDamageEffect)
 	{
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PlayerPawn);
 		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
-
+		
 		if (TargetASC && SourceASC)
 		{
 			FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
 			EffectContext.AddSourceObject(this);
-			EffectContext.AddHitResult(SweepResult);
 
-			// 체력과 강인도를 감소시키는 Effect 적용
 			FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(AttackDamageEffect, 1.f, EffectContext);
-			FGameplayEffectSpecHandle HitReactSpecHandle = SourceASC->MakeOutgoingSpec(ToughnessDamageEffect, 1.f, EffectContext);
-			
+
 			if (SpecHandle.IsValid())
 			{
 				SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data, TargetASC);
-				SourceASC->ApplyGameplayEffectSpecToTarget(*HitReactSpecHandle.Data, TargetASC);
 
 				FGameplayCueParameters CueParams;
 				CueParams.EffectContext = EffectContext;
@@ -67,4 +166,6 @@ void AMangoProjectile::OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedC
 			}
 		}
 	}
+	
+	Destroy();
 }

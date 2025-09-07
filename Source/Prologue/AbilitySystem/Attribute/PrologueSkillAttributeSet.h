@@ -32,6 +32,7 @@ public:
 	ATTRIBUTE_ACCESSORS(UPrologueSkillAttributeSet, MaxGauge);
 	ATTRIBUTE_ACCESSORS(UPrologueSkillAttributeSet, CurrentHealPotion);
 	ATTRIBUTE_ACCESSORS(UPrologueSkillAttributeSet, MaxHealPotion);
+	ATTRIBUTE_ACCESSORS(UPrologueSkillAttributeSet, Currency);
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual bool PreGameplayEffectExecute(struct FGameplayEffectModCallbackData& Data) override;
@@ -61,4 +62,7 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = "OverClock", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData MaxHealPotion;
+
+	UPROPERTY(BlueprintReadOnly, Category = "OverClock", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData Currency;
 };

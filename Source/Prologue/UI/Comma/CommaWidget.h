@@ -8,6 +8,8 @@
 #include "Prologue/UI/PrologueUserWidget.h"
 #include "CommaWidget.generated.h"
 
+class UImage;
+class UTextBlock;
 /**
  * 
  */
@@ -18,38 +20,43 @@ class PROLOGUE_API UCommaWidget : public UPrologueUserWidget
 
 public:
 	virtual void NativeConstruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	
 	virtual void SetAbilitySystemComponent(AActor* InOwner) override;
 
 	virtual void OnCurrentHealthChanged(const FOnAttributeChangeData& ChangeData);
 	virtual void OnMaxHealthChanged(const FOnAttributeChangeData& ChangeData);
 
-	virtual void OnCurrentGaugeChanged(const FOnAttributeChangeData& ChangeData);
-	virtual void OnMaxGaugeChanged(const FOnAttributeChangeData& ChangeData);
+	virtual void OnCooldownTagChanged(const FGameplayTag Tag, int32 NewCount);
 
 	virtual void OnCurrentHealPotionChanged(const FOnAttributeChangeData& ChangeData);
 
+	virtual void OnCurrencyChanged(const FOnAttributeChangeData& ChangeData);
+
 protected:
 	UPROPERTY(meta = (BindWidget))
-	class UImage* GaugeImage;
+	TObjectPtr<UImage> GaugeImage;
 
 	UPROPERTY(meta = (BindWidget))
-	class UImage* RainbowGaugeImage;
+	TObjectPtr<UImage> RainbowGaugeImage;
 
 	UPROPERTY(meta = (BindWidget))
-	class UImage* PlayerIconOverClock;
+	TObjectPtr<UImage> PlayerIconOverClock;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UMaterialInterface* GaugeMaterial;
+	TObjectPtr<UMaterialInterface> GaugeMaterial;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UMaterialInterface* RainbowGaugeMaterial;
+	TObjectPtr<UMaterialInterface> RainbowGaugeMaterial;
 
 	UPROPERTY()
-	UMaterialInstanceDynamic* GaugeMaterialInstance;
+	TObjectPtr<UMaterialInstanceDynamic> GaugeMaterialInstance;
 
 	UPROPERTY()
-	UMaterialInstanceDynamic* RainbowGaugeMaterialInstance;
+	TObjectPtr<UMaterialInstanceDynamic> RainbowGaugeMaterialInstance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	FGameplayTag CooldownTag;
 
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -67,8 +74,11 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	float CurrentHealPotion = 0.0f;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	int32 Currency = 0;
+
 	virtual void OnOverClockTagChanged(const FGameplayTag Tag, int32 NewCount);
 
-private:
-	void UpdateGaugePercent();
+	UFUNCTION(BlueprintCallable)
+	void UpdateGaugePercent(float Percent);
 };

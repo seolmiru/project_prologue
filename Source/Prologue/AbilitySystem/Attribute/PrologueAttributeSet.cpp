@@ -13,9 +13,9 @@ UPrologueAttributeSet::UPrologueAttributeSet()
 {
 	InitCurrentHealth(1.f);
 	InitMaxHealth(1.f);
-	InitDamage(1.f);
-	InitCurrentToughness(1.f);
-	InitMaxToughness(1.f);
+	InitDamage(0.f);
+	InitCurrentBrokenGauge(1.f);
+	InitMaxBrokenGauge(1.f);
 }
 
 void UPrologueAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -58,14 +58,6 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 			return false;
 		}*/
 	}
-
-	if (Data.EvaluatedData.Attribute == GetCurrentToughnessAttribute())
-	{
-		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
-		{
-			return false;
-		}
-	}
 	
 	return true;
 }
@@ -101,13 +93,10 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 		SetDamage(0.0f);
 	}
 
-	if (Data.EvaluatedData.Attribute == GetCurrentToughnessAttribute())
+	if (Data.EvaluatedData.Attribute == GetCurrentBrokenGaugeAttribute())
 	{
-		LOG_SCREEN("Direct Toughness Access : %f", GetCurrentToughness());
-		
-		const float NewCurrentToughness = FMath::Clamp(GetCurrentToughness(), 0.f, GetMaxToughness());
-
-		SetCurrentToughness(NewCurrentToughness);
+		const float NewCurrentBrokenGauge = FMath::Clamp(GetCurrentBrokenGauge(), 0.f, GetMaxBrokenGauge());
+		SetCurrentBrokenGauge(NewCurrentBrokenGauge);
 	}
 	
 	if ((GetCurrentHealth() <= 0.0f) && !bOutOfHealth)
@@ -116,13 +105,13 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 		OnOutOfHealth.Broadcast();
 	}
 
-	if ((GetCurrentToughness() <= 0.0f) && !bOutOfToughness)
+	if ((GetCurrentBrokenGauge() <= 0.0f) && !bOutOfBrokenGauge)
 	{
-		Data.Target.AddLooseGameplayTag(PrologueGameplayTags::Shared_State_IsOutOfToughness);
-		OnOutOfToughness.Broadcast();
+		Data.Target.AddLooseGameplayTag(PrologueGameplayTags::Shared_State_Broken);
+		OnOutOfBrokenGauge.Broadcast();
 	}
 
 	bOutOfHealth = (GetCurrentHealth() <= 0.0f);
 
-	bOutOfToughness = (GetCurrentToughness() <= 0.0f);
+	bOutOfBrokenGauge = (GetCurrentBrokenGauge() <= 0.0f);
 }

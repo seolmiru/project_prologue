@@ -20,6 +20,10 @@ public:
 	
 	UFUNCTION(BlueprintPure)
 	APrologueEnemyCharacter* GetEnemyCharacterFromActorInfo();
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")
+	TSubclassOf<UGameplayEffect> AddCurrencyEffect;
 	
 private:
 	TWeakObjectPtr<APrologueEnemyCharacter> CachedEnemyCharacter;

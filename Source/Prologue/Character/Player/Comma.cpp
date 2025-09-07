@@ -51,12 +51,10 @@ AComma::AComma()
 	FollowCamera->FieldOfView = 50.f;
 	FollowCamera->bUsePawnControlRotation = false;
 
-	ParryCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("ParryCollision"));
-	ParryCollision->SetupAttachment(GetMesh());
-	ParryCollision->SetCapsuleHalfHeight(96.f);
-	ParryCollision->SetCapsuleRadius(42.f);
-	ParryCollision->SetActive(false);
-
+	DashCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("DashCollision"));
+	DashCollision->SetupAttachment(RootComponent);
+	DashCollision->SetActive(false);
+	
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
@@ -80,6 +78,12 @@ AComma::AComma()
 	CooldownWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 15.f));
 	CooldownWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 
+	GuideWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SpaceBarWidgetComponent"));
+	GuideWidgetComponent->SetupAttachment(RootComponent);
+	GuideWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	GuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	GuideWidgetComponent->SetVisibility(false);
+	
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
@@ -126,6 +130,7 @@ void AComma::Tick(float DeltaSeconds)
 		SetActorRotation(NewRotation);
 	}
 
+	// 카메라 보정
 	if (CameraBoom)
 	{
 		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, TargetZoomDist))
@@ -308,15 +313,11 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 
 	if (Controller != nullptr)
 	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
 		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector ForwardDirection = FVector(1.f, 0.f, 0.f);
 
 		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		const FVector RightDirection = FVector(0.f, 1.f, 0.f);
 
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);

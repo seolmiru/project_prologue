@@ -125,6 +125,11 @@ void APrologueEnemyCharacter::PossessedBy(AController* NewController)
 		}
 	}
 
+	if (ASC)
+	{
+		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetCurrentHealthAttribute()).AddUObject(this, &APrologueEnemyCharacter::HealthAttributeChanged);
+	}
+	
 	if (BP_MangoWidget)
 	{
 		MangoHpBarWidget = CreateWidget<UEnemyWidget>(GetWorld(), BP_MangoWidget);
@@ -202,4 +207,9 @@ bool APrologueEnemyCharacter::TryActivateRandomAbilityWithWeights(const TArray<F
 	}
 
 	return false;
+}
+
+void APrologueEnemyCharacter::HealthAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	OnHealthChanged.Broadcast(Data.OldValue, Data.NewValue);
 }
