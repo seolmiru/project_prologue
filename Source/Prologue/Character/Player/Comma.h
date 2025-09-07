@@ -250,6 +250,8 @@ public:
 	class APlayerDashPoint* GetDashPoint() const;
 
 	void InputDash(bool bInput);
+
+	bool GetInputDashState() const;	
 private:
 	TObjectPtr<class APlayerDashPoint> DashPoint;
 
