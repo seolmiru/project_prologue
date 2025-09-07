@@ -31,4 +31,11 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Trace")
 	TSubclassOf<class ATA_Trace> TargetActorClass;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bHitDetected = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bHitNormalTarget = false;
 };
