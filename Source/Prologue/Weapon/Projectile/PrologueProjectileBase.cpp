@@ -21,7 +21,7 @@ APrologueProjectileBase::APrologueProjectileBase()
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-	ProjectileCollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnProjectileHit);
+	//ProjectileCollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnProjectileHit);
 	ProjectileCollisionBox->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::OnProjectileBeginOverlap);
 
 	ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComp"));
@@ -104,17 +104,6 @@ void APrologueProjectileBase::OnProjectileBeginOverlap(UPrimitiveComponent* Over
 				FGameplayCueParameters CueParams;
 				CueParams.EffectContext = EffectContext;
 				//TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParams);
-			}
-
-			// BP에서 IncreaseGaugeEffect가 할당이 되어있다면 OverClockGauge를 증가시키는 Effect 적용
-			if (IncreaseGaugeEffect)
-			{
-				FGameplayEffectSpecHandle GaugeEffectSpecHandle = SourceASC->MakeOutgoingSpec(IncreaseGaugeEffect, 1.f, EffectContext);
-
-				if (GaugeEffectSpecHandle.IsValid())
-				{
-					SourceASC->ApplyGameplayEffectSpecToSelf(*GaugeEffectSpecHandle.Data.Get());
-				}
 			}
 		}
 

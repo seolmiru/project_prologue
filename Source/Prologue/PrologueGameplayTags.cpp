@@ -94,8 +94,6 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AddBow, "Event.Character.AddBow");
 	
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SpawnProjectile, "Event.Character.SpawnProjectile");
-	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SpawnSwitchProjectile, "Event.Character.SpawnSwitchProjectile");
-	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SpawnSwitchSubProjectile, "Event.Character.SpawnSwitchSubProjectile");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_EnableInput, "Event.Character.EnableInput");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_DisableInput, "Event.Character.DisableInput");
@@ -106,7 +104,6 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_Attack, "Enemy.Ability.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_RangeAttack, "Enemy.Ability.RangeAttack");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_LaserAttack, "Enemy.Ability.LaserAttack");
-	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_CantParryAttack, "Enemy.Ability.CantParryAttack");
 
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_Charge, "Enemy.Ability.Charge");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_Jump, "Enemy.Ability.Jump");
@@ -115,8 +112,6 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Ability_FirstEncounter, "Enemy.Ability.FirstEncounter");
 	
-	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_Strafing, "Enemy.State.Strafing");
-	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_RunningAway, "Enemy.State.RunningAway");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_Charge, "Enemy.State.Charge");
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_State_Detect, "Enemy.State.Detect");
 	

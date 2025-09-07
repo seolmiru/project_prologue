@@ -235,6 +235,16 @@ void AComma::BeginPlay()
 {
 	Super::BeginPlay();
 
+	FGameplayTag DashCooldownTag = FGameplayTag::RequestGameplayTag(FName("Comma.Cooldown.Dash"));
+	FDelegateHandle DashCoolHandle = ASC->RegisterGameplayTagEvent(DashCooldownTag, EGameplayTagEventType::NewOrRemoved)
+	.AddLambda([this](const FGameplayTag Tag, int32 NewCount)
+	{
+		if (NewCount == 0 && bInputDash)
+		{
+			InputGAS(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")));
+		}
+	});
+	
 	if (ACommaController* CommaController = Cast<ACommaController>(GetController()))
 	{
 		CommaController->bShowMouseCursor = true;
@@ -276,6 +286,7 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AComma::Input_Move);
+		FGameplayTag DashTag = FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash"));
 
 		if (InputConfigDataAsset)
 		{
@@ -284,6 +295,12 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 				EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this,
 				                                   &AComma::InputGAS, InputAction.Tag);
 
+				if (InputAction.Tag == DashTag)
+				{
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputDash, true);
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this, &AComma::InputDash, false);					
+				}
+				
 				LOG_SCREEN("%s", *InputAction.Tag.ToString());
 			}
 		}
@@ -565,4 +582,10 @@ APlayerDashPoint* AComma::GetDashPoint() const
 	{
 		return nullptr;
 	}
+}
+
+void AComma::InputDash(bool bInput)
+{
+	// UE_LOG(LogTemp, Log, TEXT("Input Dash Event: %s"), *LexToString(bInput));
+	bInputDash = bInput;
 }

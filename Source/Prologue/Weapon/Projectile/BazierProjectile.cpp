@@ -162,19 +162,6 @@ void ABazierProjectile::StickAndExplosion(const FHitResult& Hit)
 void ABazierProjectile::Explode()
 {
 	FVector ExplosionLocation = GetActorLocation();
-	
-	if (ExplosionEffect)
-	{
-		UNiagaraComponent* ExplosionComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),
-			ExplosionEffect,
-			ExplosionLocation,
-			FRotator::ZeroRotator,
-			FVector(1.f, 1.f, 1.f),
-			true,
-			true
-		);
-	}
 
 	if (ExplosionSound)
 	{

@@ -27,6 +27,9 @@ public:
 	APrologueProjectileBase();
 
 	void FireInDirection(const FVector& ShootDirection) const;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Explosion|Target")
+	TObjectPtr<AActor> TargetActor;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -55,7 +58,4 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<UGameplayEffect> ToughnessDamageEffect;
-
-	UPROPERTY(EditAnywhere, Category = "GAS")
-	TSubclassOf<UGameplayEffect> IncreaseGaugeEffect;
 };
