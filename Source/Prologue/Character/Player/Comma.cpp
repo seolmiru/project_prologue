@@ -589,3 +589,8 @@ void AComma::InputDash(bool bInput)
 	// UE_LOG(LogTemp, Log, TEXT("Input Dash Event: %s"), *LexToString(bInput));
 	bInputDash = bInput;
 }
+
+bool AComma::GetInputDashState() const
+{
+	return bInputDash;
+}
