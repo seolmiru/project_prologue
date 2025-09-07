@@ -86,7 +86,7 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	/* Sejin */
 	// 주변 가까운 땅 대시 위치 검사 (대시 보정 알고리즘)
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
-	Comma->DashPoint->SetDirectionMinGround();
+	Comma->GetDashPoint()->SetDirectionMinGround();
 }
 
 void UGA_CommaDash::OnCurveTick(float Alpha)
@@ -223,7 +223,7 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 void UGA_CommaDash::OnDashAllowed()
 {
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
-	Comma->DashPoint->GetDashCoolState(); // 대시 쿨타임 설정
+	Comma->GetDashPoint()->GetDashCoolState(); // 대시 쿨타임 설정
 	
 	if (Comma->GetDashPoint()->GetDashCoolState())
 	{
