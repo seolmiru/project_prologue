@@ -41,6 +41,9 @@ protected:
 
 	/* Start Sejin */
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	TSubclassOf<UGameplayEffect> RepeatEffect;
+	
 	UFUNCTION(BlueprintCallable, Category = "Dash")
 	void OnDashAllowed();
 
