@@ -87,6 +87,11 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	// 주변 가까운 땅 대시 위치 검사 (대시 보정 알고리즘)
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	Comma->GetDashPoint()->SetDirectionMinGround();
+
+	if (Comma->GetInputDashState())
+	{
+		Comma->InputGAS(FGameplayTag::RequestGameplayTag("Comma.Ability.Dash"));
+	}
 }
 
 void UGA_CommaDash::OnCurveTick(float Alpha)
@@ -237,16 +242,6 @@ void UGA_CommaDash::OnDashAllowed()
 	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
 		InvincibleEffect, 0.f, InvincibleEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
-
-	// Repeat Input Effect 부여
-	FGameplayEffectContextHandle RepeatContext = Comma->GetAbilitySystemComponent()->MakeEffectContext();
-	RepeatContext.AddSourceObject(this);
-
-	FGameplayEffectSpecHandle RepeatSpecHandle = Comma->GetAbilitySystemComponent()->MakeOutgoingSpec(RepeatEffect, 1.f, InvincibleEffectContextHandle);
-	if (RepeatSpecHandle.IsValid())
-	{
-		Comma->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*RepeatSpecHandle.Data.Get());
-	}
 
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
 
