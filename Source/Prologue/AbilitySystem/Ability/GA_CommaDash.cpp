@@ -238,6 +238,16 @@ void UGA_CommaDash::OnDashAllowed()
 		InvincibleEffect, 0.f, InvincibleEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
 
+	// Repeat Input Effect 부여
+	FGameplayEffectContextHandle RepeatContext = Comma->GetAbilitySystemComponent()->MakeEffectContext();
+	RepeatContext.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle RepeatSpecHandle = Comma->GetAbilitySystemComponent()->MakeOutgoingSpec(RepeatEffect, 1.f, InvincibleEffectContextHandle);
+	if (RepeatSpecHandle.IsValid())
+	{
+		Comma->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*RepeatSpecHandle.Data.Get());
+	}
+
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
 
 	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(

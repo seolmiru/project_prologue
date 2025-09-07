@@ -235,10 +235,11 @@ void AComma::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FGameplayTag DashCooldownTag = FGameplayTag::RequestGameplayTag(FName("Comma.Cooldown.Dash"));
+	FGameplayTag DashCooldownTag = FGameplayTag::RequestGameplayTag(FName("Comma.Event.RepeatDash"));
 	FDelegateHandle DashCoolHandle = ASC->RegisterGameplayTagEvent(DashCooldownTag, EGameplayTagEventType::NewOrRemoved)
 	.AddLambda([this](const FGameplayTag Tag, int32 NewCount)
 	{
+		UE_LOG(LogTemp, Log, TEXT("Event! %d"), NewCount);
 		if (NewCount == 0 && bInputDash)
 		{
 			InputGAS(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")));
@@ -588,4 +589,9 @@ void AComma::InputDash(bool bInput)
 {
 	// UE_LOG(LogTemp, Log, TEXT("Input Dash Event: %s"), *LexToString(bInput));
 	bInputDash = bInput;
+}
+
+bool AComma::GetInputDashState() const
+{
+	return bInputDash;
 }
