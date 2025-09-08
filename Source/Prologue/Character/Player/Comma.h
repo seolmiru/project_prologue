@@ -248,6 +248,13 @@ private:
 	/** Sejin */
 public:
 	class APlayerDashPoint* GetDashPoint() const;
-	
+
+	void InputDash(bool bInput);
+
+	bool GetInputDashState() const;	
+private:
 	TObjectPtr<class APlayerDashPoint> DashPoint;
+
+	UPROPERTY(VisibleAnywhere, Category="Input")
+	bool bInputDash;
 };

@@ -24,20 +24,25 @@ struct FPotentialDashTarget
 		: FeetLocation(InFeetLocation), DistanceSqToStart(FVector::DistSquared(StartActorPos, InFeetLocation))
 	{
 	}
-
+	
 	bool operator<(const FPotentialDashTarget& Other) const
 	{
 		return DistanceSqToStart < Other.DistanceSqToStart;
 	}
 };
 
+UGA_CommaDash::UGA_CommaDash()
+{
+	// ActivationBlockedTags.AddTag(CooldownTag);
+	// UE_LOG(LogTemp, Log, TEXT("Cooldown: %s"), *CooldownTag.ToString());
+}
+
 bool UGA_CommaDash::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
-	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+                                       const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
+                                       const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
 {
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
-	bool bDashCoolDown = Comma->DashPoint->DashCoolDown(); // 대시 쿨다운 상태
-	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags) && bDashCoolDown;
+	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 }
 
 void UGA_CommaDash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -81,7 +86,12 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	/* Sejin */
 	// 주변 가까운 땅 대시 위치 검사 (대시 보정 알고리즘)
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
-	Comma->DashPoint->SetDirectionMinGround();
+	Comma->GetDashPoint()->SetDirectionMinGround();
+
+	if (Comma->GetInputDashState())
+	{
+		Comma->InputGAS(FGameplayTag::RequestGameplayTag("Comma.Ability.Dash"));
+	}
 }
 
 void UGA_CommaDash::OnCurveTick(float Alpha)
@@ -218,7 +228,12 @@ bool UGA_CommaDash::IsSafeLandingZone(const FVector& CandidateLocation, const TA
 void UGA_CommaDash::OnDashAllowed()
 {
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
-	Comma->DashPoint->SetDashCool(); // 대시 쿨타임 설정
+	Comma->GetDashPoint()->GetDashCoolState(); // 대시 쿨타임 설정
+	
+	if (Comma->GetDashPoint()->GetDashCoolState())
+	{
+		CommitAbilityCooldown(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
+	}
 	
 	// Invincible Effect 부여
 	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
