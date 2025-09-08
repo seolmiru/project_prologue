@@ -30,10 +30,6 @@ void UGA_AttackHitCheck::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 
 void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
-    bool bHitDetected = false;
-
-    bool bHitNormalTarget = false;
-    
     for (int32 i = 0; i < TargetDataHandle.Num(); i++)
     {
         if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, i))

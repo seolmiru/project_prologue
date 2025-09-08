@@ -87,6 +87,11 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	// 주변 가까운 땅 대시 위치 검사 (대시 보정 알고리즘)
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	Comma->GetDashPoint()->SetDirectionMinGround();
+
+	if (Comma->GetInputDashState())
+	{
+		Comma->InputGAS(FGameplayTag::RequestGameplayTag("Comma.Ability.Dash"));
+	}
 }
 
 void UGA_CommaDash::OnCurveTick(float Alpha)

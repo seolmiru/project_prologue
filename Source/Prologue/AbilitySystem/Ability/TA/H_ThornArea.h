@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "H_ThornArea.generated.h"
 
+class UNiagaraSystem;
 class UBoxComponent;
 class UGameplayEffect;
 
@@ -30,6 +31,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")
+	TObjectPtr<UNiagaraSystem> ThornEffect;	
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UBoxComponent> BoxComponent;
