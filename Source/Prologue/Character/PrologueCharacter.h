@@ -63,14 +63,14 @@ protected:
 
 protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-
-	UFUNCTION(BlueprintCallable, Category = "GAS")
-	void InputGAS(const FGameplayTag Tag);
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "GAS")
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	UFUNCTION(BlueprintCallable, Category = "GAS")
+	void InputGAS(const FGameplayTag Tag);
+	
 	UPROPERTY(BlueprintAssignable, Category = "Attributes")
 	FOnDamageChangedDelegate OnDamageChanged;
 };

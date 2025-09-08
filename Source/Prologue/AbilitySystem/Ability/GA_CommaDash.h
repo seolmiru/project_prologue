@@ -40,7 +40,7 @@ protected:
 	                       FVector& OutAdjustedLocation) const;
 
 	/* Start Sejin */
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Dash")
 	void OnDashAllowed();
 
