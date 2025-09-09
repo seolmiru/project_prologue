@@ -32,8 +32,9 @@ void UCommaWidget::NativeConstruct()
 		PlayerIconOverClock->SetVisibility(ESlateVisibility::Hidden);
 	}
 
-	CreateHealPotionImages();
-	
+	InitializeHealPotionImages();
+
+	// Intro Animation 재생 중일 때에는 UI 가리기
 	if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Intro))
 	{
 		SetVisibility(ESlateVisibility::Hidden);
@@ -48,6 +49,7 @@ void UCommaWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
+	// OverClock Cooldown Update
 	if (ASC && CooldownTag.IsValid())
 	{
 		FGameplayEffectQuery Query;
@@ -124,7 +126,7 @@ void UCommaWidget::SetAbilitySystemComponent(AActor* InOwner)
 				CurrentHealPotion = SkillAttributeSet->GetCurrentHealPotion();
 				MaxHealPotion = SkillAttributeSet->GetMaxHealPotion();
 
-				UpdateHealPotion(static_cast<int32>(CurrentHealPotion), static_cast<int32>(MaxHealPotion));
+				UpdateHealPotion(static_cast<int32>(CurrentHealPotion));
 			}
 		}
 	}
@@ -153,13 +155,13 @@ void UCommaWidget::OnCooldownTagChanged(const FGameplayTag Tag, int32 NewCount)
 void UCommaWidget::OnCurrentHealPotionChanged(const FOnAttributeChangeData& ChangeData)
 {
 	CurrentHealPotion = ChangeData.NewValue;
-	UpdateHealPotion(static_cast<int32>(CurrentHealPotion), static_cast<int32>(MaxHealPotion));
+	UpdateHealPotion(static_cast<int32>(CurrentHealPotion));
 }
 
 void UCommaWidget::OnMaxHealPotionChanged(const FOnAttributeChangeData& ChangeData)
 {
 	MaxHealPotion = ChangeData.NewValue;
-	UpdateHealPotion(static_cast<int32>(CurrentHealPotion), static_cast<int32>(MaxHealPotion));
+	UpdateHealPotion(static_cast<int32>(CurrentHealPotion));
 }
 
 void UCommaWidget::OnCurrencyChanged(const FOnAttributeChangeData& ChangeData)
@@ -191,13 +193,13 @@ void UCommaWidget::UpdateGaugePercent(float Percent)
 	}
 }
 
-void UCommaWidget::UpdateHealPotion(int32 CurrentPotions, int32 MaxPotions)
+void UCommaWidget::UpdateHealPotion(int32 CurrentPotions)
 {
 	for (int32 i = 0; i < HealPotionImages.Num(); i++)
 	{
 		if (HealPotionImages[i])
 		{
-			if (i < CurrentHealPotion)
+			if (i < CurrentPotions)
 			{
 				if (FullHealPotionTexture)
 				{
@@ -215,7 +217,7 @@ void UCommaWidget::UpdateHealPotion(int32 CurrentPotions, int32 MaxPotions)
 	}
 }
 
-void UCommaWidget::CreateHealPotionImages()
+void UCommaWidget::InitializeHealPotionImages()
 {
 	if (!HealPotionContainer)
 	{

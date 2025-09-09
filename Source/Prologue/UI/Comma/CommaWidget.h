@@ -97,14 +97,15 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	int32 Currency = 0;
 
+	// OverClock 활성화 시에 UI 교체
 	virtual void OnOverClockTagChanged(const FGameplayTag Tag, int32 NewCount);
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateGaugePercent(float Percent);
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateHealPotion(int32 CurrentPotions, int32 MaxPotions);
+	void UpdateHealPotion(int32 CurrentPotions);
 
 private:
-	void CreateHealPotionImages();
+	void InitializeHealPotionImages();
 };
