@@ -27,14 +27,28 @@ void UGA_EnemyDeath::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Comma);
 
+	// 재화 증가 이펙트 적용
 	if (ASC && AddCurrencyEffect)
 	{
-		FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
-		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(AddCurrencyEffect, 1.f, ContextHandle);
-
-		if (SpecHandle.IsValid())
+		FGameplayEffectContextHandle CurrencyContextHandle = ASC->MakeEffectContext();
+		FGameplayEffectSpecHandle CurrencySpecHandle = ASC->MakeOutgoingSpec(AddCurrencyEffect, 1.f, CurrencyContextHandle);
+		
+		if (CurrencySpecHandle.IsValid())
 		{
-			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			ASC->ApplyGameplayEffectSpecToSelf(*CurrencySpecHandle.Data.Get());
+
+		}
+	}
+
+	// 스킬 쿨다운 초기화 이펙트 적용
+	if (ASC && ResetSkillCooldownEffect)
+	{
+		FGameplayEffectContextHandle SkillContextHandle = ASC->MakeEffectContext();
+		FGameplayEffectSpecHandle SkillSpecHandle = ASC->MakeOutgoingSpec(ResetSkillCooldownEffect, 1.f, SkillContextHandle);
+
+		if (SkillSpecHandle.IsValid())
+		{
+			ASC->ApplyGameplayEffectSpecToSelf(*SkillSpecHandle.Data.Get());
 		}
 	}
 	

@@ -53,8 +53,10 @@ namespace PrologueGameplayTags
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_HitStop);
 
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_ResetSkillCooldown);
+
 	/** Comma Cooldown Tags */
-	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Cooldown_Parry);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Cooldown_Skill);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Cooldown_Heal);
 	
