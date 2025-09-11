@@ -24,6 +24,9 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")
 	TSubclassOf<UGameplayEffect> AddCurrencyEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")
+	TSubclassOf<UGameplayEffect> ResetSkillCooldownEffect;
 	
 private:
 	TWeakObjectPtr<APrologueEnemyCharacter> CachedEnemyCharacter;

@@ -20,7 +20,6 @@ APlayerDashPoint::APlayerDashPoint()
 	TargetDirection = FVector::ForwardVector;
 	CurrentDirection = TargetDirection;
 	DashPoint = FVector::ForwardVector;
-	DashCool = 1.0f;
 
 	SkillCursorDirection = FVector::ForwardVector;
 	SkillDirection = SkillCursorDirection;
@@ -59,7 +58,6 @@ void APlayerDashPoint::Tick(float DeltaTime)
 
 	// Dash Section
 	CheckNewDirecionPoint(); // 대시 지점 탐색
-	CurrentDashCool -= DeltaTime; // 쿨타임 감소
 
 	// Parry Section
 	if (bSkillSync && Player)
@@ -325,7 +323,7 @@ void APlayerDashPoint::SetDirectionMinGround()
 	}
 }
 
-void APlayerDashPoint::SetDashCool()
+bool APlayerDashPoint::GetDashCoolState()
 {
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
@@ -355,16 +353,12 @@ void APlayerDashPoint::SetDashCool()
 		// 같은 지면 대시 = 쿨타임 부여
 		if (PlayerGround == GroundActor)
 		{
-			UE_LOG(LogTemp, Log, TEXT("Start Cool Down"));
-			CurrentDashCool = DashCool;
+			// UE_LOG(LogTemp, Log, TEXT("Start Cool Down"));
+			return true;
 		}
 	}
-}
 
-bool APlayerDashPoint::DashCoolDown()
-{
-			UE_LOG(LogTemp, Log, TEXT("Check Dash Cool!"));
-	return CurrentDashCool <= 0.0f;
+	return false;
 }
 
 void APlayerDashPoint::CheckNewDirecionPoint()

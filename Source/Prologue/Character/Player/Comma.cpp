@@ -51,6 +51,10 @@ AComma::AComma()
 	FollowCamera->FieldOfView = 50.f;
 	FollowCamera->bUsePawnControlRotation = false;
 
+	DashCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("DashCollision"));
+	DashCollision->SetupAttachment(RootComponent);
+	DashCollision->SetActive(false);
+	
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
@@ -126,6 +130,7 @@ void AComma::Tick(float DeltaSeconds)
 		SetActorRotation(NewRotation);
 	}
 
+	// 카메라 보정
 	if (CameraBoom)
 	{
 		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, TargetZoomDist))
@@ -230,6 +235,16 @@ void AComma::BeginPlay()
 {
 	Super::BeginPlay();
 
+	FGameplayTag DashCooldownTag = FGameplayTag::RequestGameplayTag(FName("Comma.Cooldown.Dash"));
+	FDelegateHandle DashCoolHandle = ASC->RegisterGameplayTagEvent(DashCooldownTag, EGameplayTagEventType::NewOrRemoved)
+	.AddLambda([this](const FGameplayTag Tag, int32 NewCount)
+	{
+		if (NewCount == 0 && bInputDash)
+		{
+			InputGAS(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")));
+		}
+	});
+	
 	if (ACommaController* CommaController = Cast<ACommaController>(GetController()))
 	{
 		CommaController->bShowMouseCursor = true;
@@ -271,6 +286,7 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AComma::Input_Move);
+		FGameplayTag DashTag = FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash"));
 
 		if (InputConfigDataAsset)
 		{
@@ -279,6 +295,12 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 				EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this,
 				                                   &AComma::InputGAS, InputAction.Tag);
 
+				if (InputAction.Tag == DashTag)
+				{
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputDash, true);
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this, &AComma::InputDash, false);					
+				}
+				
 				LOG_SCREEN("%s", *InputAction.Tag.ToString());
 			}
 		}
@@ -308,15 +330,11 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 
 	if (Controller != nullptr)
 	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
 		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector ForwardDirection = FVector(1.f, 0.f, 0.f);
 
 		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		const FVector RightDirection = FVector(0.f, 1.f, 0.f);
 
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
@@ -564,4 +582,15 @@ APlayerDashPoint* AComma::GetDashPoint() const
 	{
 		return nullptr;
 	}
+}
+
+void AComma::InputDash(bool bInput)
+{
+	// UE_LOG(LogTemp, Log, TEXT("Input Dash Event: %s"), *LexToString(bInput));
+	bInputDash = bInput;
+}
+
+bool AComma::GetInputDashState() const
+{
+	return bInputDash;
 }

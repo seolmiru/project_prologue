@@ -3,6 +3,7 @@
 
 #include "GA_OverClock.h"
 
+#include "AbilitySystemGlobals.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Components/PostProcessComponent.h"
@@ -25,27 +26,31 @@ UGA_OverClock::UGA_OverClock()
 }
 
 bool UGA_OverClock::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
-	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+                                       const FGameplayAbilityActorInfo* ActorInfo,
+                                       const FGameplayTagContainer* SourceTags,
+                                       const FGameplayTagContainer* TargetTags,
+                                       FGameplayTagContainer* OptionalRelevantTags) const
 {
 	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
 	{
 		return false;
 	}
-	
+
 	if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Skill))
 	{
 		return false;
 	}
-	
+
 	return true;
 }
 
 void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-                                    const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+                                    const FGameplayAbilityActivationInfo ActivationInfo,
+                                    const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	TotalDamage = 0.0f;
 	bIsOverClockActive = true;
 	OverClockTimeScale = TimeScale;
 	CenterLocation = ActorInfo->AvatarActor->GetActorLocation();
@@ -101,7 +106,7 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	);
 
 	FVector OverClockSpawnLocation = bHit ? HitResult.ImpactPoint : OverClockLocation;
-	
+
 	if (OverClockNiagaraSystem)
 	{
 		UNiagaraComponent* OverClockNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
@@ -117,13 +122,33 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 }
 
 void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+                               const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility,
+                               bool bWasCancelled)
 {
 	// Timer 정리
 	GetWorld()->GetTimerManager().ClearTimer(OverClockTimerHandle);
 	GetWorld()->GetTimerManager().ClearTimer(CheckAreaTimerHandle);
-	
+
 	bIsOverClockActive = false;
+
+	// 대미지 적용
+	AComma* Comma = Cast<AComma>(GetActorInfo().AvatarActor);
+	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+
+	FGameplayAbilityTargetDataHandle DataHandle;
+	FGameplayAbilityTargetData_ActorArray* TargetData = new FGameplayAbilityTargetData_ActorArray();
+	for (auto _Target : AffectedActors)
+	{
+		APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(_Target.Get());
+		if (Enemy)
+		{
+			FGameplayEffectSpecHandle SpecHandle = Enemy->GetAbilitySystemComponent()->MakeOutgoingSpec(
+				FinishDamageEffect, 1.f, EffectContextHandle);
+			SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.OverClock")), GetFinishDamage());
+			UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Enemy)->ApplyGameplayEffectSpecToSelf(
+				*SpecHandle.Data.Get());
+		}
+	}
 
 	// 시간 복구
 	RestoreEnemyTime();
@@ -136,7 +161,7 @@ void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 void UGA_OverClock::OnOverClockFinished()
 {
 	LOG_SCREEN_R("End OverClock. Restoring time.");
-	
+
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
@@ -159,14 +184,26 @@ void UGA_OverClock::CheckActorsInArea()
 
 	for (AActor* Actor : OverlappingActors)
 	{
+		// Sejin
+		APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(Actor);
+		// end Sejin
+
 		// OverClock의 영향을 받을 대상인지 검사
-		if (Cast<APrologueEnemyCharacter>(Actor) || Cast<ABazierProjectile>(Actor) || Cast<APrologueProjectileBase>(Actor))
+		if (Enemy || Cast<ABazierProjectile>(Actor) || Cast<APrologueProjectileBase>(Actor))
 		{
 			// 영향을 받고 있지 않은 새로운 Actor일 때 OverClock 효과 적용
 			if (!AffectedActors.Contains(Actor))
 			{
 				Actor->CustomTimeDilation = TimeScale;
 				AffectedActors.Add(Actor);
+
+				// Sejin
+				if (Enemy)
+				{
+					UE_LOG(LogTemp, Log, TEXT("Is Enemy"));
+					Enemy->OnHealthChanged.AddDynamic(this, &UGA_OverClock::OnHitActor);
+				}
+				// end Sejin
 
 				// MaterialInstanceDynamic 생성
 				TArray<UMaterialInstanceDynamic*> MDIs;
@@ -180,7 +217,8 @@ void UGA_OverClock::CheckActorsInArea()
 					{
 						for (int32 i = 0; i < MeshComp->GetNumMaterials(); ++i)
 						{
-							UMaterialInstanceDynamic* MDI = MeshComp->CreateDynamicMaterialInstance(i, MeshComp->GetMaterial(i));
+							UMaterialInstanceDynamic* MDI = MeshComp->CreateDynamicMaterialInstance(
+								i, MeshComp->GetMaterial(i));
 							if (MDI)
 							{
 								MDI->SetScalarParameterValue(FName("OverClockFxPower"), 1.f);
@@ -222,7 +260,15 @@ void UGA_OverClock::CheckActorsInArea()
 				AffectedActorMaterial.Remove(ActorPtr);
 			}
 		}
-		
+
+		// Sejin
+		APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(ActorPtr);
+		if (Enemy)
+		{
+			Enemy->OnHealthChanged.AddDynamic(this, &UGA_OverClock::OnHitActor);
+		}
+		// end Sejin
+
 		AffectedActors.Remove(ActorPtr);
 	}
 }
@@ -251,4 +297,16 @@ void UGA_OverClock::RestoreEnemyTime()
 
 	AffectedActors.Empty();
 	AffectedActorMaterial.Empty();
+}
+
+void UGA_OverClock::OnHitActor(float OldValue, float NewValue)
+{
+	TotalDamage += OldValue - NewValue;
+	// LOG_SCREEN_R("Overclock Total Damage: %d", TotalDamage);
+	UE_LOG(LogTemp, Log, TEXT("Total Damage: %f "), TotalDamage);
+}
+
+float UGA_OverClock::GetFinishDamage()
+{
+	return TotalDamage * FinishMultiValue + FinishDefaultDamage;
 }

@@ -7,13 +7,14 @@
 #include "GameplayEffectExtension.h"
 #include "../../PrologueGameplayTags.h"
 #include "Prologue/Prologue.h"
+#include "Prologue/AbilitySystem/PrologueAbilitySystemComponent.h"
 #include "Prologue/Character/Player/Comma.h"
 
 UPrologueAttributeSet::UPrologueAttributeSet()
 {
 	InitCurrentHealth(1.f);
 	InitMaxHealth(1.f);
-	InitDamage(1.f);
+	InitDamage(0.f);
 	InitCurrentBrokenGauge(1.f);
 	InitMaxBrokenGauge(1.f);
 }
@@ -73,24 +74,25 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 		LOG_SCREEN("Direct Health Access : %f", GetCurrentHealth());
 		
 		SetCurrentHealth(FMath::Clamp(GetCurrentHealth(), MinimumHealth, GetMaxHealth()));
-
-		if (AActor* TargetActor = Data.Target.GetAvatarActor())
-		{
-			if (AComma* Comma = Cast<AComma>(TargetActor))
-			{
-				float HealthChange = Data.EvaluatedData.Magnitude;
-				if (HealthChange < 0.f)
-				{
-					Comma->TriggerDamageEffect(FMath::Abs(HealthChange));
-				}
-			}
-		}
 	}
 	else if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
-		LOG_SCREEN("Damage : %f", GetDamage());
-		SetCurrentHealth(FMath::Clamp(GetCurrentHealth() - GetDamage(), MinimumHealth, GetMaxHealth()));
+		const float LocalDamage = GetDamage();
+		
+		LOG_SCREEN("Damage : %f", LocalDamage);
+		SetCurrentHealth(FMath::Clamp(GetCurrentHealth() - LocalDamage, MinimumHealth, GetMaxHealth()));
 		SetDamage(0.0f);
+
+		if (LocalDamage > 0.f)
+		{
+			if (AActor* TargetActor = Data.Target.GetAvatarActor())
+			{
+				if (AComma* Comma = Cast<AComma>(TargetActor))
+				{
+					Comma->TriggerDamageEffect(LocalDamage);
+				}
+			}
+		}
 	}
 
 	if (Data.EvaluatedData.Attribute == GetCurrentBrokenGaugeAttribute())

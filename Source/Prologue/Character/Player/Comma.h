@@ -59,6 +59,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCapsuleComponent> DashCollision;
 	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
@@ -179,6 +182,8 @@ public:
 	FORCEINLINE UCommaWidget* GetCommaWidget() const { return CommaWidget; }
 	FORCEINLINE UWidgetComponent* GetCooldownWidget() const { return CooldownWidgetComponent; }
 
+	FORCEINLINE UCapsuleComponent* GetDashCollision() const { return DashCollision; }
+
 	FORCEINLINE UWidgetComponent* GetGuideWidget() const { return GuideWidgetComponent; }
 
 	void SetUIVisibility(bool bVisible);
@@ -243,6 +248,13 @@ private:
 	/** Sejin */
 public:
 	class APlayerDashPoint* GetDashPoint() const;
-	
+
+	void InputDash(bool bInput);
+
+	bool GetInputDashState() const;	
+private:
 	TObjectPtr<class APlayerDashPoint> DashPoint;
+
+	UPROPERTY(VisibleAnywhere, Category="Input")
+	bool bInputDash;
 };

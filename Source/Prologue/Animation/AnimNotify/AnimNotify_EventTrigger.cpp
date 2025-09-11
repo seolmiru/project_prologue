@@ -26,3 +26,8 @@ void UAnimNotify_EventTrigger::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 		}
 	}
 }
+
+FString UAnimNotify_EventTrigger::GetNotifyName_Implementation() const
+{
+	return TriggerGameplayTag.ToString();
+}
