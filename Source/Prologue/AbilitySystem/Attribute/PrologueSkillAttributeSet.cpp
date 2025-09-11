@@ -5,7 +5,7 @@
 
 UPrologueSkillAttributeSet::UPrologueSkillAttributeSet() :
 	SwordSwitchAttackDamage(80.f),
-	MaxSwordSwitchAttackDamage(300.f),
+	MaxSwordSwitchAttackDamage(500.f),
 	SwordSwitchAttackRange(500.f),
 	MaxSwordSwitchAttackRange(800.f)
 {
