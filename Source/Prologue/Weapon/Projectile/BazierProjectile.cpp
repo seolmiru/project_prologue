@@ -27,11 +27,8 @@ ABazierProjectile::ABazierProjectile()
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	ProjectileCollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnProjectileHit);
 
-
 	ProjectileNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ProjectileNiagaraComponent"));
 	ProjectileNiagaraComponent->SetupAttachment(GetRootComponent());
-	//SyncNiagaraSpeed(UGA_OverClock::OverClockTimeScale);
-	//UGA_OverClock::OnTimeScale.AddDynamic(this, &ABazierProjectile::SyncNiagaraSpeed);
 
 	ExplosionRadius = 400.f;
 	TimeToExplode = 3.f;
@@ -42,11 +39,6 @@ ABazierProjectile::ABazierProjectile()
 	GroundOffset = 100.0f;
 }
 
-/*ABazierProjectile::~ABazierProjectile()
-{
-	UGA_OverClock::OnTimeScale.RemoveDynamic(this, &ABazierProjectile::SyncNiagaraSpeed);
-}*/
-
 void ABazierProjectile::FireInDirection(const FVector& ShootDirection)
 {
 	UE_LOG(LogTemp, Log, TEXT("FireInDirection"));
@@ -54,30 +46,10 @@ void ABazierProjectile::FireInDirection(const FVector& ShootDirection)
 	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (PlayerCharacter)
 	{
-		OriginalTarget = PlayerCharacter;
 		FVector TargetLocation = PlayerCharacter->GetActorLocation();
 		TargetLocation.Z -= GroundOffset;
 		SetBazierPoint(MyLocation, TargetLocation);
 	}
-}
-
-void ABazierProjectile::Deflected(AActor* DeflectingActor)
-{
-	if (bIsDeflected || !GetInstigator())
-		return;
-
-	bIsDeflected = true;
-
-	// 패링 당한 위치에서 투사체 발사한 Actor로 경로 설정
-	FVector MyLocation = GetActorLocation();
-	FVector ShooterLocation = GetInstigator()->GetActorLocation();
-	ShooterLocation.Z -= GroundOffset;
-
-	// 배지어 경로 재지정
-	SetBazierPoint(MyLocation, ShooterLocation);
-
-	// 타겟 변경
-	OriginalTarget = GetInstigator();
 }
 
 void ABazierProjectile::BeginPlay()
@@ -87,6 +59,11 @@ void ABazierProjectile::BeginPlay()
 	if (UGA_OverClock::bIsOverClockActive)
 	{
 		CustomTimeDilation = UGA_OverClock::OverClockTimeScale;
+	}
+
+	if (ProjectileNiagaraComponent)
+	{
+		ProjectileNiagaraComponent->OnSystemFinished.AddDynamic(this, &ABazierProjectile::OnNiagaraSystemFinished);
 	}
 }
 
@@ -119,7 +96,7 @@ void ABazierProjectile::Tick(float DeltaTime)
 			if (ElapsedTime > TimeToExplode)
 			{
 				Explode();
-				Destroy();
+				SetActorTickEnabled(false);
 				return;
 			}
 
@@ -143,6 +120,11 @@ void ABazierProjectile::OnProjectileHit(UPrimitiveComponent* HitComponent, AActo
 	{
 		StickAndExplosion(Hit);
 	}
+}
+
+void ABazierProjectile::OnNiagaraSystemFinished(UNiagaraComponent* Niagara)
+{
+	Destroy();
 }
 
 void ABazierProjectile::StickAndExplosion(const FHitResult& Hit)
@@ -189,26 +171,16 @@ void ABazierProjectile::Explode()
 		);
 	}
 
-	// 패링 당한 투사체라면 투사체를 발사한 Actor를 타겟으로 지정
-	AActor* TargetActor = bIsDeflected ? GetInstigator() : UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	AActor* TargetActor = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
 	if (!TargetActor)
 	{
-		Destroy();
 		return;
 	}
-	
-	/*APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-	if (PlayerPawn == nullptr)
-	{
-		Destroy();
-		return;
-	}*/
 
 	const float DistSq = FVector::DistSquared(TargetActor->GetActorLocation(), GetActorLocation());
 	if (DistSq > FMath::Square(ExplosionRadius))
 	{
-		Destroy();
 		return;
 	}
 
@@ -216,8 +188,7 @@ void ABazierProjectile::Explode()
 	{
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 
-		// 패링된 투사체는 발사자를 플레이어로 지정함
-		AActor* SourceActor = bIsDeflected ? UGameplayStatics::GetPlayerPawn(GetWorld(), 0) : GetInstigator();
+		AActor* SourceActor = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 		
 		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
 
@@ -238,8 +209,6 @@ void ABazierProjectile::Explode()
 			}
 		}
 	}
-
-	Destroy();
 }
 
 void ABazierProjectile::SetBazierPoint(FVector MyLocation, FVector TargetLocation)
@@ -280,10 +249,3 @@ FVector ABazierProjectile::GetBazierPoint(float weight)
 
 	return DummyPoints[0];
 }
-
-/*
-void ABazierProjectile::SyncNiagaraSpeed(float NewTimeScale)
-{
-	ProjectileNiagaraComponent->SetFloatParameter(FName("User.PlayRate"), UGA_OverClock::OverClockTimeScale);
-}
-*/

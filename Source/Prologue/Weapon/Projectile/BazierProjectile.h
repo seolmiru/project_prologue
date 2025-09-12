@@ -17,12 +17,8 @@ class PROLOGUE_API ABazierProjectile : public AActor
 	
 public:	
 	ABazierProjectile();
-	//virtual ~ABazierProjectile() override;
 
 	void FireInDirection(const FVector& ShootDirection);
-
-	// 투사체 반사당했을 때 호출
-	void Deflected(AActor* DeflectingActor);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -59,6 +55,9 @@ protected:
 	UFUNCTION()
 	virtual void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UFUNCTION()
+	void OnNiagaraSystemFinished(UNiagaraComponent* Niagara);
+	
 	void StickAndExplosion(const FHitResult& Hit);
 
 	void Explode();
@@ -92,18 +91,4 @@ protected:
 	bool bFire;
 	float FlyTime;
 	float CurrentFlyTime;
-
-	// Niagara Section
-/*protected:
-	UFUNCTION()
-	void SyncNiagaraSpeed(float NewTimeScale);	*/
-
-
-protected:
-	// 투사체가 패링 당했을 때의 상태 관리
-	UPROPERTY()
-	bool bIsDeflected = false;
-
-	UPROPERTY()
-	TObjectPtr<AActor> OriginalTarget;
 };
