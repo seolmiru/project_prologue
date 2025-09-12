@@ -3,12 +3,17 @@
 
 #include "ArenaGate.h"
 
+#include "NiagaraComponent.h"
+
 AArenaGate::AArenaGate()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
+	GateEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("GateEffect"));
+	GateEffect->SetupAttachment(RootComponent);
+	
 	GateMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GateMesh"));
 	GateMesh->SetupAttachment(RootComponent);
 	GateMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
