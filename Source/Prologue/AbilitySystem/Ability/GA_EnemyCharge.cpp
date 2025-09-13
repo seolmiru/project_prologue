@@ -16,6 +16,8 @@ void UGA_EnemyCharge::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	HitActors.Empty();
+	
 	UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, OverlapCheckDelay);
 	DelayTask->OnFinish.AddDynamic(this, &UGA_EnemyCharge::OnDelayFinished);
 
@@ -55,6 +57,11 @@ void UGA_EnemyCharge::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 
 void UGA_EnemyCharge::HandleTargetHit(AActor* TargetActor, const FHitResult& SweepResult)
 {
+	if (HitActors.Contains(TargetActor))
+	{
+		return;
+	}
+	
 	AComma* Comma = Cast<AComma>(TargetActor);
 	if (!Comma)
 	{
@@ -75,6 +82,8 @@ void UGA_EnemyCharge::HandleTargetHit(AActor* TargetActor, const FHitResult& Swe
 		DataHandle.Add(TargetData);
 		TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
+		HitActors.Add(TargetActor);
+		
 		TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_PlayerHit);
 	}
 }
