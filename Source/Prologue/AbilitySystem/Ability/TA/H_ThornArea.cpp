@@ -5,6 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -17,13 +18,27 @@ AH_ThornArea::AH_ThornArea()
 	SetRootComponent(BoxComponent);
 	BoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	BoxComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+
+	ThornNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ThornNiagaraComponent"));
+	ThornNiagaraComponent->SetupAttachment(RootComponent);
 }
 
-void AH_ThornArea::SetBoxExtent(const FVector& InBoxExtent)
+void AH_ThornArea::SetBoxExtent(const FVector& InBoxExtent, int32 ThornIndex)
 {
 	if (BoxComponent)
 	{
 		BoxComponent->SetBoxExtent(InBoxExtent, true);
+	}
+
+	if (ThornNiagaraComponent)
+	{
+		const float NewSpawnCount = 50.f + (ThornIndex * 25.f);
+
+		const FVector NiagaraBoxSize = InBoxExtent * 2.f;
+		
+		ThornNiagaraComponent->SetFloatParameter(TEXT("Count"), NewSpawnCount);
+		
+		ThornNiagaraComponent->SetVectorParameter(TEXT("SpawnThornAreaExtent"), NiagaraBoxSize);
 	}
 }
 
@@ -32,19 +47,6 @@ void AH_ThornArea::BeginPlay()
 	Super::BeginPlay();
 
 	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AH_ThornArea::OnBoxOverlap);
-
-	if (ThornEffect)
-	{
-		UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),
-			ThornEffect,
-			GetActorLocation(),
-			FRotator::ZeroRotator,
-			FVector(1.f, 1.f, 1.f),
-			true,
-			true
-		);
-	}
 }
 
 void AH_ThornArea::Tick(float DeltaSeconds)
