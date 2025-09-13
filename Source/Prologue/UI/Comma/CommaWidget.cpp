@@ -4,7 +4,10 @@
 #include "CommaWidget.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
+#include "Prologue/Prologue.h"
 #include "Prologue/PrologueGameplayTags.h"
 
 void UCommaWidget::NativeConstruct()
@@ -28,7 +31,10 @@ void UCommaWidget::NativeConstruct()
 	{
 		PlayerIconOverClock->SetVisibility(ESlateVisibility::Hidden);
 	}
-	
+
+	InitializeHealPotionImages();
+
+	// Intro Animation 재생 중일 때에는 UI 가리기
 	if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Intro))
 	{
 		SetVisibility(ESlateVisibility::Hidden);
@@ -43,6 +49,7 @@ void UCommaWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
+	// OverClock Cooldown Update
 	if (ASC && CooldownTag.IsValid())
 	{
 		FGameplayEffectQuery Query;
@@ -83,6 +90,7 @@ void UCommaWidget::SetAbilitySystemComponent(AActor* InOwner)
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetCurrentHealthAttribute()).AddUObject(this, &UCommaWidget::OnCurrentHealthChanged);
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetMaxHealthAttribute()).AddUObject(this, &UCommaWidget::OnMaxHealthChanged);
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueSkillAttributeSet::GetCurrentHealPotionAttribute()).AddUObject(this, &UCommaWidget::OnCurrentHealPotionChanged);
+		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueSkillAttributeSet::GetMaxHealPotionAttribute()).AddUObject(this, &UCommaWidget::OnMaxHealPotionChanged);
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueSkillAttributeSet::GetCurrencyAttribute()).AddUObject(this, &UCommaWidget::OnCurrencyChanged);
 			
 		if (CooldownTag.IsValid())
@@ -114,6 +122,11 @@ void UCommaWidget::SetAbilitySystemComponent(AActor* InOwner)
 
 				CurrentGauge = SkillAttributeSet->GetCurrentGauge();
 				CurrentMaxGauge = SkillAttributeSet->GetMaxGauge();
+
+				CurrentHealPotion = SkillAttributeSet->GetCurrentHealPotion();
+				MaxHealPotion = SkillAttributeSet->GetMaxHealPotion();
+
+				UpdateHealPotion(static_cast<int32>(CurrentHealPotion));
 			}
 		}
 	}
@@ -142,6 +155,13 @@ void UCommaWidget::OnCooldownTagChanged(const FGameplayTag Tag, int32 NewCount)
 void UCommaWidget::OnCurrentHealPotionChanged(const FOnAttributeChangeData& ChangeData)
 {
 	CurrentHealPotion = ChangeData.NewValue;
+	UpdateHealPotion(static_cast<int32>(CurrentHealPotion));
+}
+
+void UCommaWidget::OnMaxHealPotionChanged(const FOnAttributeChangeData& ChangeData)
+{
+	MaxHealPotion = ChangeData.NewValue;
+	UpdateHealPotion(static_cast<int32>(CurrentHealPotion));
 }
 
 void UCommaWidget::OnCurrencyChanged(const FOnAttributeChangeData& ChangeData)
@@ -170,5 +190,57 @@ void UCommaWidget::UpdateGaugePercent(float Percent)
 	if (GaugeMaterialInstance)
 	{
 		GaugeMaterialInstance->SetScalarParameterValue(TEXT("Percent"), Percent);
+	}
+}
+
+void UCommaWidget::UpdateHealPotion(int32 CurrentPotions)
+{
+	for (int32 i = 0; i < HealPotionImages.Num(); i++)
+	{
+		if (HealPotionImages[i])
+		{
+			if (i < CurrentPotions)
+			{
+				if (FullHealPotionTexture)
+				{
+					HealPotionImages[i]->SetBrushFromTexture(FullHealPotionTexture);
+				}
+			}
+			else
+			{
+				if (EmptyHealPotionTexture)
+				{
+					HealPotionImages[i]->SetBrushFromTexture(EmptyHealPotionTexture);
+				}
+			}
+		}
+	}
+}
+
+void UCommaWidget::InitializeHealPotionImages()
+{
+	if (!HealPotionContainer)
+	{
+		LOG_SCREEN_R("HealPotionContainer is Null");
+		return;
+	}
+
+	HealPotionContainer->ClearChildren();
+	HealPotionImages.Empty();
+
+	for (int32 i = 0; i < MaxDisplayHealPotions; i++)
+	{
+		UImage* PotionImage = NewObject<UImage>(this);
+		if (PotionImage)
+		{
+			if (FullHealPotionTexture)
+			{
+				PotionImage->SetBrushFromTexture(FullHealPotionTexture);
+
+				UHorizontalBoxSlot* BoxSlot = HealPotionContainer->AddChildToHorizontalBox(PotionImage);
+
+				HealPotionImages.Add(PotionImage);
+			}
+		}
 	}
 }

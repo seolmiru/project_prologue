@@ -53,8 +53,10 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_HitStop, "Comma.Event.HitStop");
 
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_ResetSkillCooldown, "Comma.Event.ResetSkillCooldown");
+
 	/** Comma Cooldown Tags */
-	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Parry, "Comma.Cooldown.Parry");
+	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Skill, "Comma.Cooldown.Skill");
 	
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Heal, "Comma.Cooldown.Heal");
 
