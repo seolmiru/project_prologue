@@ -24,7 +24,7 @@ struct FPotentialDashTarget
 		: FeetLocation(InFeetLocation), DistanceSqToStart(FVector::DistSquared(StartActorPos, InFeetLocation))
 	{
 	}
-	
+
 	bool operator<(const FPotentialDashTarget& Other) const
 	{
 		return DistanceSqToStart < Other.DistanceSqToStart;
@@ -38,8 +38,10 @@ UGA_CommaDash::UGA_CommaDash()
 }
 
 bool UGA_CommaDash::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
-                                       const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
-                                       const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+                                       const FGameplayAbilityActorInfo* ActorInfo,
+                                       const FGameplayTagContainer* SourceTags,
+                                       const FGameplayTagContainer* TargetTags,
+                                       FGameplayTagContainer* OptionalRelevantTags) const
 {
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
@@ -91,6 +93,21 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	if (Comma->GetInputDashState())
 	{
 		Comma->InputGAS(FGameplayTag::RequestGameplayTag("Comma.Ability.Dash"));
+	}
+}
+
+UGameplayEffect* UGA_CommaDash::GetCooldownGameplayEffect() const
+{
+	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
+	if (Comma->GetDashPoint()->GetDashCoolState())
+	{
+		LOG_SCREEN("Dash: Long Cool");
+		return CoolEffectLong.GetDefaultObject();
+	}
+	else
+	{
+		LOG_SCREEN("Dash: Short Cool");
+		return CoolEffectShort.GetDefaultObject();
 	}
 }
 
@@ -229,12 +246,12 @@ void UGA_CommaDash::OnDashAllowed()
 {
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
 	Comma->GetDashPoint()->GetDashCoolState(); // 대시 쿨타임 설정
-	
-	if (Comma->GetDashPoint()->GetDashCoolState())
-	{
-		CommitAbilityCooldown(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
-	}
-	
+	CommitAbilityCooldown(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
+
+	// if (Comma->GetDashPoint()->GetDashCoolState())
+	// {
+	// }
+
 	// Invincible Effect 부여
 	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->
 		MakeEffectContext();
@@ -319,7 +336,6 @@ void UGA_CommaDash::OnDashAllowed()
 		if (TickCurveTask)
 		{
 			TickCurveTask->OnCurveTick.AddDynamic(this, &UGA_CommaDash::OnCurveTick);
-			//TickCurveTask->OnComplete.AddDynamic(this, &UGA_CommaDash::OnComplete);
 			TickCurveTask->ReadyForActivation();
 		}
 	}
