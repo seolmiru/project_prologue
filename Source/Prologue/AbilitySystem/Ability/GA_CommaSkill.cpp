@@ -71,6 +71,20 @@ void UGA_CommaSkill::InputPressed(const FGameplayAbilitySpecHandle Handle, const
 void UGA_CommaSkill::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
+	bHitStopApplied = false;
+	
+	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
+
+	if (Comma)
+	{
+		Comma->GetDashCollision()->SetActive(false);
+		Comma->GetDashCollision()->OnComponentBeginOverlap.Clear();
+	}
+
+	Comma->GetDashPoint()->SetCursorDirectionState(true);
+
+	Comma->GetCharacterMovement()->UpdateFloorFromAdjustment();
+	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 

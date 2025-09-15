@@ -61,10 +61,10 @@ void ABazierProjectile::BeginPlay()
 		CustomTimeDilation = UGA_OverClock::OverClockTimeScale;
 	}
 
-	if (ProjectileNiagaraComponent)
+	/*if (ProjectileNiagaraComponent)
 	{
 		ProjectileNiagaraComponent->OnSystemFinished.AddDynamic(this, &ABazierProjectile::OnNiagaraSystemFinished);
-	}
+	}*/
 }
 
 void ABazierProjectile::Tick(float DeltaTime)
@@ -96,6 +96,7 @@ void ABazierProjectile::Tick(float DeltaTime)
 			if (ElapsedTime > TimeToExplode)
 			{
 				Explode();
+				Destroy();
 				SetActorTickEnabled(false);
 				return;
 			}
@@ -188,12 +189,14 @@ void ABazierProjectile::Explode()
 
 	if (!TargetActor)
 	{
+		Destroy();
 		return;
 	}
 
 	const float DistSq = FVector::DistSquared(TargetActor->GetActorLocation(), GetActorLocation());
 	if (DistSq > FMath::Square(ExplosionRadius))
 	{
+		Destroy();
 		return;
 	}
 
@@ -222,6 +225,8 @@ void ABazierProjectile::Explode()
 			}
 		}
 	}
+
+	Destroy();
 }
 
 void ABazierProjectile::SetBazierPoint(FVector MyLocation, FVector TargetLocation)
