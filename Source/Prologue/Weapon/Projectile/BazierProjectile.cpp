@@ -156,6 +156,19 @@ void ABazierProjectile::Explode()
 		);
 	}
 
+	if (ProjectileExplosion)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			ProjectileExplosion,
+			GetActorLocation(),
+			FRotator::ZeroRotator,
+			FVector(1.f, 1.f, 1.f),
+			true,
+			true
+		);
+	}
+	
 	if (bShowDebug)
 	{
 		DrawDebugSphere(
