@@ -34,6 +34,9 @@ protected:
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")
+	TSubclassOf<UGameplayEffect> ImmunityEffectClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")
 	TObjectPtr<UNiagaraComponent> ThornNiagaraComponent;
 
 	UPROPERTY(VisibleAnywhere)

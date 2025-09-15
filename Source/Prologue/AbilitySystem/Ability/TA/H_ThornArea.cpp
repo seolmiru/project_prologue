@@ -85,10 +85,23 @@ void AH_ThornArea::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 
 	FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
 	ContextHandle.AddSourceObject(this);
-	const FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(DamageEffectClass, 1.f, ContextHandle);
-	if (EffectSpecHandle.IsValid())
+
+	if (DamageEffectClass)
 	{
-		TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+		const FGameplayEffectSpecHandle DamageEffectSpecHandle = TargetASC->MakeOutgoingSpec(DamageEffectClass, 1.f, ContextHandle);
+		if (DamageEffectSpecHandle.IsValid())
+		{
+			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
+		}
+	}
+
+	if (ImmunityEffectClass)
+	{
+		const FGameplayEffectSpecHandle ImmunityEffectSpecHandle = TargetASC->MakeOutgoingSpec(ImmunityEffectClass, 1.f, ContextHandle);
+		if (ImmunityEffectSpecHandle.IsValid())
+		{
+			TargetASC->ApplyGameplayEffectSpecToSelf(*ImmunityEffectSpecHandle.Data.Get());
+		}
 	}
 }
 
