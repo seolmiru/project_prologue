@@ -69,6 +69,7 @@ void AArenaGate::CloseGate()
 		bIsOpen = false;
 		GateMesh->SetVisibility(true);
 		GateMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		GateEffect->Deactivate();
 		OnGateStateChanged.Broadcast(false);
 	}
 }
