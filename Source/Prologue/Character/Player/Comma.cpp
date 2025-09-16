@@ -13,6 +13,7 @@
 #include "Prologue/DataAsset/Input/DataAsset_InputConfig.h"
 #include "EnhancedInputComponent.h"
 #include "AbilitySystemComponent.h"
+#include "NiagaraComponent.h"
 #include "PlayerDashPoint.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/PostProcessComponent.h"
@@ -62,6 +63,9 @@ AComma::AComma()
 	SwordWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SwordWeaponMesh"));
 	SwordWeaponMesh->SetupAttachment(GetMesh(),TEXT("SwordSocket"));
 
+	/*SwordAuraEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("SwordAuraEffect"));
+	SwordAuraEffect->SetupAttachment(SwordWeaponMesh, FName("AuraSocket"));*/
+	
 	UIAnchorComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("UIAnchorComponent"));
 	UIAnchorComponent->SetupAttachment(GetRootComponent());
 	UIAnchorComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));

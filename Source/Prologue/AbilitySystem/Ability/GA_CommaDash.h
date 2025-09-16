@@ -24,6 +24,7 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	                        const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility,
 	                        bool bWasCancelled) override;
+	virtual UGameplayEffect* GetCooldownGameplayEffect() const override;
 
 	UFUNCTION(BlueprintCallable)
 	void OnCurveTick(float Alpha);
@@ -99,6 +100,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Safety")
 	float MinPlatformSafetyScore;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Cool")
+	TSubclassOf<UGameplayEffect> CoolEffectLong;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash|Cool")
+	TSubclassOf<UGameplayEffect> CoolEffectShort;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	TObjectPtr<class UCurveFloat> Curve;

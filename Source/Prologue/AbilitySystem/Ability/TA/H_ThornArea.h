@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "H_ThornArea.generated.h"
 
+class UNiagaraComponent;
 class UNiagaraSystem;
 class UBoxComponent;
 class UGameplayEffect;
@@ -19,7 +20,7 @@ public:
 	AH_ThornArea();
 
 	UFUNCTION(BlueprintCallable, Category = "ThornArea")
-	void SetBoxExtent(const FVector& InBoxExtent);
+	void SetBoxExtent(const FVector& InBoxExtent, int32 ThornIndex);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
 	bool bShowDebug = true;
@@ -33,7 +34,10 @@ protected:
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")
-	TObjectPtr<UNiagaraSystem> ThornEffect;	
+	TSubclassOf<UGameplayEffect> ImmunityEffectClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")
+	TObjectPtr<UNiagaraComponent> ThornNiagaraComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UBoxComponent> BoxComponent;
