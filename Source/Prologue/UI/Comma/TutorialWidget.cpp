@@ -24,22 +24,22 @@ void UTutorialWidget::NativeConstruct()
 
 void UTutorialWidget::OnAbilityActivated(UGameplayAbility* ActivatedAbility)
 {
-	if (ActivatedAbility->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Comma.Ability.Attack.Sword")))
+	if (ActivatedAbility->GetAssetTags().HasTag(FGameplayTag::RequestGameplayTag("Comma.Ability.Attack.Sword")))
 	{
 		LeftClickText->SetOpacity(0.5f);
 	}
 
-	if (ActivatedAbility->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Comma.Ability.Skill")))
+	if (ActivatedAbility->GetAssetTags().HasTag(FGameplayTag::RequestGameplayTag("Comma.Ability.Skill")))
 	{
 		RightClickText->SetOpacity(0.5f);
 	}
 
-	if (ActivatedAbility->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Comma.State.OverClock")))
+	if (ActivatedAbility->GetAssetTags().HasTag(FGameplayTag::RequestGameplayTag("Comma.State.OverClock")))
 	{
 		ShiftText->SetOpacity(0.5f);
 	}
 
-	if (ActivatedAbility->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Comma.Ability.SmashAttack")))
+	if (ActivatedAbility->GetAssetTags().HasTag(FGameplayTag::RequestGameplayTag("Comma.Ability.SmashAttack")))
 	{
 		SmashText->SetOpacity(0.5f);
 	}
