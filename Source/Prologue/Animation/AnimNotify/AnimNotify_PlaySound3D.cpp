@@ -5,7 +5,7 @@
 
 #include "Kismet/GameplayStatics.h"
 
-void UAnimNotify_PlaySound3D::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
+void UAnimNotify_PlaySound3D::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::Notify(MeshComp, Animation);
 
