@@ -23,7 +23,7 @@ AH_ThornArea::AH_ThornArea()
 	ThornNiagaraComponent->SetupAttachment(RootComponent);
 }
 
-void AH_ThornArea::SetBoxExtent(const FVector& InBoxExtent, int32 ThornIndex)
+void AH_ThornArea::SpecifyingThorn(const FVector& InBoxExtent, int32 ThornIndex, const FVector& ThornSize)
 {
 	if (BoxComponent)
 	{
@@ -35,10 +35,14 @@ void AH_ThornArea::SetBoxExtent(const FVector& InBoxExtent, int32 ThornIndex)
 		const float NewSpawnCount = 50.f + (ThornIndex * 25.f);
 
 		const FVector NiagaraBoxSize = InBoxExtent * 2.f;
+
+		const FVector NewSize = ThornSize * 2.f;
 		
 		ThornNiagaraComponent->SetFloatParameter(TEXT("Count"), NewSpawnCount);
 		
 		ThornNiagaraComponent->SetVectorParameter(TEXT("SpawnThornAreaExtent"), NiagaraBoxSize);
+
+		ThornNiagaraComponent->SetVectorParameter(TEXT("Main_Size"), NewSize);
 	}
 }
 
@@ -85,10 +89,23 @@ void AH_ThornArea::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 
 	FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
 	ContextHandle.AddSourceObject(this);
-	const FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(DamageEffectClass, 1.f, ContextHandle);
-	if (EffectSpecHandle.IsValid())
+
+	if (DamageEffectClass)
 	{
-		TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+		const FGameplayEffectSpecHandle DamageEffectSpecHandle = TargetASC->MakeOutgoingSpec(DamageEffectClass, 1.f, ContextHandle);
+		if (DamageEffectSpecHandle.IsValid())
+		{
+			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
+		}
+	}
+
+	if (ImmunityEffectClass)
+	{
+		const FGameplayEffectSpecHandle ImmunityEffectSpecHandle = TargetASC->MakeOutgoingSpec(ImmunityEffectClass, 1.f, ContextHandle);
+		if (ImmunityEffectSpecHandle.IsValid())
+		{
+			TargetASC->ApplyGameplayEffectSpecToSelf(*ImmunityEffectSpecHandle.Data.Get());
+		}
 	}
 }
 

@@ -23,6 +23,7 @@ APowerBank::APowerBank()
 	PowerBankMesh->SetupAttachment(RootComponent);
 
 	TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &APowerBank::OnOverlapBegin);
+	TriggerVolume->OnComponentEndOverlap.AddDynamic(this, &APowerBank::OnOverlapEnd);
 
 	MaterialTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("MaterialTimeline"));
 }
@@ -64,6 +65,16 @@ void APowerBank::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
 	if (Comma)
 	{
 		Comma->GetGuideWidget()->SetVisibility(true);
+	}
+}
+
+void APowerBank::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex)
+{
+	AComma* Comma = Cast<AComma>(OtherActor);
+	if (Comma)
+	{
+		Comma->GetGuideWidget()->SetVisibility(false);
 	}
 }
 
