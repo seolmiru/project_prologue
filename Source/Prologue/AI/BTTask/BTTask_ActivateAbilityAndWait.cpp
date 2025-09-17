@@ -67,7 +67,7 @@ void UBTTask_ActivateAbilityAndWait::OnAbilityEnded(const FAbilityEndedData& Abi
 {
 	if (UBehaviorTreeComponent* OwnerComp = OwnerCompWeakPtr.Get())
 	{
-		if (AbilityEndedData.AbilityThatEnded && AbilityEndedData.AbilityThatEnded->AbilityTags.HasTag(AbilityTagToActivate))
+		if (AbilityEndedData.AbilityThatEnded && AbilityEndedData.AbilityThatEnded->GetAssetTags().HasTag(AbilityTagToActivate))
 		{
 			CleanUp();
 			FinishLatentTask(*OwnerComp, EBTNodeResult::Succeeded);

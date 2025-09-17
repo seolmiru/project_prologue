@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Comma.generated.h"
 
+class UNiagaraComponent;
 class UWidgetComponent;
 class UPostProcessComponent;
 class UCommaWidget;
@@ -62,6 +63,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCapsuleComponent> DashCollision;
+
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UNiagaraComponent> SwordAuraEffect;*/
 	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))

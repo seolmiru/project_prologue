@@ -31,6 +31,9 @@ protected:
 	TObjectPtr<UNiagaraComponent> ProjectileNiagaraComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TObjectPtr<UNiagaraSystem> ProjectileExplosion;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 	float ExplosionRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
