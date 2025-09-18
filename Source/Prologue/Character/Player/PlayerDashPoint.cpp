@@ -325,33 +325,34 @@ void APlayerDashPoint::SetDirectionMinGround()
 
 bool APlayerDashPoint::GetDashCoolState()
 {
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(Player);
-	FVector PlayerLocation = Player->GetActorLocation();
+	// FHitResult HitResult;
+	// FCollisionQueryParams Params;
+	// Params.AddIgnoredActor(Player);
+	// FVector PlayerLocation = Player->GetActorLocation();
+	//
+	// FVector PlayerFloorStart = PlayerLocation;
+	// FVector PlayerFloorEnd = PlayerLocation;
+	// PlayerFloorEnd.Z -= Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 50.0f;
+	// const float CapsuleRadius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	// const float CapsuleHalfHeight = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	//
+	// bool bPlayerHit = GetWorld()->SweepSingleByChannel(
+	// 	HitResult,
+	// 	PlayerLocation,
+	// 	PlayerFloorEnd,
+	// 	FQuat::Identity,
+	// 	ECC_GameTraceChannel8,
+	// 	FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight),
+	// 	Params
+	// );
 
-	FVector PlayerFloorStart = PlayerLocation;
-	FVector PlayerFloorEnd = PlayerLocation;
-	PlayerFloorEnd.Z -= Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 50.0f;
-	const float CapsuleRadius = Player->GetCapsuleComponent()->GetScaledCapsuleRadius();
-	const float CapsuleHalfHeight = Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-
-	bool bPlayerHit = GetWorld()->SweepSingleByChannel(
-		HitResult,
-		PlayerLocation,
-		PlayerFloorEnd,
-		FQuat::Identity,
-		ECC_GameTraceChannel8,
-		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight),
-		Params
-	);
-
-	if (bPlayerHit)
+	const AActor* Ground = Player->GetGround();
+	
+	if (Ground != nullptr)
 	{
-		AActor* PlayerGround = HitResult.GetActor();
 		// UE_LOG(LogTemp, Log, TEXT("Player Ground: (%s), Dash Point Ground: (%s)"), *PlayerGround->GetName(), *GroundActor->GetName());
 		// 같은 지면 대시 = 쿨타임 부여
-		return PlayerGround == GroundActor;
+		return Ground == GroundActor;
 	}
 
 	return false;

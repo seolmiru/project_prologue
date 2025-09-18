@@ -55,7 +55,7 @@ AComma::AComma()
 	DashCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("DashCollision"));
 	DashCollision->SetupAttachment(RootComponent);
 	DashCollision->SetActive(false);
-	
+
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
@@ -65,7 +65,7 @@ AComma::AComma()
 
 	/*SwordAuraEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("SwordAuraEffect"));
 	SwordAuraEffect->SetupAttachment(SwordWeaponMesh, FName("AuraSocket"));*/
-	
+
 	UIAnchorComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("UIAnchorComponent"));
 	UIAnchorComponent->SetupAttachment(GetRootComponent());
 	UIAnchorComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
@@ -87,17 +87,17 @@ AComma::AComma()
 	GuideWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 	GuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	GuideWidgetComponent->SetVisibility(false);
-	
+
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
-	
+
 	SwordWeaponMesh->SetVisibility(true);
 
 	CameraBoom->TargetArmLength = 1200.f;
 	DefaultZoomDist = CameraBoom->TargetArmLength;
 	TargetZoomDist = DefaultZoomDist;
-	
+
 	/** Sejin */
 
 	// 대쉬 위치 오브젝트 소환
@@ -139,10 +139,11 @@ void AComma::Tick(float DeltaSeconds)
 	{
 		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, TargetZoomDist))
 		{
-			float NewArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, TargetZoomDist, DeltaSeconds, ZoomOutInterpSpeed);
+			float NewArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, TargetZoomDist, DeltaSeconds,
+			                                      ZoomOutInterpSpeed);
 			CameraBoom->TargetArmLength = NewArmLength;
 		}
-		
+
 		FVector TargetLocation = GetActorLocation();
 		TargetLocation.Z += 100.f;
 
@@ -150,7 +151,7 @@ void AComma::Tick(float DeltaSeconds)
 		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
 		CameraBoom->SetWorldLocation(NewLocation);
 	}
-	
+
 	if (UIAnchorComponent)
 	{
 		FRotator FixedRotation = FRotator::ZeroRotator;
@@ -218,7 +219,7 @@ void AComma::PossessedBy(AController* NewController)
 		CommaWidget->SetAbilitySystemComponent(this);
 		CommaWidget->AddToViewport();
 	}
-	
+
 	if (!StartEffect.IsEmpty())
 	{
 		for (const TSubclassOf<UGameplayEffect>& EffectClass : StartEffect)
@@ -241,14 +242,14 @@ void AComma::BeginPlay()
 
 	FGameplayTag DashCooldownTag = FGameplayTag::RequestGameplayTag(FName("Comma.Cooldown.Dash"));
 	FDelegateHandle DashCoolHandle = ASC->RegisterGameplayTagEvent(DashCooldownTag, EGameplayTagEventType::NewOrRemoved)
-	.AddLambda([this](const FGameplayTag Tag, int32 NewCount)
-	{
-		if (NewCount == 0 && bInputDash)
-		{
-			InputGAS(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")));
-		}
-	});
-	
+	                                    .AddLambda([this](const FGameplayTag Tag, int32 NewCount)
+	                                    {
+		                                    if (NewCount == 0 && bInputDash)
+		                                    {
+			                                    InputGAS(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")));
+		                                    }
+	                                    });
+
 	if (ACommaController* CommaController = Cast<ACommaController>(GetController()))
 	{
 		CommaController->bShowMouseCursor = true;
@@ -279,7 +280,7 @@ void AComma::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 	}
-	
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -301,10 +302,12 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 				if (InputAction.Tag == DashTag)
 				{
-					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputDash, true);
-					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this, &AComma::InputDash, false);					
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this,
+					                                   &AComma::InputDash, true);
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this,
+					                                   &AComma::InputDash, false);
 				}
-				
+
 				LOG_SCREEN("%s", *InputAction.Tag.ToString());
 			}
 		}
@@ -323,7 +326,7 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 	{
 		DashPoint->SetDirection(FVector(MovementVector.X, MovementVector.Y, 0.f).GetSafeNormal());
 	}
-	
+
 	if (ASC)
 	{
 		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
@@ -586,6 +589,37 @@ APlayerDashPoint* AComma::GetDashPoint() const
 	{
 		return nullptr;
 	}
+}
+
+AActor* AComma::GetGround() const
+{
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	FVector MyLocation = GetActorLocation();
+
+	FVector FloorStart = MyLocation;
+	FVector FloorEnd = MyLocation;
+	FloorEnd.Z -= GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 50.0f;
+	const float CapsuleRadius = GetCapsuleComponent()->GetScaledCapsuleRadius();
+	const float CapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+	bool bPlayerHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		MyLocation,
+		FloorEnd,
+		FQuat::Identity,
+		ECC_GameTraceChannel8,
+		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight),
+		Params
+	);
+
+	if (bPlayerHit)
+	{
+		return HitResult.GetActor();
+	}
+
+	return nullptr;
 }
 
 void AComma::InputDash(bool bInput)

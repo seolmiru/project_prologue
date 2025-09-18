@@ -253,6 +253,8 @@ private:
 public:
 	class APlayerDashPoint* GetDashPoint() const;
 
+	AActor* GetGround() const;
+	
 	void InputDash(bool bInput);
 
 	bool GetInputDashState() const;	
