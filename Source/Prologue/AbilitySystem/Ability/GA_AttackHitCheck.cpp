@@ -56,7 +56,7 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
             {
                 if (!TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_NoHitEffect))
                 {
-                    // 강인도 감소 적용
+                    // 피격 애니메이션 재생
                     TargetASC->ApplyGameplayEffectSpecToSelf(*HitReactEffectSpecHandle.Data.Get());
                 }
             }
@@ -112,7 +112,7 @@ void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataH
                 {
                     if (!TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_NoHitEffect))
                     {
-                        // 강인도 감소
+                        // 피격 애니메이션 재생
                         ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, HitReactEffectSpecHandle, TargetDataHandle);
                     }
                 }

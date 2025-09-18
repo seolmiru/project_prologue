@@ -218,7 +218,7 @@ void AComma::PossessedBy(AController* NewController)
 		CommaWidget->SetAbilitySystemComponent(this);
 		CommaWidget->AddToViewport();
 	}
-
+	
 	if (!StartEffect.IsEmpty())
 	{
 		for (const TSubclassOf<UGameplayEffect>& EffectClass : StartEffect)
