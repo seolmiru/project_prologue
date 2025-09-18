@@ -96,6 +96,12 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	}
 }
 
+void UGA_CommaDash::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
+{
+	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
+}
+
 UGameplayEffect* UGA_CommaDash::GetCooldownGameplayEffect() const
 {
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());

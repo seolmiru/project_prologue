@@ -14,7 +14,7 @@
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/Controller/CommaController.h"
 #include "Prologue/Weapon/Projectile/BazierProjectile.h"
-#include "Prologue/Weapon/Projectile/PrologueProjectileBase.h"
+#include "Prologue/Weapon/Projectile/EggBallProjectile.h"
 
 bool UGA_OverClock::bIsOverClockActive = false;
 float UGA_OverClock::OverClockTimeScale = 1.0f;
@@ -189,7 +189,7 @@ void UGA_OverClock::CheckActorsInArea()
 		// end Sejin
 
 		// OverClock의 영향을 받을 대상인지 검사
-		if (Enemy || Cast<ABazierProjectile>(Actor) || Cast<APrologueProjectileBase>(Actor))
+		if (Enemy || Cast<ABazierProjectile>(Actor) || Cast<AEggBallProjectile>(Actor))
 		{
 			// 영향을 받고 있지 않은 새로운 Actor일 때 OverClock 효과 적용
 			if (!AffectedActors.Contains(Actor))

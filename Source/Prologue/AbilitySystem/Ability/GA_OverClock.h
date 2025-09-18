@@ -7,7 +7,7 @@
 #include "GA_OverClock.generated.h"
 
  class UNiagaraSystem;
- class APrologueProjectileBase;
+ class AEggBallProjectile;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTimeScale, float, NewScale);
 
 class ABazierProjectile;

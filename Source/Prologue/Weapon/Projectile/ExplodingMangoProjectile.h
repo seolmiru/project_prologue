@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PrologueProjectileBase.h"
 #include "GameFramework/Actor.h"
 #include "ExplodingMangoProjectile.generated.h"
 
@@ -14,17 +15,13 @@ class UGameplayEffect;
 class UNiagaraSystem;
 
 UCLASS()
-class PROLOGUE_API AExplodingMangoProjectile : public AActor
+class PROLOGUE_API AExplodingMangoProjectile : public APrologueProjectileBase
 {
 	GENERATED_BODY()
 
 public:
 	AExplodingMangoProjectile();
 
-	// GA_SpawnSkyProjectile을 통해서 Blackboard에서 TargetActor를 가져오기 위한 변수
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Explosion|Target")
-	TObjectPtr<AActor> TargetActor;
-	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -37,15 +34,6 @@ protected:
 	void Explode();
 
 protected:
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
-	TObjectPtr<UBoxComponent> ProjectileCollision;
-	
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
-	TObjectPtr<UNiagaraComponent> ProjectileNiagaraComponent;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
-	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
-	
 	float ElapsedTime = 0.f;
 
 	FTimerHandle ExplosionTimerHandle;
@@ -65,7 +53,4 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|Effect")
 	TObjectPtr<USoundBase> ExplosionSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|GAS")
-	TSubclassOf<UGameplayEffect> DamageEffect;
 };

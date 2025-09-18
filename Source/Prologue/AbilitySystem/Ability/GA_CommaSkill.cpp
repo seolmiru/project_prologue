@@ -84,6 +84,8 @@ void UGA_CommaSkill::CancelAbility(const FGameplayAbilitySpecHandle Handle, cons
 	Comma->GetDashPoint()->SetCursorDirectionState(true);
 
 	Comma->GetCharacterMovement()->UpdateFloorFromAdjustment();
+
+	EndHitStop();
 	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
@@ -104,6 +106,8 @@ void UGA_CommaSkill::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 	Comma->GetDashPoint()->SetCursorDirectionState(true);
 
 	Comma->GetCharacterMovement()->UpdateFloorFromAdjustment();
+
+	EndHitStop();
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
