@@ -67,13 +67,6 @@ void APowerBank::BeginPlay()
 
 		TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
-	
-	if (BP_IconWidget)
-	{
-		IconWidget = CreateWidget<UPowerBankIconWidget>(GetWorld(), BP_IconWidget);
-		IconWidget->AddToViewport();
-		IconWidget->PowerBank = this;
-	}
 }
 
 void APowerBank::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -83,6 +76,14 @@ void APowerBank::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
 	if (Comma)
 	{
 		Comma->GetGuideWidget()->SetVisibility(true);
+
+		
+		if (BP_IconWidget && !IconWidget)
+		{
+			IconWidget = CreateWidget<UPowerBankIconWidget>(GetWorld(), BP_IconWidget);
+			IconWidget->AddToViewport();
+			IconWidget->PowerBank = this;
+		}
 	}
 }
 
