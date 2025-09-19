@@ -112,10 +112,10 @@ private:
 	TObjectPtr<USceneComponent> UIAnchorComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UWidgetComponent> SwitchAttackWidgetComponent;
+	TObjectPtr<UWidgetComponent> SmashAttackWidgetComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> BP_SwitchAttackWidget;
+	TSubclassOf<UUserWidget> BP_SmashAttackWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> OverClockWidget;
@@ -175,7 +175,7 @@ public:
 	FORCEINLINE UAnimMontage* GetSwordComboMontage() const { return SwordComboMontage; }
 	//FORCEINLINE UAnimMontage* GetBowComboMontage() const { return BowComboMontage; }
 
-	FORCEINLINE UAnimMontage* GetSwordSwitchAttackMontage() const { return SwordSwitchAttackMontage; }
+	FORCEINLINE UAnimMontage* GetSwordSmashAttackMontage() const { return SwordSmashAttackMontage; }
 	//FORCEINLINE UAnimMontage* GetBowSwitchAttackMontage() const { return BowSwitchAttackMontage; }
 
 	FVector2D GetCachedMovementInput() const { return CachedMovementInput; }
@@ -209,7 +209,7 @@ public:
 
 	void OnAttackEnded();
 
-	void OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;
+	void OnSmashAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;
 
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void TriggerDamageEffect(float DamageAmount = 1.f);
@@ -241,13 +241,13 @@ protected:
 	//TObjectPtr<class UAnimMontage> BowComboMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TObjectPtr<class UAnimMontage> SwordSwitchAttackMontage;
+	TObjectPtr<class UAnimMontage> SwordSmashAttackMontage;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	//TObjectPtr<class UAnimMontage> BowSwitchAttackMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FGameplayTag SwitchAttackSwordTag;
+	FGameplayTag SmashAttackSwordTag;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	//FGameplayTag SwitchAttackBowTag;

@@ -70,12 +70,12 @@ AComma::AComma()
 	UIAnchorComponent->SetupAttachment(GetRootComponent());
 	UIAnchorComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 
-	SwitchAttackWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SwitchAttackWidgetComponent"));
-	SwitchAttackWidgetComponent->SetupAttachment(UIAnchorComponent);
-	SwitchAttackWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
-	SwitchAttackWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	SwitchAttackWidgetComponent->SetDrawSize(FVector2D(400.f, 384.f));
-	SwitchAttackWidgetComponent->SetVisibility(false);
+	SmashAttackWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SwitchAttackWidgetComponent"));
+	SmashAttackWidgetComponent->SetupAttachment(UIAnchorComponent);
+	SmashAttackWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	SmashAttackWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	SmashAttackWidgetComponent->SetDrawSize(FVector2D(400.f, 384.f));
+	SmashAttackWidgetComponent->SetVisibility(false);
 
 	CooldownWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("CooldownWidgetComponent"));
 	CooldownWidgetComponent->SetupAttachment(RootComponent);
@@ -90,7 +90,7 @@ AComma::AComma()
 
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
-	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
+	SmashAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
 
 	SpeedBoostTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.Boost"));
 
@@ -189,9 +189,10 @@ void AComma::PossessedBy(AController* NewController)
 		ASC = GASPS->GetAbilitySystemComponent();
 		ASC->InitAbilityActorInfo(GASPS, this);
 
-		if (ASC && SwitchAttackSwordTag.IsValid())
+		// SmashAttackSwordTag, SpeedBoostTag Event 등록
+		if (ASC && SmashAttackSwordTag.IsValid())
 		{
-			ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnSwitchAttackUI);
+			ASC->RegisterGameplayTagEvent(SmashAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnSmashAttackUI);
 		}
 
 		if (ASC && SpeedBoostTag.IsValid())
@@ -291,9 +292,9 @@ void AComma::BeginPlay()
 
 void AComma::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (ASC && SwitchAttackSwordTag.IsValid())
+	if (ASC && SmashAttackSwordTag.IsValid())
 	{
-		ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
+		ASC->RegisterGameplayTagEvent(SmashAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 	}
 
 	if (ASC && SpeedBoostTag.IsValid())
@@ -532,17 +533,18 @@ void AComma::OnAttackEnded()
 	TargetRotation = FRotator::ZeroRotator;
 }
 
-void AComma::OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const
+void AComma::OnSmashAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const
 {
-	if (CallbackTag == SwitchAttackSwordTag && SwitchAttackWidgetComponent)
+	// SmashAttackTag가 들어왔을 때
+	if (CallbackTag == SmashAttackSwordTag && SmashAttackWidgetComponent)
 	{
 		if (NewCount > 0)
 		{
-			SwitchAttackWidgetComponent->SetVisibility(true);
+			SmashAttackWidgetComponent->SetVisibility(true);
 		}
 		else
 		{
-			SwitchAttackWidgetComponent->SetVisibility(false);
+			SmashAttackWidgetComponent->SetVisibility(false);
 		}
 	}
 }
@@ -587,16 +589,22 @@ void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)
 		LOG_SCREEN_R("Comma OnDashSpeedBoost : No CharacterMovementComponent");
 		return;
 	}
-	
-	if (NewCount > 0)
+
+	// SpeedBoostTag가 들어왔을 때
+	if (CallbackTag == SpeedBoostTag)
 	{
-		MoveComp->MaxWalkSpeed = DefaultWalkSpeed * SpeedBoost;
-		LOG_SCREEN("Speed Boost Activated");
-	}
-	else
-	{
-		MoveComp->MaxWalkSpeed = DefaultWalkSpeed;
-		LOG_SCREEN("Speed Boost Deactivated");
+		if (NewCount > 0)
+		{
+			// MaxWalkSpeed를 SpeedBoost만큼 증가
+			MoveComp->MaxWalkSpeed = DefaultWalkSpeed * SpeedBoost;
+			LOG_SCREEN("Speed Boost Activated");
+		}
+		else
+		{
+			// 태그가 전부 제거되면 MaxWalkSpeed 복구
+			MoveComp->MaxWalkSpeed = DefaultWalkSpeed;
+			LOG_SCREEN("Speed Boost Deactivated");
+		}
 	}
 }
 
