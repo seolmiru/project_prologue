@@ -134,19 +134,41 @@ private:
 
 	void Input_Move(const FInputActionValue& InputActionValue);
 
+	/** Camera Settings Function */
+protected:
+	UFUNCTION(BlueprintCallable, Category = "Camera|Rotate")
+	void ActivateRotateCamera(FRotator NewTargetRotation);
+
+	UFUNCTION(BlueprintCallable, Category = "Camera|Rotate")
+	void DeactivateRotateCamera();
+
+	UFUNCTION(BlueprintCallable, Category = "Camera|Length")
+	void ActivateAdjustCamera(float NewTargetArmLength);
+
+	UFUNCTION(BlueprintCallable, Category = "Camera|Length")
+	void DeactivateAdjustCamera();
+	
+	/** Camera Settings Variables */
 private:
-	/** Camera Settings */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float DefaultZoomDist = 1200.f;
+	FRotator DefaultCameraRelativeRotation = FRotator(0.f, 0.f, 0.f);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float IntroZoomDist = 600.f;
+	FRotator TargetCameraRelativeRotation = FRotator(0.f, 0.f, 0.f);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float ZoomOutInterpSpeed = 4.f;
+	float CameraRotationInterpolationSpeed = 3.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float DefaultCameraArmLength = 1600.f;
 	
-	float TargetZoomDist = 1200.f;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float TargetCameraArmLength = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float CameraArmLengthInterpolationSpeed = 2.f;
+
+	/** Effect Material Settings */
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UMaterial> DamagePostProcessMaterial;
@@ -213,12 +235,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void TriggerDamageEffect(float DamageAmount = 1.f);
-
-	void ZoomIn(float ZoomDist = 600.f);
-
-	void ZoomOut();
-
-	void ResetZoom();
 
 	/** Speed Boost */
 protected:
