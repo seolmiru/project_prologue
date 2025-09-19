@@ -96,10 +96,6 @@ AComma::AComma()
 
 	SwordWeaponMesh->SetVisibility(true);
 
-	CameraBoom->TargetArmLength = 1200.f;
-	DefaultZoomDist = CameraBoom->TargetArmLength;
-	TargetZoomDist = DefaultZoomDist;
-
 	/** Sejin */
 
 	// 대쉬 위치 오브젝트 소환
@@ -139,13 +135,6 @@ void AComma::Tick(float DeltaSeconds)
 	// 카메라 보정
 	if (CameraBoom)
 	{
-		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, TargetZoomDist))
-		{
-			float NewArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, TargetZoomDist, DeltaSeconds,
-			                                      ZoomOutInterpSpeed);
-			CameraBoom->TargetArmLength = NewArmLength;
-		}
-
 		FVector TargetLocation = GetActorLocation();
 		TargetLocation.Z += 100.f;
 
@@ -380,6 +369,26 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 	}
 }
 
+void AComma::ActivateRotateCamera(FRotator NewTargetRotation)
+{
+	TargetCameraRelativeRotation = NewTargetRotation;
+}
+
+void AComma::DeactivateRotateCamera()
+{
+	TargetCameraRelativeRotation = DefaultCameraRelativeRotation;
+}
+
+void AComma::ActivateAdjustCamera(float NewTargetArmLength)
+{
+	TargetCameraArmLength = NewTargetArmLength;
+}
+
+void AComma::DeactivateAdjustCamera()
+{
+	TargetCameraArmLength = DefaultCameraArmLength;
+}
+
 UStaticMeshComponent* AComma::GetSwordWeaponMesh() const
 {
 	return SwordWeaponMesh;
@@ -562,23 +571,6 @@ void AComma::TriggerDamageEffect(float DamageAmount)
 
 	GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
 	GetWorld()->GetTimerManager().SetTimer(DamageEffectTimerHandle, this, &AComma::UpdateDamageEffect, 0.05f, true);
-}
-
-void AComma::ZoomIn(float ZoomDist)
-{
-	CameraBoom->TargetArmLength = ZoomDist;
-	TargetZoomDist = ZoomDist;
-}
-
-void AComma::ZoomOut()
-{
-	TargetZoomDist = DefaultZoomDist;
-}
-
-void AComma::ResetZoom()
-{
-	CameraBoom->TargetArmLength = DefaultZoomDist;
-	TargetZoomDist = DefaultZoomDist;
 }
 
 void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)
