@@ -114,6 +114,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	TSubclassOf<UGameplayEffect> InvincibleEffect;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TSubclassOf<UGameplayEffect> SpeedBoostEffect;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TEnumAsByte<ECollisionChannel> TraceChannel;
 

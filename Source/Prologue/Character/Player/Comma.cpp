@@ -92,6 +92,8 @@ AComma::AComma()
 
 	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
 
+	SpeedBoostTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.Boost"));
+
 	SwordWeaponMesh->SetVisibility(true);
 
 	CameraBoom->TargetArmLength = 1200.f;
@@ -135,7 +137,7 @@ void AComma::Tick(float DeltaSeconds)
 	}
 
 	// 카메라 보정
-	/*if (CameraBoom)
+	if (CameraBoom)
 	{
 		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, TargetZoomDist))
 		{
@@ -151,7 +153,6 @@ void AComma::Tick(float DeltaSeconds)
 		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
 		CameraBoom->SetWorldLocation(NewLocation);
 	}
-	*/
 
 	if (UIAnchorComponent)
 	{
@@ -190,8 +191,12 @@ void AComma::PossessedBy(AController* NewController)
 
 		if (ASC && SwitchAttackSwordTag.IsValid())
 		{
-			ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(
-				this, &AComma::OnSwitchAttackUI);
+			ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnSwitchAttackUI);
+		}
+
+		if (ASC && SpeedBoostTag.IsValid())
+		{
+			ASC->RegisterGameplayTagEvent(SpeedBoostTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnDashSpeedBoost);
 		}
 	}
 
@@ -241,6 +246,15 @@ void AComma::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp)
+	{
+		LOG_SCREEN_R("Comma BeginPlay : No CharacterMovementComponent");
+		return;
+	}
+
+	DefaultWalkSpeed = MoveComp->MaxWalkSpeed;
+	
 	FGameplayTag DashCooldownTag = FGameplayTag::RequestGameplayTag(FName("Comma.Cooldown.Dash"));
 	FDelegateHandle DashCoolHandle = ASC->RegisterGameplayTagEvent(DashCooldownTag, EGameplayTagEventType::NewOrRemoved)
 	                                    .AddLambda([this](const FGameplayTag Tag, int32 NewCount)
@@ -280,6 +294,11 @@ void AComma::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if (ASC && SwitchAttackSwordTag.IsValid())
 	{
 		ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
+	}
+
+	if (ASC && SpeedBoostTag.IsValid())
+	{
+		ASC->RegisterGameplayTagEvent(SpeedBoostTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 	}
 
 	Super::EndPlay(EndPlayReason);
@@ -558,6 +577,27 @@ void AComma::ResetZoom()
 {
 	CameraBoom->TargetArmLength = DefaultZoomDist;
 	TargetZoomDist = DefaultZoomDist;
+}
+
+void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp)
+	{
+		LOG_SCREEN_R("Comma OnDashSpeedBoost : No CharacterMovementComponent");
+		return;
+	}
+	
+	if (NewCount > 0)
+	{
+		MoveComp->MaxWalkSpeed = DefaultWalkSpeed * SpeedBoost;
+		LOG_SCREEN("Speed Boost Activated");
+	}
+	else
+	{
+		MoveComp->MaxWalkSpeed = DefaultWalkSpeed;
+		LOG_SCREEN("Speed Boost Deactivated");
+	}
 }
 
 void AComma::UpdateDamageEffect()

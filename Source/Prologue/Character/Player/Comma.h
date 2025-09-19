@@ -219,6 +219,19 @@ public:
 	void ZoomOut();
 
 	void ResetZoom();
+
+	/** Speed Boost */
+protected:
+	UFUNCTION()
+	void OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount);
+
+	float DefaultWalkSpeed;
+
+	FGameplayTag IsMovingTag;
+	FGameplayTag SpeedBoostTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Speed Boost")
+	float SpeedBoost = 1.5f;
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")

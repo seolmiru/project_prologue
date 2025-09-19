@@ -84,7 +84,15 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
                                bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+	
+	// 이동 속도 증가 이펙트 적용
+	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SpeedBoostEffect, 0.f, EffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
 
+	LOG_SCREEN_R("Dash Speed Boost");
+	
 	/* Sejin */
 	// 주변 가까운 땅 대시 위치 검사 (대시 보정 알고리즘)
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
