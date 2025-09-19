@@ -47,6 +47,8 @@ void AExplodingMangoProjectile::Tick(float DeltaTime)
 	{
 		Explode();
 		Destroy();
+		SetActorTickEnabled(false);
+		return;
 	}
 }
 
@@ -114,7 +116,7 @@ void AExplodingMangoProjectile::Explode()
 		);
 	}
 
-	if (!IsValid(TargetActor))
+	if (!TargetActor)
 	{
 		Destroy();
 		return;

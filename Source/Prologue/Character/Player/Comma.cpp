@@ -135,7 +135,7 @@ void AComma::Tick(float DeltaSeconds)
 	}
 
 	// 카메라 보정
-	if (CameraBoom)
+	/*if (CameraBoom)
 	{
 		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, TargetZoomDist))
 		{
@@ -151,6 +151,7 @@ void AComma::Tick(float DeltaSeconds)
 		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
 		CameraBoom->SetWorldLocation(NewLocation);
 	}
+	*/
 
 	if (UIAnchorComponent)
 	{

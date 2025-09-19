@@ -44,6 +44,8 @@ void ABazierProjectile::FireInDirection(const FVector& ShootDirection)
 	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (PlayerCharacter)
 	{
+		TargetActor = PlayerCharacter;
+		
 		FVector TargetLocation = PlayerCharacter->GetActorLocation();
 		TargetLocation.Z -= GroundOffset;
 		SetBazierPoint(MyLocation, TargetLocation);
@@ -199,8 +201,6 @@ void ABazierProjectile::Explode()
 	if (TargetActor->Implements<UAbilitySystemInterface>() && DamageEffect)
 	{
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
-
-		AActor* SourceActor = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 		
 		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
 
