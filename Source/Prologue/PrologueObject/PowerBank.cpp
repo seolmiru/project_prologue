@@ -67,22 +67,26 @@ void APowerBank::BeginPlay()
 
 		TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
-	
-	if (BP_IconWidget)
-	{
-		IconWidget = CreateWidget<UPowerBankIconWidget>(GetWorld(), BP_IconWidget);
-		IconWidget->AddToViewport();
-		IconWidget->PowerBank = this;
-	}
 }
 
 void APowerBank::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                                 int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AComma* Comma = Cast<AComma>(OtherActor);
+	if (!Comma)
+	{
+		return;
+	}
+
 	if (Comma)
 	{
 		Comma->GetGuideWidget()->SetVisibility(true);
+
+		if (IconWidget && IconWidget->IsInViewport())
+		{
+			IconWidget->RemoveFromParent();
+			IconWidget = nullptr;
+		}
 	}
 }
 
@@ -90,9 +94,25 @@ void APowerBank::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Other
                               int32 OtherBodyIndex)
 {
 	AComma* Comma = Cast<AComma>(OtherActor);
+	if (!Comma)
+	{
+		return;
+	}
+
 	if (Comma)
 	{
 		Comma->GetGuideWidget()->SetVisibility(false);
+	}
+
+	UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(GetGameInstance());
+	if (GameInstance && !GameInstance->HasPowerBankInteracted(PowerBankID))
+	{
+		if (BP_IconWidget && !IconWidget)
+		{
+			IconWidget = CreateWidget<UPowerBankIconWidget>(GetWorld(), BP_IconWidget);
+			IconWidget->AddToViewport();
+			IconWidget->PowerBank = this;
+		}
 	}
 }
 
