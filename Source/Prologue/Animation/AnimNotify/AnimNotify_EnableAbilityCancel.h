@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
+#include "Prologue/PrologueGameplayTags.h"
 #include "AnimNotify_EnableAbilityCancel.generated.h"
 
+struct FGameplayTag;
 /**
  * 
  */
@@ -19,4 +21,6 @@ public:
 
 protected:
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
+
+	FGameplayTag CancelEnableTag = PrologueGameplayTags::Comma_State_CancelEnabled;
 };

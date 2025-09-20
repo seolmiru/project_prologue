@@ -23,6 +23,8 @@ void UGA_CommaSkill::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	HitActors.Reset();
+
+	AlreadyHitActors.Empty();
 	
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
 
@@ -130,6 +132,11 @@ void UGA_CommaSkill::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 void UGA_CommaSkill::HandleTargetHit(AActor* TargetActor, const FHitResult& SweepResult)
 {
+	if (AlreadyHitActors.Contains(TargetActor))
+	{
+		return;
+	}
+	
 	bool bHitDetected = false;
 
 	bool bHitNormalTarget = false;
@@ -164,6 +171,8 @@ void UGA_CommaSkill::HandleTargetHit(AActor* TargetActor, const FHitResult& Swee
 		DataHandle.Add(TargetData);
 		TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
+		AlreadyHitActors.Add(TargetActor);
+		
 		if (!TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_NoHitEffect))
 		{
 			// 경직 적용
