@@ -11,6 +11,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Prologue/Prologue.h"
+#include "Prologue/PrologueBlackboardKey.h"
 
 APrologueAIController::APrologueAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer.SetDefaultSubobjectClass<UCrowdFollowingComponent>("PathFollowingComponent"))
 {
@@ -18,7 +19,7 @@ APrologueAIController::APrologueAIController(const FObjectInitializer& ObjectIni
 	AISenseConfig_Sight->DetectionByAffiliation.bDetectEnemies = true;
 	AISenseConfig_Sight->DetectionByAffiliation.bDetectFriendlies = false;
 	AISenseConfig_Sight->DetectionByAffiliation.bDetectNeutrals = false;
-	AISenseConfig_Sight->SightRadius = 1000.f;
+	AISenseConfig_Sight->SightRadius = 1500.f;
 	AISenseConfig_Sight->LoseSightRadius = 0.f;
 	AISenseConfig_Sight->PeripheralVisionAngleDegrees = 360.f;
 
@@ -117,16 +118,16 @@ void APrologueAIController::OnEnemyPerceptionUpdated(AActor* Actor, FAIStimulus 
 	{
 		if (Stimulus.WasSuccessfullySensed() && Actor)
 		{
-			if (!BlackboardComponent->GetValueAsObject(FName("TargetActor")))
+			if (!BlackboardComponent->GetValueAsObject((PrologueBlackboard::TargetActor)))
 			{
 				InitiateCombat(Actor);
 			}
 
-			BlackboardComponent->SetValueAsObject(FName("TargetActor"), Actor);
+			BlackboardComponent->SetValueAsObject((PrologueBlackboard::TargetActor), Actor);
 		}
 		else
 		{
-			BlackboardComponent->SetValueAsObject(FName("TargetActor"), Actor);
+			BlackboardComponent->SetValueAsObject((PrologueBlackboard::TargetActor), Actor);
 		}
 	}
 }
@@ -135,16 +136,16 @@ void APrologueAIController::UpdateDistanceToTarget()
 {
 	if (UBlackboardComponent* BlackboardComponent = GetBlackboardComponent())
 	{
-		AActor* TargetActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(FName("TargetActor")));
+		AActor* TargetActor = Cast<AActor>(BlackboardComponent->GetValueAsObject((PrologueBlackboard::TargetActor)));
 
 		if (TargetActor && GetPawn())
 		{
 			float Distance = FVector::Dist(GetPawn()->GetActorLocation(), TargetActor->GetActorLocation());
-			BlackboardComponent->SetValueAsFloat(FName("DistToTarget"), Distance);
+			BlackboardComponent->SetValueAsFloat((PrologueBlackboard::DistanceToTarget), Distance);
 		}
 		else
 		{
-			BlackboardComponent->SetValueAsFloat(FName("DistToTarget"), 99999.f);
+			BlackboardComponent->SetValueAsFloat((PrologueBlackboard::DistanceToTarget), 99999.f);
 		}
 	}
 }

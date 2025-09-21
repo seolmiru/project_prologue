@@ -3,14 +3,18 @@
 
 #include "GA_OverClock.h"
 
+#include "AbilitySystemGlobals.h"
 #include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Components/PostProcessComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/PrologueGameplayTags.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueSkillAttributeSet.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/Controller/CommaController.h"
 #include "Prologue/Weapon/Projectile/BazierProjectile.h"
+#include "Prologue/Weapon/Projectile/EggBallProjectile.h"
 
 bool UGA_OverClock::bIsOverClockActive = false;
 float UGA_OverClock::OverClockTimeScale = 1.0f;
@@ -21,34 +25,50 @@ UGA_OverClock::UGA_OverClock()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
+bool UGA_OverClock::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
+                                       const FGameplayAbilityActorInfo* ActorInfo,
+                                       const FGameplayTagContainer* SourceTags,
+                                       const FGameplayTagContainer* TargetTags,
+                                       FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
+	{
+		return false;
+	}
+
+	if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Skill))
+	{
+		return false;
+	}
+
+	return true;
+}
+
 void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+                                    const FGameplayAbilityActivationInfo ActivationInfo,
+                                    const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	const UPrologueAttributeSet* AttributeSet = ASC->GetSet<UPrologueAttributeSet>();
-
-	// 오버클락 게이지가 100이 아닐 때에는 시전 불가
-	if (AttributeSet->GetCurrentGauge() < AttributeSet->GetMaxGauge())
-	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-		return;
-	}
-
-	// 게이지 초기화
-	ASC->SetNumericAttributeBase(UPrologueAttributeSet::GetCurrentGaugeAttribute(), 0.0f);
-	
+	TotalDamage = 0.0f;
 	bIsOverClockActive = true;
 	OverClockTimeScale = TimeScale;
+	CenterLocation = ActorInfo->AvatarActor->GetActorLocation();
 
-	if (AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get()))
-	{
-		Comma->SetOverClockEffectActive(true);
-	}
-	
-	ApplySlowToEnemies();
-	
+	// OverClock 영역 Debug
+	DrawDebugBox(
+		GetWorld(),
+		CenterLocation,
+		FVector(Radius, Radius, HalfHeight),
+		FQuat::Identity,
+		FColor::Cyan,
+		false,
+		bShowDebug ? OverClockDuration : EDrawDebugTrace::None,
+		0,
+		3.f
+	);
+
+	// OverClock 종료 Timer
 	GetWorld()->GetTimerManager().SetTimer(
 		OverClockTimerHandle,
 		this,
@@ -56,104 +76,237 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		OverClockDuration,
 		false
 	);
+
+	// Tick마다 영역 검사하는 Timer
+	GetWorld()->GetTimerManager().SetTimer(
+		CheckAreaTimerHandle,
+		this,
+		&UGA_OverClock::CheckActorsInArea,
+		CheckInterval,
+		true,
+		0.f
+	);
+
+	FVector OverClockLocation = GetAvatarActorFromActorInfo()->GetActorLocation();
+
+	FVector StartLocation = OverClockLocation;
+	FVector EndLocation = OverClockLocation - FVector(0.f, 0.f, 1000.f);
+
+	FHitResult HitResult;
+
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(GetAvatarActorFromActorInfo());
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		StartLocation,
+		EndLocation,
+		ECC_GameTraceChannel7,
+		CollisionParams
+	);
+
+	FVector OverClockSpawnLocation = bHit ? HitResult.ImpactPoint : OverClockLocation;
+
+	if (OverClockNiagaraSystem)
+	{
+		UNiagaraComponent* OverClockNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			OverClockNiagaraSystem,
+			OverClockSpawnLocation,
+			FRotator::ZeroRotator,
+			FVector(1.f, 1.f, 1.f),
+			true,
+			true
+		);
+	}
 }
 
 void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+                               const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility,
+                               bool bWasCancelled)
 {
-	if (AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get()))
-	{
-		Comma->SetOverClockEffectActive(false);
-	}
-	
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
+	// Timer 정리
 	GetWorld()->GetTimerManager().ClearTimer(OverClockTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(CheckAreaTimerHandle);
 
 	bIsOverClockActive = false;
-	
+
+	// 대미지 적용
+	AComma* Comma = Cast<AComma>(GetActorInfo().AvatarActor);
+	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+
+	FGameplayAbilityTargetDataHandle DataHandle;
+	FGameplayAbilityTargetData_ActorArray* TargetData = new FGameplayAbilityTargetData_ActorArray();
+	for (auto _Target : AffectedActors)
+	{
+		APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(_Target.Get());
+		if (Enemy)
+		{
+			FGameplayEffectSpecHandle SpecHandle = Enemy->GetAbilitySystemComponent()->MakeOutgoingSpec(
+				FinishDamageEffect, 1.f, EffectContextHandle);
+			SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.OverClock")), GetFinishDamage());
+			UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Enemy)->ApplyGameplayEffectSpecToSelf(
+				*SpecHandle.Data.Get());
+		}
+	}
+
+	// 시간 복구
 	RestoreEnemyTime();
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	CommitAbilityCooldown(Handle, ActorInfo, ActivationInfo, false);
 }
 
 void UGA_OverClock::OnOverClockFinished()
 {
 	LOG_SCREEN_R("End OverClock. Restoring time.");
 
-	if (CurrentActorInfo && CurrentActorInfo->AvatarActor.IsValid())
-	{
-		if (AComma* Comma = Cast<AComma>(CurrentActorInfo->AvatarActor.Get()))
-		{
-			Comma->SetOverClockEffectActive(false);
-		}
-	}
-	
-	RestoreEnemyTime();
-	
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-// 월드 내에 존재하는 모든 적과 적이 발사한 투사체에 TimeScale만큼 시간이 느려지도록 적용
-void UGA_OverClock::ApplySlowToEnemies()
+void UGA_OverClock::CheckActorsInArea()
 {
-	AffectedEnemies.Empty();
-	AffectedProjectiles.Empty();
+	// 현재 프레임에서 OverClock 영역 내에 있는 Actor 저장
+	TSet<TWeakObjectPtr<AActor>> ActorsInAreaNow;
+	TArray<AActor*> OverlappingActors;
 
-	// EnemyCharacter를 상속 받은 모든 액터 찾기
-	TArray<AActor*> Found;
-	UGameplayStatics::GetAllActorsOfClass(
+	// OverClock 영역 검사
+	UKismetSystemLibrary::BoxOverlapActors(
 		GetWorld(),
-		APrologueEnemyCharacter::StaticClass(),
-		Found
+		CenterLocation,
+		FVector(Radius, Radius, HalfHeight),
+		TArray<TEnumAsByte<EObjectTypeQuery>>(),
+		AActor::StaticClass(),
+		TArray<AActor*>(),
+		OverlappingActors
 	);
 
-	for (AActor* Actor : Found)
+	for (AActor* Actor : OverlappingActors)
 	{
-		if (auto* Enemy = Cast<APrologueEnemyCharacter>(Actor))
+		// Sejin
+		APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(Actor);
+		// end Sejin
+
+		// OverClock의 영향을 받을 대상인지 검사
+		if (Enemy || Cast<ABazierProjectile>(Actor) || Cast<AEggBallProjectile>(Actor))
 		{
-			// 시간 배율 적용, AffectedEnemies 목록에 추가
-			Enemy->CustomTimeDilation = TimeScale;
-			AffectedEnemies.Add(Enemy);
+			// 영향을 받고 있지 않은 새로운 Actor일 때 OverClock 효과 적용
+			if (!AffectedActors.Contains(Actor))
+			{
+				Actor->CustomTimeDilation = TimeScale;
+				AffectedActors.Add(Actor);
+
+				// Sejin
+				if (Enemy)
+				{
+					UE_LOG(LogTemp, Log, TEXT("Is Enemy"));
+					Enemy->OnHealthChanged.AddDynamic(this, &UGA_OverClock::OnHitActor);
+				}
+				// end Sejin
+
+				// MaterialInstanceDynamic 생성
+				TArray<UMaterialInstanceDynamic*> MDIs;
+				TArray<UPrimitiveComponent*> PrimitiveComponents;
+				Actor->GetComponents<UPrimitiveComponent>(PrimitiveComponents);
+
+				for (UPrimitiveComponent* Comp : PrimitiveComponents)
+				{
+					// OverClock에 영향을 받고 있는 Actor들에게 Material 효과 적용
+					if (USkeletalMeshComponent* MeshComp = Cast<USkeletalMeshComponent>(Comp))
+					{
+						for (int32 i = 0; i < MeshComp->GetNumMaterials(); ++i)
+						{
+							UMaterialInstanceDynamic* MDI = MeshComp->CreateDynamicMaterialInstance(
+								i, MeshComp->GetMaterial(i));
+							if (MDI)
+							{
+								MDI->SetScalarParameterValue(FName("OverClockFxPower"), 1.f);
+								MDIs.Add(MDI);
+							}
+						}
+					}
+				}
+				if (MDIs.Num() > 0)
+				{
+					AffectedActorMaterial.Add(Actor, MDIs);
+				}
+			}
+
+			// 현재 OverClock 영역에 있는 Actor 목록에 추가
+			ActorsInAreaNow.Add(Actor);
 		}
 	}
 
-	// BazierProjectile을 상속 받은 모든 액터 찾기
-	TArray<AActor*> FoundProjectiles;
-	UGameplayStatics::GetAllActorsOfClass(
-		GetWorld(),
-		ABazierProjectile::StaticClass(),
-		FoundProjectiles
-	);
-
-	for (AActor* Actor : FoundProjectiles)
+	// 이전에 영향을 받았지만 OverClock 영역을 벗어난 Actor 찾기
+	TSet<TWeakObjectPtr<AActor>> ExitedActors = AffectedActors.Difference(ActorsInAreaNow);
+	for (const auto& ActorPtr : ExitedActors)
 	{
-		if (auto* Projectile = Cast<ABazierProjectile>(Actor))
+		if (ActorPtr.IsValid())
 		{
-			// 시간 배율 적용, AffectedProjectiles 목록에 추가
-			Projectile->CustomTimeDilation = TimeScale;
-			AffectedProjectiles.Add(Projectile);
+			// 시간 복구
+			ActorPtr->CustomTimeDilation = 1.f;
+
+			// Material 복구
+			if (AffectedActorMaterial.Contains(ActorPtr))
+			{
+				for (UMaterialInstanceDynamic* MDI : AffectedActorMaterial[ActorPtr])
+				{
+					if (MDI)
+					{
+						MDI->SetScalarParameterValue(FName("OverClockFxPower"), 0.f);
+					}
+				}
+				AffectedActorMaterial.Remove(ActorPtr);
+			}
 		}
+
+		// Sejin
+		APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(ActorPtr);
+		if (Enemy)
+		{
+			Enemy->OnHealthChanged.AddDynamic(this, &UGA_OverClock::OnHitActor);
+		}
+		// end Sejin
+
+		AffectedActors.Remove(ActorPtr);
 	}
 }
 
-// 원래 속도로 복구
+// 원래 속도, Material로 복구
 void UGA_OverClock::RestoreEnemyTime()
 {
-	for (auto* Enemy : AffectedEnemies)
+	for (const auto& ActorPtr : AffectedActors)
 	{
-		if (IsValid(Enemy))
+		if (ActorPtr.IsValid())
 		{
-			Enemy->CustomTimeDilation = 1.0f;
+			ActorPtr->CustomTimeDilation = 1.f;
+
+			if (AffectedActorMaterial.Contains(ActorPtr))
+			{
+				for (UMaterialInstanceDynamic* MDI : AffectedActorMaterial[ActorPtr])
+				{
+					if (MDI)
+					{
+						MDI->SetScalarParameterValue(FName("OverClockFxPower"), 0.f);
+					}
+				}
+			}
 		}
 	}
 
-	for (auto* Projectile : AffectedProjectiles)
-	{
-		if (IsValid(Projectile))
-		{
-			Projectile->CustomTimeDilation = 1.0f;
-		}
-	}
-	
-	AffectedEnemies.Empty();
-	AffectedProjectiles.Empty();
+	AffectedActors.Empty();
+	AffectedActorMaterial.Empty();
+}
+
+void UGA_OverClock::OnHitActor(float OldValue, float NewValue)
+{
+	TotalDamage += OldValue - NewValue;
+	// LOG_SCREEN_R("Overclock Total Damage: %d", TotalDamage);
+	UE_LOG(LogTemp, Log, TEXT("Total Damage: %f "), TotalDamage);
+}
+
+float UGA_OverClock::GetFinishDamage()
+{
+	return TotalDamage * FinishMultiValue + FinishDefaultDamage;
 }

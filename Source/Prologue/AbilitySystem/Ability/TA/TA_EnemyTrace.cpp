@@ -8,7 +8,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Prologue/Prologue.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 
 FGameplayAbilityTargetDataHandle ATA_EnemyTrace::MakeTargetData() const
 {

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GA_MontageAbility.h"
 #include "Abilities/GameplayAbility.h"
 #include "GA_EnemyCharge.generated.h"
 
@@ -10,24 +11,31 @@
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_EnemyCharge : public UGameplayAbility
+class PROLOGUE_API UGA_EnemyCharge : public UGA_MontageAbility
 {
 	GENERATED_BODY()
 
 public:
-	UGA_EnemyCharge();
-
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
-protected:
 	UFUNCTION()
-	virtual void OnComplete();
+	void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
-	virtual void OnInterrupted();
+	void HandleTargetHit(AActor* TargetActor, const FHitResult& SweepResult);
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	TSubclassOf<UGameplayEffect> ChargeDamageEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Charge")
+	float OverlapCheckDelay = 0.3f;
+
+	UPROPERTY()
+	TArray<TObjectPtr<AActor>> HitActors;
 	
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UAnimMontage> AnimMontage;
+	UFUNCTION()
+	void OnDelayFinished();
 };

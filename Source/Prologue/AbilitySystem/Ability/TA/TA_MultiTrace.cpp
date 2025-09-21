@@ -7,7 +7,7 @@
 #include "Engine/OverlapResult.h"
 #include "GameFramework/Character.h"
 #include "Prologue/Prologue.h"
-#include "Prologue/AbilitySystem/PrologueAttributeSet.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueSkillAttributeSet.h"
 
 FGameplayAbilityTargetDataHandle ATA_MultiTrace::MakeTargetData() const
 {
@@ -20,15 +20,15 @@ FGameplayAbilityTargetDataHandle ATA_MultiTrace::MakeTargetData() const
 		return FGameplayAbilityTargetDataHandle();
 	}
 
-	const UPrologueAttributeSet* AttributeSet = ASC->GetSet<UPrologueAttributeSet>();
-	if (!AttributeSet)
+	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
+	if (!SkillAttributeSet)
 	{
 		LOG_SCREEN("Attribute not found");
 		return FGameplayAbilityTargetDataHandle();
 	}
 
 	TArray<FOverlapResult> Overlaps;
-	const float SwitchAttackRadius = AttributeSet->GetSwordSwitchAttackRange();
+	const float SwitchAttackRadius = SkillAttributeSet->GetSwordSwitchAttackRange();
 
 	FVector Origin = Character->GetActorLocation();
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ATA_MultiTrace), false, Character);

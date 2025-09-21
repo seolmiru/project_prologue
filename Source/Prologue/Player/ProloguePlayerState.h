@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerState.h"
 #include "ProloguePlayerState.generated.h"
 
+class UPrologueAbilitySystemComponent;
 class UAbilitySystemComponent;
 
 /**
@@ -24,8 +25,11 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS")
-	TObjectPtr<UAbilitySystemComponent> ASC;
+	TObjectPtr<UPrologueAbilitySystemComponent> ASC;
 
 	UPROPERTY()
 	TObjectPtr<class UPrologueAttributeSet> AttributeSet;
+
+	UPROPERTY()
+	TObjectPtr<class UPrologueSkillAttributeSet> SkillAttributeSet;
 };

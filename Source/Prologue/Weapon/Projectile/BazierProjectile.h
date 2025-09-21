@@ -3,19 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PrologueProjectileBase.h"
 #include "GameFramework/Actor.h"
 #include "BazierProjectile.generated.h"
 
+class UNiagaraComponent;
+class UBoxComponent;
 class UNiagaraSystem;
 
 UCLASS()
-class PROLOGUE_API ABazierProjectile : public AActor
+class PROLOGUE_API ABazierProjectile : public APrologueProjectileBase
 {
 	GENERATED_BODY()
 	
 public:	
 	ABazierProjectile();
-	//virtual ~ABazierProjectile() override;
 
 	void FireInDirection(const FVector& ShootDirection);
 	
@@ -23,17 +25,14 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	class UBoxComponent* ProjectileCollisionBox;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TObjectPtr<UNiagaraSystem> ProjectileExplosion;
 	
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	class UNiagaraComponent* ProjectileNiagaraComponent;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 	float ExplosionRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
-	float TimeToExplode;	
+	float TimeToExplode;
 
 	bool bIsStuck = false;
 	float ElapsedTime = 0.f;
@@ -41,12 +40,6 @@ protected:
 	FTimerHandle ExplosionTimerHandle;
 
 protected:
-	UPROPERTY(EditAnywhere, Category = "GAS")
-	TSubclassOf<class UGameplayEffect> AttackDamageEffect;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UNiagaraSystem* ExplosionEffect;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USoundBase> ExplosionSound;
 
@@ -57,6 +50,9 @@ protected:
 	UFUNCTION()
 	virtual void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UFUNCTION()
+	void OnNiagaraSystemFinished(UNiagaraComponent* Niagara);
+	
 	void StickAndExplosion(const FHitResult& Hit);
 
 	void Explode();
@@ -90,9 +86,4 @@ protected:
 	bool bFire;
 	float FlyTime;
 	float CurrentFlyTime;
-
-	// Niagara Section
-/*protected:
-	UFUNCTION()
-	void SyncNiagaraSpeed(float NewTimeScale);	*/
 };

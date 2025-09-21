@@ -8,15 +8,8 @@
 
 class UGameplayEffect;
 class UProjectileMovementComponent;
-class UBoxComponent;
 class UNiagaraComponent;
-
-UENUM(BlueprintType)
-enum class EProjectileDamagePolicy : uint8
-{
-	OnHit,
-	OnBeginOverlap
-};
+class UBoxComponent;
 
 UCLASS()
 class PROLOGUE_API APrologueProjectileBase : public AActor
@@ -26,36 +19,23 @@ class PROLOGUE_API APrologueProjectileBase : public AActor
 public:
 	APrologueProjectileBase();
 
-	void FireInDirection(const FVector& ShootDirection) const;
+	// GA_SpawnSkyProjectile을 통해서 Blackboard에서 TargetActor를 가져오기 위한 변수
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Explosion|Target")
+	TObjectPtr<AActor> TargetActor;
 	
 protected:
-	virtual void BeginPlay() override;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	UBoxComponent* ProjectileCollisionBox;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	UProjectileMovementComponent* ProjectileMovementComp;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	UNiagaraComponent* ProjectileNiagaraComponent;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	TObjectPtr<UBoxComponent> ProjectileCollision;
 	
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	EProjectileDamagePolicy ProjectileDamagePolicy = EProjectileDamagePolicy::OnBeginOverlap;  // 기본값을 OnBeginOverlap으로 변경
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	TObjectPtr<UNiagaraComponent> ProjectileNiagaraComponent;
 
-	UFUNCTION()
-	virtual void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
 
-	UFUNCTION()
-	virtual void OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-	
-protected:
-	UPROPERTY(EditAnywhere, Category = "GAS")
-	TSubclassOf<UGameplayEffect> AttackDamageEffect;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|GAS")
+	TSubclassOf<UGameplayEffect> DamageEffect;
+
 	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<UGameplayEffect> ToughnessDamageEffect;
-
-	UPROPERTY(EditAnywhere, Category = "GAS")
-	TSubclassOf<UGameplayEffect> IncreaseGaugeEffect;
 };
