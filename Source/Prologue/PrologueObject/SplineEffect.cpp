@@ -63,7 +63,7 @@ void ASplineEffect::Tick(float DeltaTime)
 	float NewY = FMath::Lerp(Start.Y, End.Y, t);
 
 	float DeltaZ = End.Z - Start.Z;
-	float NewZ = Start.Z + DeltaZ * t + (-4.f * PeakHeight * (t - 0.5f) * (t - 0.5f) + PeakHeight);
+	float NewZ = Start.Z + DeltaZ * t + (-4.f * ArcHeight * (t - 0.5f) * (t - 0.5f) + ArcHeight);
 
 	FVector NewLocation(NewX, NewY, NewZ);
 	SetActorLocation(NewLocation);
@@ -100,7 +100,7 @@ void ASplineEffect::OnStartSpline(FVector StartPosition, AActor* targetActor,
 	
 	this->StartLocation = StartPosition;
 	this->TargetActor = targetActor;
-	this->PeakHeight = PeakHeight;
+	this->ArcHeight = PeakHeight;
 
 	if (startEventHandler.IsBound())
 		startEventHandler.Broadcast(this, this->TargetActor->GetActorLocation());

@@ -49,7 +49,7 @@ public:
 	float Duration = 1.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PeakHeight")
-	float PeakHeight = 300.f; // 포물선 최고점 높이 (Z 오프셋)
+	float ArcHeight = 300.f; // 포물선 최고점 높이 (Z 오프셋)
 private:
 	float ElapsedTime;
 	FVector StartLocation;

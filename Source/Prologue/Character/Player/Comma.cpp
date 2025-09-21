@@ -21,7 +21,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/AbilitySystem/Ability/GA_CommaAttackSword.h"
 #include "Prologue/Component/InputBufferComponent.h"
-#include "Prologue/Player/ProloguePlayerState.h"
+#include "Prologue/PlayerState/ProloguePlayerState.h"
 #include "Prologue/UI/Comma/CommaWidget.h"
 
 

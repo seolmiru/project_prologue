@@ -3,7 +3,7 @@
 
 #include "PrologueAISubsystem.h"
 
-#include "PrologueAIController.h"
+#include "Prologue/Controller/PrologueAIController.h"
 #include "Prologue/Prologue.h"
 
 void UPrologueAISubsystem::RegisterAIController(APrologueAIController* AIController)

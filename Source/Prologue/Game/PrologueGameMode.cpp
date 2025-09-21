@@ -3,7 +3,7 @@
 #include "PrologueGameMode.h"
 #include "Prologue/Character/PrologueCharacter.h"
 #include "Prologue/Controller/CommaController.h"
-#include "Prologue/Player/ProloguePlayerState.h"
+#include "Prologue/PlayerState/ProloguePlayerState.h"
 #include "Prologue/UI/TutorialGuide.h"
 #include "UObject/ConstructorHelpers.h"
 
