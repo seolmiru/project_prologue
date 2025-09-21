@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/Actor.h"
+#include "Prologue/UI/Object/PowerBankIconWidget.h"
 #include "PowerBank.generated.h"
 
 class UTimelineComponent;
@@ -40,14 +42,41 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsInteracted = false;
+
+	/* Start Sejin */
+
+	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="UI")
+	// TObjectPtr<UWidgetComponent> WidgetComponent;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	TObjectPtr<USceneComponent> AttachPoint;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	TSubclassOf<UPowerBankIconWidget> BP_IconWidget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UPowerBankIconWidget> IconWidget;
+	
+	/* End Sejin */
 protected:
 	UFUNCTION(BlueprintCallable)
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION()
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	
 	UFUNCTION(BlueprintCallable)
 	void Interact();
 
 	UFUNCTION()
 	void TimelineProgress(float Value);
+
+	/* Start Sejin */
+
+	UFUNCTION()
+	void AttachWidget();
+
+	
+	
+	/* End Sejin */
 };

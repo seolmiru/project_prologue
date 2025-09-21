@@ -35,7 +35,7 @@ void UBackgroundMusicSubsystem::SetAndPlayMusic(UMetaSoundSource* MusicAsset)
 {
 	if (!MusicAsset)
 	{
-		LOG_SCREEN_R("Not Valid music");
+		LOG_SCREEN_R("Not Set Backgroundmusic");
 		return;
 	}
 
@@ -58,7 +58,7 @@ void UBackgroundMusicSubsystem::SetAndPlayMusic(UMetaSoundSource* MusicAsset)
 		return;
 	}
 
-	LOG_SCREEN_R("Valid Music, Play Music");
+	LOG_SCREEN_R("Set BackgroundMusic, Play Music");
 	MusicAudioComponent->SetSound(MusicAsset);
 	MusicAudioComponent->Play();
 

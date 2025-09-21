@@ -39,26 +39,6 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 	{
 		return false;
 	}
-
-	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
-	{
-		if (Data.EvaluatedData.Magnitude < 0.f)
-		{
-			if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
-			{
-				return false;
-			}
-		}	
-		/*if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Dashing))
-		{
-			FGameplayEventData PlayData;
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.Target.GetAvatarActor(), PrologueGameplayTags::Comma_Event_JustDash, PlayData);
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.EffectSpec.GetContext().GetEffectCauser(), PrologueGameplayTags::Enemy_Event_Dashed, PlayData);
-			LOG_SCREEN("%s", *Data.EffectSpec.GetContext().GetEffectCauser()->GetName());
-
-			return false;
-		}*/
-	}
 	
 	return true;
 }
@@ -77,6 +57,12 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 	}
 	else if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
+		{
+			SetDamage(0.f);
+			return;
+		}
+		
 		const float LocalDamage = GetDamage();
 		
 		LOG_SCREEN("Damage : %f", LocalDamage);

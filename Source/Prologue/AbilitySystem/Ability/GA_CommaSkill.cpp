@@ -23,6 +23,8 @@ void UGA_CommaSkill::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	HitActors.Reset();
+
+	AlreadyHitActors.Empty();
 	
 	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
 
@@ -71,6 +73,22 @@ void UGA_CommaSkill::InputPressed(const FGameplayAbilitySpecHandle Handle, const
 void UGA_CommaSkill::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
+	bHitStopApplied = false;
+	
+	AComma* Comma = Cast<AComma>(ActorInfo->AvatarActor.Get());
+
+	if (Comma)
+	{
+		Comma->GetDashCollision()->SetActive(false);
+		Comma->GetDashCollision()->OnComponentBeginOverlap.Clear();
+	}
+
+	Comma->GetDashPoint()->SetCursorDirectionState(true);
+
+	Comma->GetCharacterMovement()->UpdateFloorFromAdjustment();
+
+	EndHitStop();
+	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
@@ -90,6 +108,8 @@ void UGA_CommaSkill::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 	Comma->GetDashPoint()->SetCursorDirectionState(true);
 
 	Comma->GetCharacterMovement()->UpdateFloorFromAdjustment();
+
+	EndHitStop();
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
@@ -112,6 +132,11 @@ void UGA_CommaSkill::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 void UGA_CommaSkill::HandleTargetHit(AActor* TargetActor, const FHitResult& SweepResult)
 {
+	if (AlreadyHitActors.Contains(TargetActor))
+	{
+		return;
+	}
+	
 	bool bHitDetected = false;
 
 	bool bHitNormalTarget = false;
@@ -146,6 +171,8 @@ void UGA_CommaSkill::HandleTargetHit(AActor* TargetActor, const FHitResult& Swee
 		DataHandle.Add(TargetData);
 		TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
+		AlreadyHitActors.Add(TargetActor);
+		
 		if (!TargetASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_NoHitEffect))
 		{
 			// 경직 적용

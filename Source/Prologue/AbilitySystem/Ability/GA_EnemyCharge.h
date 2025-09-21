@@ -33,6 +33,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Charge")
 	float OverlapCheckDelay = 0.3f;
 
+	UPROPERTY()
+	TArray<TObjectPtr<AActor>> HitActors;
+	
 	UFUNCTION()
 	void OnDelayFinished();
 };

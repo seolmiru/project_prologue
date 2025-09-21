@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PrologueProjectileBase.h"
 #include "GameFramework/Actor.h"
 #include "BazierProjectile.generated.h"
 
@@ -11,7 +12,7 @@ class UBoxComponent;
 class UNiagaraSystem;
 
 UCLASS()
-class PROLOGUE_API ABazierProjectile : public AActor
+class PROLOGUE_API ABazierProjectile : public APrologueProjectileBase
 {
 	GENERATED_BODY()
 	
@@ -24,12 +25,9 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	TObjectPtr<UBoxComponent> ProjectileCollisionBox;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TObjectPtr<UNiagaraSystem> ProjectileExplosion;
 	
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	TObjectPtr<UNiagaraComponent> ProjectileNiagaraComponent;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 	float ExplosionRadius;
 
@@ -42,9 +40,6 @@ protected:
 	FTimerHandle ExplosionTimerHandle;
 
 protected:
-	UPROPERTY(EditAnywhere, Category = "GAS")
-	TSubclassOf<class UGameplayEffect> AttackDamageEffect;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USoundBase> ExplosionSound;
 
