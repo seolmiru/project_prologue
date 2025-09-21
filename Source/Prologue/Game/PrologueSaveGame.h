@@ -34,4 +34,11 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
 	int32 ActivatedPowerBankCount = 0;
+
+	/** AttributeSet*/
+	UPROPERTY(BlueprintReadWrite, Category = "PlayerStats")
+	float SavedHealth;
+
+	UPROPERTY(BlueprintReadWrite, Category = "PlayerStats")
+	float SavedCurrency;
 };

@@ -87,3 +87,12 @@ AActor* UPrologueFunctionLibrary::GetCurrentStandingPlatform(AActor* TargetActor
 
 	return nullptr;
 }
+
+void UPrologueFunctionLibrary::SetAttributeBaseValue(UAbilitySystemComponent* AbilitySystemComponent,
+	FGameplayAttribute Attribute, float NewBaseValue)
+{
+	if (IsValid(AbilitySystemComponent))
+	{
+		AbilitySystemComponent->SetNumericAttributeBase(Attribute, NewBaseValue);
+	}
+}
