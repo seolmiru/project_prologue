@@ -24,10 +24,6 @@ void UAnimNotify_EnableAbilityCancel::Notify(USkeletalMeshComponent* MeshComp, U
 			{
 				ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled);
 				ASC->AddLooseGameplayTag(CancelEnableTag);				
-
-				/*if (!CancelEnableTag.IsValid())
-				{
-				}*/
 			}
 		}
 	}

@@ -39,4 +39,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Prologue|FunctionLibrary", meta = (DisplayName = "Does Actor Have Tag", ExpandEnumAsExecs = "OutConfirmType"))
 	static void BP_DoesActorHaveTag(AActor* InActor, FGameplayTag TagToCheck, EConfirmType& OutConfirmType);
+
+	UFUNCTION(BlueprintCallable, Category = "AI|Platform")
+	static AActor* GetCurrentStandingPlatform(AActor* TargetActor, float TraceDistance = 500.f);
 };

@@ -60,3 +60,30 @@ void UPrologueFunctionLibrary::BP_DoesActorHaveTag(AActor* InActor, FGameplayTag
 {
 	OutConfirmType = NativeDoesActorHaveTag(InActor, TagToCheck) ? EConfirmType::Yes : EConfirmType::No;
 }
+
+AActor* UPrologueFunctionLibrary::GetCurrentStandingPlatform(AActor* TargetActor, float TraceDistance)
+{
+	if (!TargetActor)
+	{
+		return nullptr;
+	}
+
+	const FVector StartLocation = TargetActor->GetActorLocation();
+	const FVector EndLocation = StartLocation - FVector(0.f, 0.f, TraceDistance);
+
+	FHitResult HitResult;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(TargetActor);
+
+	if (TargetActor->GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		StartLocation,
+		EndLocation,
+		ECC_GameTraceChannel7,
+		CollisionParams))
+	{
+		return HitResult.GetActor();
+	}
+
+	return nullptr;
+}
