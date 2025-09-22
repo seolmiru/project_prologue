@@ -136,7 +136,7 @@ void UGA_CommaDash::OnCurveTick(float Alpha)
 		if (AvatarActor)
 		{
 			FVector InterpolatedLocation = FMath::Lerp(BasePos, TargetPos, Alpha);
-			AvatarActor->SetActorLocation(InterpolatedLocation);
+			AvatarActor->SetActorLocation(InterpolatedLocation, false);
 		}
 	}
 }
