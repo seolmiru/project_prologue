@@ -7,6 +7,8 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "PrologueFunctionLibrary.generated.h"
 
+struct FGameplayAttribute;
+
 UENUM()
 enum class EConfirmType : uint8
 {
@@ -40,6 +42,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Prologue|FunctionLibrary", meta = (DisplayName = "Does Actor Have Tag", ExpandEnumAsExecs = "OutConfirmType"))
 	static void BP_DoesActorHaveTag(AActor* InActor, FGameplayTag TagToCheck, EConfirmType& OutConfirmType);
 
-	UFUNCTION(BlueprintCallable, Category = "AI|Platform")
+	UFUNCTION(BlueprintCallable, Category = "Prologue|FunctionLibrary|AI")
 	static AActor* GetCurrentStandingPlatform(AActor* TargetActor, float TraceDistance = 500.f);
+
+	UFUNCTION(BlueprintCallable, Category = "Prologue|FunctionLibrary|Player")
+	static void SetAttributeBaseValue(UAbilitySystemComponent* AbilitySystemComponent, FGameplayAttribute Attribute, float NewBaseValue);
 };
