@@ -71,32 +71,35 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Potion")
 	TArray<TObjectPtr<UImage>> HealPotionImages;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Potion")
+	FVector2D PotionImageSize = FVector2D(50.f, 50.f);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
 	FGameplayTag CooldownTag;
 
 protected:
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float CurrentHealth = 0.0f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float CurrentMaxHealth = 0.0f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float CurrentGauge = 0.0f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float CurrentMaxGauge = 0.0f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float CurrentHealPotion = 0.0f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float MaxHealPotion;
 	
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	int32 Currency = 0;
-
+	
 	// OverClock 활성화 시에 UI 교체
 	virtual void OnOverClockTagChanged(const FGameplayTag Tag, int32 NewCount);
 
