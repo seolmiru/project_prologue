@@ -37,9 +37,6 @@ protected:
 
 	UFUNCTION()
 	void CheckActorsInArea();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OverClock")
-	TObjectPtr<UNiagaraSystem> OverClockNiagaraSystem;
 	
 	UPROPERTY(EditAnywhere, Category = "OverClock")
 	float OverClockDuration = 3.0f;
