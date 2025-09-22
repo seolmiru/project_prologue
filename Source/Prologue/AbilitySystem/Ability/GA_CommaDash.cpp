@@ -90,8 +90,11 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	EffectContextHandle.AddSourceObject(this);
 	FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SpeedBoostEffect, 0.f, EffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
-
+	
 	LOG_SCREEN_R("Dash Speed Boost");
+
+	// Dash Trail 생성
+	GetAbilitySystemComponentFromActorInfo()->AddGameplayCue(PrologueGameplayTags::GameplayCue_Effect_DashTrail);
 	
 	/* Sejin */
 	// 주변 가까운 땅 대시 위치 검사 (대시 보정 알고리즘)
