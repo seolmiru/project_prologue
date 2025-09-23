@@ -146,7 +146,7 @@ void UPrologueGameInstance::RegisterCenterHub(ACenterHub* Hub)
 void UPrologueGameInstance::OnPreLoadMap(const FString& MapName)
 {
 	FLoadingScreenAttributes LoadingScreenAttributes;
-	LoadingScreenAttributes.bAutoCompleteWhenLoadingCompletes = true;
+	LoadingScreenAttributes.bAutoCompleteWhenLoadingCompletes = false;
 	LoadingScreenAttributes.MinimumLoadingScreenDisplayTime = 10.f;
 	LoadingScreenAttributes.WidgetLoadingScreen = CreateRandomLoadingWidget();
 
