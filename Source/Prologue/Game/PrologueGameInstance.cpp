@@ -109,6 +109,29 @@ FString UPrologueGameInstance::GetSavedLevelName() const
 	return SaveGameData ? SaveGameData->SavedLevelName : FString();
 }
 
+void UPrologueGameInstance::StartNewGame(const FString& LevelName)
+{
+	if (!SaveGameData)
+	{
+		SaveGameData = Cast<UPrologueSaveGame>(UGameplayStatics::CreateSaveGameObject(UPrologueSaveGame::StaticClass()));
+		if (!SaveGameData)
+		{
+			LOG_SCREEN_R("세이브 객체 생성 불가");
+			return;
+		}
+	}
+
+	SaveGameData->ResetToDefault();
+
+	PlayedTriggerIDs.Empty();
+	InteractedPowerBankIDs.Empty();
+	bHasIntroDialoguePlayed = false;
+
+	UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
+
+	UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelName), true);
+}
+
 void UPrologueGameInstance::OnPowerBankActivated(FName PowerBankID)
 {
 	if (!SaveGameData || InteractedPowerBankIDs.Contains(PowerBankID))

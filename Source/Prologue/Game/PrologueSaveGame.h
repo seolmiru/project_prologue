@@ -17,6 +17,9 @@ class PROLOGUE_API UPrologueSaveGame : public USaveGame
 public:
 	UPrologueSaveGame();
 
+	UFUNCTION(BlueprintCallable, Category = "Save Data")
+	void ResetToDefault();
+
 	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
 	bool bHasIntroDialoguePlayed = false;
 
