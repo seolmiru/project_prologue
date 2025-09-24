@@ -67,12 +67,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	float TypewriterSpeed = 0.05f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	FLinearColor ActiveColor = FLinearColor(1.f, 1.f, 1.f, 1.f);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	FLinearColor InactiveColor = FLinearColor(0.1f, 0.1f, 0.1f, 1.f);
 	
 	FTimerHandle TypewriterTimerHandle;
 	FString FullDialogueText;

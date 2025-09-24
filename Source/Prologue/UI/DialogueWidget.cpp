@@ -18,12 +18,12 @@ void UDialogueWidget::NativeConstruct()
 
 	if (HourHand)
 	{
-		HourHand->SetColorAndOpacity(InactiveColor);
+		HourHand->SetVisibility(ESlateVisibility::Hidden);
 	}
 
 	if (MinuteHand)
 	{
-		MinuteHand->SetColorAndOpacity(InactiveColor);
+		MinuteHand->SetVisibility(ESlateVisibility::Hidden);
 	}
 	
 	SetVisibility(ESlateVisibility::Collapsed);
@@ -181,12 +181,12 @@ void UDialogueWidget::UpdateCharacterIconStates(const FString& SpeakerName)
 
 	if (bIsLeftSpeaker)
 	{
-		MinuteHand->SetColorAndOpacity(ActiveColor);
-		HourHand->SetColorAndOpacity(InactiveColor);
+		MinuteHand->SetVisibility(ESlateVisibility::Visible);
+		HourHand->SetVisibility(ESlateVisibility::Hidden);
 	}
 	else
 	{
-		MinuteHand->SetColorAndOpacity(InactiveColor);
-		HourHand->SetColorAndOpacity(ActiveColor);
+		MinuteHand->SetVisibility(ESlateVisibility::Hidden);
+		HourHand->SetVisibility(ESlateVisibility::Visible);
 	}
 }
