@@ -133,6 +133,34 @@ void AComma::Tick(float DeltaSeconds)
 		SetActorRotation(NewRotation);
 	}
 
+	// 카메라 보간
+	if (CameraBoom)
+	{
+		// 회전 보간
+		const FRotator CurrentBoomRotation = CameraBoom->GetRelativeRotation();
+
+		const FRotator NewBoomRotation = FMath::RInterpTo(
+			CurrentBoomRotation,
+			TargetCameraRelativeRotation,
+			DeltaSeconds,
+			CameraRotationInterpolationSpeed
+		);
+
+		CameraBoom->SetRelativeRotation(NewBoomRotation);
+
+		// 거리 보간
+		const float CurrentArmLength = CameraBoom->TargetArmLength;
+
+		const float NewArmLength = FMath::FInterpTo(
+			CurrentArmLength,
+			TargetCameraArmLength,
+			DeltaSeconds,
+			CameraArmLengthInterpolationSpeed
+		);
+
+		CameraBoom->TargetArmLength = NewArmLength;
+	}
+	
 	// 카메라 보정
 	if (CameraBoom)
 	{
