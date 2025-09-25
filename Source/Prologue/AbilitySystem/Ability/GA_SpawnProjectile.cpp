@@ -8,7 +8,7 @@
 #include "GameFramework/Character.h"
 #include "Prologue/Prologue.h"
 #include "Prologue/Controller/PrologueAIController.h"
-#include "Prologue/Weapon/Projectile/PrologueProjectileBase.h"
+#include "Prologue/Weapon/Projectile/EggBallProjectile.h"
 
 UGA_SpawnProjectile::UGA_SpawnProjectile()
 {
@@ -66,7 +66,7 @@ void UGA_SpawnProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	SpawnParams.Instigator = AvatarCharacter;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	APrologueProjectileBase* SpawnProjectile = GetWorld()->SpawnActor<APrologueProjectileBase>(
+	AEggBallProjectile* SpawnProjectile = GetWorld()->SpawnActor<AEggBallProjectile>(
 		ProjectileClass,
 		SpawnLocation,
 		FireDirection.Rotation(),

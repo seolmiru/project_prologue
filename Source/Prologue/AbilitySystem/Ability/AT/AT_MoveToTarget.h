@@ -23,7 +23,7 @@ public:
 	FMoveToTargetDelegate OnFinished;
 	
 	UFUNCTION(BlueprintCallable, Category = "Ability|Tasks", meta = (HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "TRUE"))
-	static UAT_MoveToTarget* MoveToTarget(UGameplayAbility* OwningAbility, FVector TargetLocation, float Duration);
+	static UAT_MoveToTarget* MoveToTarget(UGameplayAbility* OwningAbility, AActor* InTargetActor, float Duration, float StopDistance);
 
 	virtual void Activate() override;
 
@@ -34,4 +34,14 @@ private:
 	FVector TargetLocation;
 	float Duration;
 	float ElapsedTime;
+
+	UPROPERTY()
+	TObjectPtr<AActor> AvatarActor;
+
+	UPROPERTY()
+	TObjectPtr<AActor> TargetActor;
+
+	FVector FinalTargetLocation;
+
+	float StopDistance;
 };

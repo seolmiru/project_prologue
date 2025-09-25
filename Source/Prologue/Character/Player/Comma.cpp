@@ -20,8 +20,9 @@
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/AbilitySystem/Ability/GA_CommaAttackSword.h"
+#include "Prologue/Character/ShopKeeper.h"
 #include "Prologue/Component/InputBufferComponent.h"
-#include "Prologue/Player/ProloguePlayerState.h"
+#include "Prologue/PlayerState/ProloguePlayerState.h"
 #include "Prologue/UI/Comma/CommaWidget.h"
 
 
@@ -55,7 +56,7 @@ AComma::AComma()
 	DashCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("DashCollision"));
 	DashCollision->SetupAttachment(RootComponent);
 	DashCollision->SetActive(false);
-	
+
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1000.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
@@ -65,17 +66,17 @@ AComma::AComma()
 
 	/*SwordAuraEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("SwordAuraEffect"));
 	SwordAuraEffect->SetupAttachment(SwordWeaponMesh, FName("AuraSocket"));*/
-	
+
 	UIAnchorComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("UIAnchorComponent"));
 	UIAnchorComponent->SetupAttachment(GetRootComponent());
 	UIAnchorComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 
-	SwitchAttackWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SwitchAttackWidgetComponent"));
-	SwitchAttackWidgetComponent->SetupAttachment(UIAnchorComponent);
-	SwitchAttackWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
-	SwitchAttackWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	SwitchAttackWidgetComponent->SetDrawSize(FVector2D(400.f, 384.f));
-	SwitchAttackWidgetComponent->SetVisibility(false);
+	SmashAttackWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SwitchAttackWidgetComponent"));
+	SmashAttackWidgetComponent->SetupAttachment(UIAnchorComponent);
+	SmashAttackWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	SmashAttackWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	SmashAttackWidgetComponent->SetDrawSize(FVector2D(400.f, 384.f));
+	SmashAttackWidgetComponent->SetVisibility(false);
 
 	CooldownWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("CooldownWidgetComponent"));
 	CooldownWidgetComponent->SetupAttachment(RootComponent);
@@ -87,17 +88,15 @@ AComma::AComma()
 	GuideWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 	GuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	GuideWidgetComponent->SetVisibility(false);
-	
+
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
-	SwitchAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
-	
+	SmashAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
+
+	SpeedBoostTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.Boost"));
+
 	SwordWeaponMesh->SetVisibility(true);
 
-	CameraBoom->TargetArmLength = 1200.f;
-	DefaultZoomDist = CameraBoom->TargetArmLength;
-	TargetZoomDist = DefaultZoomDist;
-	
 	/** Sejin */
 
 	// 대쉬 위치 오브젝트 소환
@@ -134,15 +133,37 @@ void AComma::Tick(float DeltaSeconds)
 		SetActorRotation(NewRotation);
 	}
 
+	// 카메라 보간
+	if (CameraBoom)
+	{
+		// 회전 보간
+		const FRotator CurrentBoomRotation = CameraBoom->GetRelativeRotation();
+
+		const FRotator NewBoomRotation = FMath::RInterpTo(
+			CurrentBoomRotation,
+			TargetCameraRelativeRotation,
+			DeltaSeconds,
+			CameraRotationInterpolationSpeed
+		);
+
+		CameraBoom->SetRelativeRotation(NewBoomRotation);
+
+		// 거리 보간
+		const float CurrentArmLength = CameraBoom->TargetArmLength;
+
+		const float NewArmLength = FMath::FInterpTo(
+			CurrentArmLength,
+			TargetCameraArmLength,
+			DeltaSeconds,
+			CameraArmLengthInterpolationSpeed
+		);
+
+		CameraBoom->TargetArmLength = NewArmLength;
+	}
+	
 	// 카메라 보정
 	if (CameraBoom)
 	{
-		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, TargetZoomDist))
-		{
-			float NewArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, TargetZoomDist, DeltaSeconds, ZoomOutInterpSpeed);
-			CameraBoom->TargetArmLength = NewArmLength;
-		}
-		
 		FVector TargetLocation = GetActorLocation();
 		TargetLocation.Z += 100.f;
 
@@ -150,7 +171,7 @@ void AComma::Tick(float DeltaSeconds)
 		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaSeconds, 4.f);
 		CameraBoom->SetWorldLocation(NewLocation);
 	}
-	
+
 	if (UIAnchorComponent)
 	{
 		FRotator FixedRotation = FRotator::ZeroRotator;
@@ -186,10 +207,15 @@ void AComma::PossessedBy(AController* NewController)
 		ASC = GASPS->GetAbilitySystemComponent();
 		ASC->InitAbilityActorInfo(GASPS, this);
 
-		if (ASC && SwitchAttackSwordTag.IsValid())
+		// SmashAttackSwordTag, SpeedBoostTag Event 등록
+		if (ASC && SmashAttackSwordTag.IsValid())
 		{
-			ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(
-				this, &AComma::OnSwitchAttackUI);
+			ASC->RegisterGameplayTagEvent(SmashAttackSwordTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnSmashAttackUI);
+		}
+
+		if (ASC && SpeedBoostTag.IsValid())
+		{
+			ASC->RegisterGameplayTagEvent(SpeedBoostTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AComma::OnDashSpeedBoost);
 		}
 	}
 
@@ -218,7 +244,7 @@ void AComma::PossessedBy(AController* NewController)
 		CommaWidget->SetAbilitySystemComponent(this);
 		CommaWidget->AddToViewport();
 	}
-	
+
 	if (!StartEffect.IsEmpty())
 	{
 		for (const TSubclassOf<UGameplayEffect>& EffectClass : StartEffect)
@@ -239,16 +265,25 @@ void AComma::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp)
+	{
+		LOG_SCREEN_R("Comma BeginPlay : No CharacterMovementComponent");
+		return;
+	}
+
+	DefaultWalkSpeed = MoveComp->MaxWalkSpeed;
+	
 	FGameplayTag DashCooldownTag = FGameplayTag::RequestGameplayTag(FName("Comma.Cooldown.Dash"));
 	FDelegateHandle DashCoolHandle = ASC->RegisterGameplayTagEvent(DashCooldownTag, EGameplayTagEventType::NewOrRemoved)
-	.AddLambda([this](const FGameplayTag Tag, int32 NewCount)
-	{
-		if (NewCount == 0 && bInputDash)
-		{
-			InputGAS(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")));
-		}
-	});
-	
+	                                    .AddLambda([this](const FGameplayTag Tag, int32 NewCount)
+	                                    {
+		                                    if (NewCount == 0 && bInputDash)
+		                                    {
+			                                    InputGAS(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")));
+		                                    }
+	                                    });
+
 	if (ACommaController* CommaController = Cast<ACommaController>(GetController()))
 	{
 		CommaController->bShowMouseCursor = true;
@@ -275,11 +310,16 @@ void AComma::BeginPlay()
 
 void AComma::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (ASC && SwitchAttackSwordTag.IsValid())
+	if (ASC && SmashAttackSwordTag.IsValid())
 	{
-		ASC->RegisterGameplayTagEvent(SwitchAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
+		ASC->RegisterGameplayTagEvent(SmashAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 	}
-	
+
+	if (ASC && SpeedBoostTag.IsValid())
+	{
+		ASC->RegisterGameplayTagEvent(SpeedBoostTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
+	}
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -301,10 +341,12 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 				if (InputAction.Tag == DashTag)
 				{
-					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputDash, true);
-					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this, &AComma::InputDash, false);					
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this,
+					                                   &AComma::InputDash, true);
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this,
+					                                   &AComma::InputDash, false);
 				}
-				
+
 				LOG_SCREEN("%s", *InputAction.Tag.ToString());
 			}
 		}
@@ -323,7 +365,7 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 	{
 		DashPoint->SetDirection(FVector(MovementVector.X, MovementVector.Y, 0.f).GetSafeNormal());
 	}
-	
+
 	if (ASC)
 	{
 		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
@@ -354,6 +396,26 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 			SetActorRotation(NewRotation);
 		}
 	}
+}
+
+void AComma::ActivateRotateCamera(FRotator NewTargetRotation)
+{
+	TargetCameraRelativeRotation = NewTargetRotation;
+}
+
+void AComma::DeactivateRotateCamera()
+{
+	TargetCameraRelativeRotation = DefaultCameraRelativeRotation;
+}
+
+void AComma::ActivateAdjustCamera(float NewTargetArmLength)
+{
+	TargetCameraArmLength = NewTargetArmLength;
+}
+
+void AComma::DeactivateAdjustCamera()
+{
+	TargetCameraArmLength = DefaultCameraArmLength;
 }
 
 UStaticMeshComponent* AComma::GetSwordWeaponMesh() const
@@ -509,17 +571,18 @@ void AComma::OnAttackEnded()
 	TargetRotation = FRotator::ZeroRotator;
 }
 
-void AComma::OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const
+void AComma::OnSmashAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const
 {
-	if (CallbackTag == SwitchAttackSwordTag && SwitchAttackWidgetComponent)
+	// SmashAttackTag가 들어왔을 때
+	if (CallbackTag == SmashAttackSwordTag && SmashAttackWidgetComponent)
 	{
 		if (NewCount > 0)
 		{
-			SwitchAttackWidgetComponent->SetVisibility(true);
+			SmashAttackWidgetComponent->SetVisibility(true);
 		}
 		else
 		{
-			SwitchAttackWidgetComponent->SetVisibility(false);
+			SmashAttackWidgetComponent->SetVisibility(false);
 		}
 	}
 }
@@ -539,21 +602,109 @@ void AComma::TriggerDamageEffect(float DamageAmount)
 	GetWorld()->GetTimerManager().SetTimer(DamageEffectTimerHandle, this, &AComma::UpdateDamageEffect, 0.05f, true);
 }
 
-void AComma::ZoomIn(float ZoomDist)
+void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)
 {
-	CameraBoom->TargetArmLength = ZoomDist;
-	TargetZoomDist = ZoomDist;
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp)
+	{
+		LOG_SCREEN_R("Comma OnDashSpeedBoost : No CharacterMovementComponent");
+		return;
+	}
+
+	// SpeedBoostTag가 들어왔을 때
+	if (CallbackTag == SpeedBoostTag)
+	{
+		if (NewCount > 0)
+		{
+			// MaxWalkSpeed를 SpeedBoost만큼 증가
+			MoveComp->MaxWalkSpeed = DefaultWalkSpeed * SpeedBoost;
+			LOG_SCREEN("Speed Boost Activated");
+		}
+		else
+		{
+			// 태그가 전부 제거되면 MaxWalkSpeed 복구
+			MoveComp->MaxWalkSpeed = DefaultWalkSpeed;
+			LOG_SCREEN("Speed Boost Deactivated");
+		}
+	}
 }
 
-void AComma::ZoomOut()
+void AComma::OnInteractShop()
 {
-	TargetZoomDist = DefaultZoomDist;
+	if (!ShopKeeperInRange || !ASC)
+	{
+		return;
+	}
+
+	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
+	if (!SkillAttributeSet)
+	{
+		return;
+	}
+
+	const float CurrentCurrency = SkillAttributeSet->GetCurrency();
+	const float CurrentPotions = SkillAttributeSet->GetCurrentHealPotion();
+	const float MaxPotions = SkillAttributeSet->GetMaxHealPotion();
+
+	if (CurrentCurrency >= ShopKeeperInRange->HealPotionCost && CurrentPotions <= MaxPotions)
+	{
+		GetWorld()->GetTimerManager().SetTimer(PurchaseTimerHandle, this, &AComma::PurchaseHealPotion, 3.f, false);
+
+		LOG_SCREEN_R("포션 구매 진행중");
+		// UI 추가 예정
+	}
+	else
+	{
+		LOG_SCREEN_R("포션 구매 불가. 돈이 부족하거나 포션이 가득 참");
+	}
 }
 
-void AComma::ResetZoom()
+void AComma::OnInteractShopCompleted()
 {
-	CameraBoom->TargetArmLength = DefaultZoomDist;
-	TargetZoomDist = DefaultZoomDist;
+	GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+	// UI 추가 예정
+}
+
+void AComma::PurchaseHealPotion()
+{
+	if (!ShopKeeperInRange || !ASC)
+	{
+		return;
+	}
+
+	if (!ShopKeeperInRange->CostEffect || !ShopKeeperInRange->RewardEffect)
+	{
+		return;
+	}
+
+	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(ShopKeeperInRange);
+
+	FGameplayEffectSpecHandle CostSpecHandle = ASC->MakeOutgoingSpec(ShopKeeperInRange->CostEffect, 1.f, EffectContextHandle);
+	if (CostSpecHandle.IsValid())
+	{
+		ASC->ApplyGameplayEffectSpecToSelf(*CostSpecHandle.Data.Get());
+	}
+
+	FGameplayEffectSpecHandle RewardSpecHandle = ASC->MakeOutgoingSpec(ShopKeeperInRange->RewardEffect, 1.f, EffectContextHandle);
+	if (RewardSpecHandle.IsValid())
+	{
+		ASC->ApplyGameplayEffectSpecToSelf(*RewardSpecHandle.Data.Get());
+	}
+
+	LOG_SCREEN_R("포션 구매 완료");
+}
+
+void AComma::SetShopKeeper(AShopKeeper* ShopKeeper)
+{
+	ShopKeeperInRange = ShopKeeper;
+
+	if (!ShopKeeperInRange)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+
+		// UI 추가 예정
+	}
 }
 
 void AComma::UpdateDamageEffect()
@@ -586,6 +737,37 @@ APlayerDashPoint* AComma::GetDashPoint() const
 	{
 		return nullptr;
 	}
+}
+
+AActor* AComma::GetGround() const
+{
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	FVector MyLocation = GetActorLocation();
+
+	FVector FloorStart = MyLocation;
+	FVector FloorEnd = MyLocation;
+	FloorEnd.Z -= GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 50.0f;
+	const float CapsuleRadius = GetCapsuleComponent()->GetScaledCapsuleRadius();
+	const float CapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+	bool bPlayerHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		MyLocation,
+		FloorEnd,
+		FQuat::Identity,
+		ECC_GameTraceChannel8,
+		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight),
+		Params
+	);
+
+	if (bPlayerHit)
+	{
+		return HitResult.GetActor();
+	}
+
+	return nullptr;
 }
 
 void AComma::InputDash(bool bInput)

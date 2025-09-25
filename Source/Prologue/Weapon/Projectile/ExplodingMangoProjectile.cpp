@@ -16,23 +16,17 @@
 AExplodingMangoProjectile::AExplodingMangoProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	ProjectileCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("ProjectileCollision"));
-	SetRootComponent(ProjectileCollision);
+	
 	ProjectileCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	ProjectileCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
 	ProjectileCollision->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	ProjectileCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Block);
 	ProjectileCollision->OnComponentHit.AddDynamic(this, &ThisClass::OnProjectileHit);
 
-	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->InitialSpeed = 700.f;
 	ProjectileMovement->MaxSpeed = 5000.f;
 	ProjectileMovement->Velocity = FVector(0.f, 0.f, -1.f);
 	ProjectileMovement->ProjectileGravityScale = 1.f;
-	
-	ProjectileNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ProjectileNiagaraComponent"));
-	ProjectileNiagaraComponent->SetupAttachment(GetRootComponent());
 
 	ExplosionRadius = 400.f;
 	TimeToExplode = 3.f;
@@ -53,6 +47,8 @@ void AExplodingMangoProjectile::Tick(float DeltaTime)
 	{
 		Explode();
 		Destroy();
+		SetActorTickEnabled(false);
+		return;
 	}
 }
 
@@ -74,6 +70,21 @@ void AExplodingMangoProjectile::StickAndExplosion(const FHitResult& Hit)
 
 	ElapsedTime = 0.f;
 
+	FVector ProjectileLocation = GetActorLocation();
+	
+	if (ProjectileEffect)
+	{
+		UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			ExplosionEffect,
+			ProjectileLocation,
+			FRotator::ZeroRotator,
+			FVector(1.f, 1.f, 1.f),
+			true,
+			true
+		);
+	}
+	
 	GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &AExplodingMangoProjectile::Explode, TimeToExplode, false);
 }
 
@@ -120,7 +131,7 @@ void AExplodingMangoProjectile::Explode()
 		);
 	}
 
-	if (!IsValid(TargetActor))
+	if (!TargetActor)
 	{
 		Destroy();
 		return;

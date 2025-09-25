@@ -4,17 +4,12 @@
 #include "GA_OverClock.h"
 
 #include "AbilitySystemGlobals.h"
-#include "NiagaraComponent.h"
-#include "NiagaraFunctionLibrary.h"
-#include "Components/PostProcessComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
-#include "Prologue/AbilitySystem/Attribute/PrologueSkillAttributeSet.h"
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Character/Player/Comma.h"
-#include "Prologue/Controller/CommaController.h"
 #include "Prologue/Weapon/Projectile/BazierProjectile.h"
-#include "Prologue/Weapon/Projectile/PrologueProjectileBase.h"
+#include "Prologue/Weapon/Projectile/EggBallProjectile.h"
 
 bool UGA_OverClock::bIsOverClockActive = false;
 float UGA_OverClock::OverClockTimeScale = 1.0f;
@@ -87,38 +82,8 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		0.f
 	);
 
-	FVector OverClockLocation = GetAvatarActorFromActorInfo()->GetActorLocation();
-
-	FVector StartLocation = OverClockLocation;
-	FVector EndLocation = OverClockLocation - FVector(0.f, 0.f, 1000.f);
-
-	FHitResult HitResult;
-
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActor(GetAvatarActorFromActorInfo());
-
-	bool bHit = GetWorld()->LineTraceSingleByChannel(
-		HitResult,
-		StartLocation,
-		EndLocation,
-		ECC_GameTraceChannel7,
-		CollisionParams
-	);
-
-	FVector OverClockSpawnLocation = bHit ? HitResult.ImpactPoint : OverClockLocation;
-
-	if (OverClockNiagaraSystem)
-	{
-		UNiagaraComponent* OverClockNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),
-			OverClockNiagaraSystem,
-			OverClockSpawnLocation,
-			FRotator::ZeroRotator,
-			FVector(1.f, 1.f, 1.f),
-			true,
-			true
-		);
-	}
+	// OverClock Niagara 생성
+	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_OverClock);
 }
 
 void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -189,7 +154,7 @@ void UGA_OverClock::CheckActorsInArea()
 		// end Sejin
 
 		// OverClock의 영향을 받을 대상인지 검사
-		if (Enemy || Cast<ABazierProjectile>(Actor) || Cast<APrologueProjectileBase>(Actor))
+		if (Enemy || Cast<ABazierProjectile>(Actor) || Cast<AEggBallProjectile>(Actor))
 		{
 			// 영향을 받고 있지 않은 새로운 Actor일 때 OverClock 효과 적용
 			if (!AffectedActors.Contains(Actor))

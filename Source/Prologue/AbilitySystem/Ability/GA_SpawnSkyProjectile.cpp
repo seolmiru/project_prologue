@@ -4,6 +4,7 @@
 #include "GA_SpawnSkyProjectile.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Prologue/PrologueBlackboardKey.h"
 #include "Prologue/Controller/PrologueAIController.h"
 #include "Prologue/Weapon/Projectile/ExplodingMangoProjectile.h"
 
@@ -18,20 +19,25 @@ void UGA_SpawnSkyProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	
-	APrologueAIController* AIController = Cast<APrologueAIController>(ActorInfo->OwnerActor->GetInstigatorController());
+	SpawnSkyProjectile();
+
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+}
+
+void UGA_SpawnSkyProjectile::SpawnSkyProjectile()
+{
+	APrologueAIController* AIController = Cast<APrologueAIController>(CurrentActorInfo->OwnerActor->GetInstigatorController());
 	if (!AIController)
 	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
 
 	// Blackboard에서 TargetActor 가져오기
 	UBlackboardComponent* BlackboardComponent = AIController->GetBlackboardComponent();
-	AActor* TargetActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(FName("TargetActor")));
+	AActor* TargetActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(PrologueBlackboard::TargetActor));
 
 	if (!TargetActor)
 	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
 	
@@ -67,6 +73,4 @@ void UGA_SpawnSkyProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 			Projectile->FinishSpawning(FTransform(SpawnRotation, SpawnLocation));
 		}
 	}
-
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

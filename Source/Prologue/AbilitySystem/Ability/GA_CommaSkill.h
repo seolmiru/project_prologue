@@ -61,4 +61,7 @@ private:
 
 	UPROPERTY()
 	TSet<AActor*> HitActors;
+
+	UPROPERTY()
+	TArray<TObjectPtr<AActor>> AlreadyHitActors;
 };

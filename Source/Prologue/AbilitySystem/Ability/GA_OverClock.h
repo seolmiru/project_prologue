@@ -7,7 +7,7 @@
 #include "GA_OverClock.generated.h"
 
  class UNiagaraSystem;
- class APrologueProjectileBase;
+ class AEggBallProjectile;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTimeScale, float, NewScale);
 
 class ABazierProjectile;
@@ -37,9 +37,6 @@ protected:
 
 	UFUNCTION()
 	void CheckActorsInArea();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OverClock")
-	TObjectPtr<UNiagaraSystem> OverClockNiagaraSystem;
 	
 	UPROPERTY(EditAnywhere, Category = "OverClock")
 	float OverClockDuration = 3.0f;

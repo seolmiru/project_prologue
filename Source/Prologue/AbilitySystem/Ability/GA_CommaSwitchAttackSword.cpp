@@ -43,7 +43,7 @@ void UGA_CommaSwitchAttackSword::ActivateAbility(const FGameplayAbilitySpecHandl
 
 	Comma->RotateToMouse();
 	
-	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetSwordSwitchAttackMontage(), 1.0f);
+	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Comma->GetSwordSmashAttackMontage(), 1.0f);
 	PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_CommaSwitchAttackSword::OnComplete);
 	PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_CommaSwitchAttackSword::OnInterrupted);
 	PlayAttackTask->ReadyForActivation();

@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "ArenaGate.generated.h"
 
+class UNiagaraSystem;
 class UNiagaraComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGateStateChanged, bool, bIsOpen);
 
@@ -18,11 +19,30 @@ class PROLOGUE_API AArenaGate : public AActor
 public:
 	AArenaGate();
 
+public:
+	UPROPERTY(BlueprintAssignable, Category = "Arena")
+	FOnGateStateChanged OnGateStateChanged;
+
+	UFUNCTION(BlueprintCallable, Category = "Arena")
+	void OpenGate();
+
+	UFUNCTION(BlueprintCallable, Category = "Arena")
+	void CloseGate();
+
+	UFUNCTION(BlueprintCallable, Category = "Arena")
+	void ActivateArena();
+
+	UFUNCTION(BlueprintCallable, Category = "Arena")
+	void CheckEnemies();
+	
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Effect")
 	TObjectPtr<UNiagaraComponent> GateEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Effect")
+	TObjectPtr<UNiagaraSystem> GateDestroyEffect;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Mesh")
 	TObjectPtr<UStaticMeshComponent> GateMesh;
@@ -41,22 +61,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arena")
 	FName EnemyTag = "Enemy";
-
-public:
-	UPROPERTY(BlueprintAssignable, Category = "Arena")
-	FOnGateStateChanged OnGateStateChanged;
-
-	UFUNCTION(BlueprintCallable, Category = "Arena")
-	void OpenGate();
-
-	UFUNCTION(BlueprintCallable, Category = "Arena")
-	void CloseGate();
-
-	UFUNCTION(BlueprintCallable, Category = "Arena")
-	void ActivateArena();
-
-	UFUNCTION(BlueprintCallable, Category = "Arena")
-	void CheckEnemies();
 
 protected:
 	UFUNCTION()

@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Comma.generated.h"
 
+class AShopKeeper;
 class UNiagaraComponent;
 class UWidgetComponent;
 class UPostProcessComponent;
@@ -112,10 +113,10 @@ private:
 	TObjectPtr<USceneComponent> UIAnchorComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UWidgetComponent> SwitchAttackWidgetComponent;
+	TObjectPtr<UWidgetComponent> SmashAttackWidgetComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> BP_SwitchAttackWidget;
+	TSubclassOf<UUserWidget> BP_SmashAttackWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> OverClockWidget;
@@ -134,19 +135,41 @@ private:
 
 	void Input_Move(const FInputActionValue& InputActionValue);
 
+	/** Camera Settings Function */
+protected:
+	UFUNCTION(BlueprintCallable, Category = "Camera|Rotate")
+	void ActivateRotateCamera(FRotator NewTargetRotation);
+
+	UFUNCTION(BlueprintCallable, Category = "Camera|Rotate")
+	void DeactivateRotateCamera();
+
+	UFUNCTION(BlueprintCallable, Category = "Camera|Length")
+	void ActivateAdjustCamera(float NewTargetArmLength);
+
+	UFUNCTION(BlueprintCallable, Category = "Camera|Length")
+	void DeactivateAdjustCamera();
+	
+	/** Camera Settings Variables */
 private:
-	/** Camera Settings */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float DefaultZoomDist = 1200.f;
+	FRotator DefaultCameraRelativeRotation = FRotator(0.f, 0.f, 0.f);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float IntroZoomDist = 600.f;
+	FRotator TargetCameraRelativeRotation = FRotator(0.f, 0.f, 0.f);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float ZoomOutInterpSpeed = 4.f;
+	float CameraRotationInterpolationSpeed = 3.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float DefaultCameraArmLength = 1600.f;
 	
-	float TargetZoomDist = 1200.f;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float TargetCameraArmLength = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float CameraArmLengthInterpolationSpeed = 2.f;
+
+	/** Effect Material Settings */
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UMaterial> DamagePostProcessMaterial;
@@ -175,7 +198,7 @@ public:
 	FORCEINLINE UAnimMontage* GetSwordComboMontage() const { return SwordComboMontage; }
 	//FORCEINLINE UAnimMontage* GetBowComboMontage() const { return BowComboMontage; }
 
-	FORCEINLINE UAnimMontage* GetSwordSwitchAttackMontage() const { return SwordSwitchAttackMontage; }
+	FORCEINLINE UAnimMontage* GetSwordSmashAttackMontage() const { return SwordSmashAttackMontage; }
 	//FORCEINLINE UAnimMontage* GetBowSwitchAttackMontage() const { return BowSwitchAttackMontage; }
 
 	FVector2D GetCachedMovementInput() const { return CachedMovementInput; }
@@ -209,16 +232,41 @@ public:
 
 	void OnAttackEnded();
 
-	void OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;
+	void OnSmashAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;
 
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void TriggerDamageEffect(float DamageAmount = 1.f);
 
-	void ZoomIn(float ZoomDist = 600.f);
+	/** Speed Boost */
+protected:
+	UFUNCTION()
+	void OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount);
 
-	void ZoomOut();
+	float DefaultWalkSpeed;
 
-	void ResetZoom();
+	FGameplayTag IsMovingTag;
+	FGameplayTag SpeedBoostTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Speed Boost")
+	float SpeedBoost = 1.5f;
+
+	/** Shop */
+public:
+	UFUNCTION(BlueprintCallable)
+	void OnInteractShop();
+	
+	UFUNCTION(BlueprintCallable)
+	void OnInteractShopCompleted();
+
+	void PurchaseHealPotion();
+
+	FTimerHandle PurchaseTimerHandle;
+
+	UPROPERTY()
+	TObjectPtr<AShopKeeper> ShopKeeperInRange;
+
+public:
+	void SetShopKeeper(AShopKeeper* ShopKeeper);
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -228,13 +276,13 @@ protected:
 	//TObjectPtr<class UAnimMontage> BowComboMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TObjectPtr<class UAnimMontage> SwordSwitchAttackMontage;
+	TObjectPtr<class UAnimMontage> SwordSmashAttackMontage;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	//TObjectPtr<class UAnimMontage> BowSwitchAttackMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FGameplayTag SwitchAttackSwordTag;
+	FGameplayTag SmashAttackSwordTag;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	//FGameplayTag SwitchAttackBowTag;
@@ -253,6 +301,8 @@ private:
 public:
 	class APlayerDashPoint* GetDashPoint() const;
 
+	AActor* GetGround() const;
+	
 	void InputDash(bool bInput);
 
 	bool GetInputDashState() const;	
