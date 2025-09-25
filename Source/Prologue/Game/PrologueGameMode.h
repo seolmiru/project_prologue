@@ -14,21 +14,8 @@ class APrologueGameMode : public AGameModeBase
 public:
 	APrologueGameMode();
 
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	void SpawnGuide();
-
 protected:
 	virtual void BeginPlay() override;
-	
-private:
-	UPROPERTY()
-	TObjectPtr<class ATutorialGuide> TutorialGuideActor;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<ATutorialGuide> TutorialGuideClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	FVector GuideSpawnLocation = FVector(0.f, 0.f, 500.f);
 };
 
 

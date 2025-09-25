@@ -110,7 +110,7 @@ void APowerBank::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Other
 		if (BP_IconWidget && !IconWidget)
 		{
 			IconWidget = CreateWidget<UPowerBankIconWidget>(GetWorld(), BP_IconWidget);
-			IconWidget->AddToViewport();
+			IconWidget->AddToViewport(-1);
 			IconWidget->PowerBank = this;
 		}
 	}

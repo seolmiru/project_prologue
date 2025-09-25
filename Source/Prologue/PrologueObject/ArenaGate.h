@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "ArenaGate.generated.h"
 
+class UNiagaraSystem;
 class UNiagaraComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGateStateChanged, bool, bIsOpen);
 
@@ -39,6 +40,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Effect")
 	TObjectPtr<UNiagaraComponent> GateEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Effect")
+	TObjectPtr<UNiagaraSystem> GateDestroyEffect;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Mesh")
 	TObjectPtr<UStaticMeshComponent> GateMesh;

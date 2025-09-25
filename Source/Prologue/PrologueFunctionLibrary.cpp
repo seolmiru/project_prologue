@@ -79,11 +79,20 @@ AActor* UPrologueFunctionLibrary::GetCurrentStandingPlatform(AActor* TargetActor
 		HitResult,
 		StartLocation,
 		EndLocation,
-		ECC_GameTraceChannel7,
+		ECC_GameTraceChannel8,
 		CollisionParams))
 	{
 		return HitResult.GetActor();
 	}
 
 	return nullptr;
+}
+
+void UPrologueFunctionLibrary::SetAttributeBaseValue(UAbilitySystemComponent* AbilitySystemComponent,
+	FGameplayAttribute Attribute, float NewBaseValue)
+{
+	if (IsValid(AbilitySystemComponent))
+	{
+		AbilitySystemComponent->SetNumericAttributeBase(Attribute, NewBaseValue);
+	}
 }

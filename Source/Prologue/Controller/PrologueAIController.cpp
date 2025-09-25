@@ -3,7 +3,7 @@
 
 #include "PrologueAIController.h"
 
-#include "PrologueAISubsystem.h"
+#include "Prologue/Game/Subsystem/PrologueAISubsystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Navigation/CrowdFollowingComponent.h"
 #include "Perception/AIPerceptionComponent.h"

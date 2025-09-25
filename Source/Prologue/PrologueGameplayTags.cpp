@@ -10,6 +10,9 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Sword, "InputTag.Attack.Sword");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Bow, "InputTag.Attack.Bow");
 
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Interact_Started, "InputTag.Interact.Started");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Interact_Completed, "InputTag.Interact.Completed");
+
 	/** Comma Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Sword, "Comma.Weapon.Sword");
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Bow, "Comma.Weapon.Bow");
@@ -85,6 +88,10 @@ namespace PrologueGameplayTags
 	
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Heal, "GameplayCue.Effect.Heal");
 
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_DashTrail, "GameplayCue.Effect.DashTrail");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_OverClock, "GameplayCue.Effect.OverClock");
+	
 	/** Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AttackHitCheck, "Event.Character.AttackHitCheck");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SecondAttackHitCheck, "Event.Character.SecondAttackHitCheck");

@@ -4,6 +4,7 @@
 #include "ArenaGate.h"
 
 #include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
 AArenaGate::AArenaGate()
 {
@@ -55,8 +56,25 @@ void AArenaGate::OpenGate()
 {
 	if (!bIsOpen)
 	{
+		GateEffect->DeactivateImmediate();
+
+		const FVector GateEffectLocation = GateEffect->GetComponentLocation();
+
+		// Gate 열릴 때 나오는 Niagara 생성
+		if (GateDestroyEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				GateDestroyEffect,
+				GateEffectLocation,
+				FRotator(0, 0, 0),
+				FVector(1.f, 1.f, 1.f),
+				true,
+				true
+			);
+		}
+		
 		bIsOpen = true;
-		GateMesh->SetVisibility(false);
 		GateMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		OnGateStateChanged.Broadcast(true);
 	}
@@ -67,9 +85,7 @@ void AArenaGate::CloseGate()
 	if (bIsOpen)
 	{
 		bIsOpen = false;
-		GateMesh->SetVisibility(true);
 		GateMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		GateEffect->Deactivate();
 		OnGateStateChanged.Broadcast(false);
 	}
 }

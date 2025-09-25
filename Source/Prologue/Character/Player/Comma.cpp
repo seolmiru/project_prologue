@@ -20,8 +20,9 @@
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/AbilitySystem/Ability/GA_CommaAttackSword.h"
+#include "Prologue/Character/ShopKeeper.h"
 #include "Prologue/Component/InputBufferComponent.h"
-#include "Prologue/Player/ProloguePlayerState.h"
+#include "Prologue/PlayerState/ProloguePlayerState.h"
 #include "Prologue/UI/Comma/CommaWidget.h"
 
 
@@ -132,6 +133,34 @@ void AComma::Tick(float DeltaSeconds)
 		SetActorRotation(NewRotation);
 	}
 
+	// 카메라 보간
+	if (CameraBoom)
+	{
+		// 회전 보간
+		const FRotator CurrentBoomRotation = CameraBoom->GetRelativeRotation();
+
+		const FRotator NewBoomRotation = FMath::RInterpTo(
+			CurrentBoomRotation,
+			TargetCameraRelativeRotation,
+			DeltaSeconds,
+			CameraRotationInterpolationSpeed
+		);
+
+		CameraBoom->SetRelativeRotation(NewBoomRotation);
+
+		// 거리 보간
+		const float CurrentArmLength = CameraBoom->TargetArmLength;
+
+		const float NewArmLength = FMath::FInterpTo(
+			CurrentArmLength,
+			TargetCameraArmLength,
+			DeltaSeconds,
+			CameraArmLengthInterpolationSpeed
+		);
+
+		CameraBoom->TargetArmLength = NewArmLength;
+	}
+	
 	// 카메라 보정
 	if (CameraBoom)
 	{
@@ -597,6 +626,84 @@ void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)
 			MoveComp->MaxWalkSpeed = DefaultWalkSpeed;
 			LOG_SCREEN("Speed Boost Deactivated");
 		}
+	}
+}
+
+void AComma::OnInteractShop()
+{
+	if (!ShopKeeperInRange || !ASC)
+	{
+		return;
+	}
+
+	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
+	if (!SkillAttributeSet)
+	{
+		return;
+	}
+
+	const float CurrentCurrency = SkillAttributeSet->GetCurrency();
+	const float CurrentPotions = SkillAttributeSet->GetCurrentHealPotion();
+	const float MaxPotions = SkillAttributeSet->GetMaxHealPotion();
+
+	if (CurrentCurrency >= ShopKeeperInRange->HealPotionCost && CurrentPotions <= MaxPotions)
+	{
+		GetWorld()->GetTimerManager().SetTimer(PurchaseTimerHandle, this, &AComma::PurchaseHealPotion, 3.f, false);
+
+		LOG_SCREEN_R("포션 구매 진행중");
+		// UI 추가 예정
+	}
+	else
+	{
+		LOG_SCREEN_R("포션 구매 불가. 돈이 부족하거나 포션이 가득 참");
+	}
+}
+
+void AComma::OnInteractShopCompleted()
+{
+	GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+	// UI 추가 예정
+}
+
+void AComma::PurchaseHealPotion()
+{
+	if (!ShopKeeperInRange || !ASC)
+	{
+		return;
+	}
+
+	if (!ShopKeeperInRange->CostEffect || !ShopKeeperInRange->RewardEffect)
+	{
+		return;
+	}
+
+	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(ShopKeeperInRange);
+
+	FGameplayEffectSpecHandle CostSpecHandle = ASC->MakeOutgoingSpec(ShopKeeperInRange->CostEffect, 1.f, EffectContextHandle);
+	if (CostSpecHandle.IsValid())
+	{
+		ASC->ApplyGameplayEffectSpecToSelf(*CostSpecHandle.Data.Get());
+	}
+
+	FGameplayEffectSpecHandle RewardSpecHandle = ASC->MakeOutgoingSpec(ShopKeeperInRange->RewardEffect, 1.f, EffectContextHandle);
+	if (RewardSpecHandle.IsValid())
+	{
+		ASC->ApplyGameplayEffectSpecToSelf(*RewardSpecHandle.Data.Get());
+	}
+
+	LOG_SCREEN_R("포션 구매 완료");
+}
+
+void AComma::SetShopKeeper(AShopKeeper* ShopKeeper)
+{
+	ShopKeeperInRange = ShopKeeper;
+
+	if (!ShopKeeperInRange)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+
+		// UI 추가 예정
 	}
 }
 

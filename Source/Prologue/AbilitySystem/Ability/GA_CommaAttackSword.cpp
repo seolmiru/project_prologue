@@ -65,14 +65,10 @@ void UGA_CommaAttackSword::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 		{
 			CachedComma->RotateToTarget(TargetEnemy);
 			
-			// 감지된 적과 플레이어 캐릭터의 거리 계산
-			FVector Direction = (TargetEnemy->GetActorLocation() - CachedComma->GetActorLocation()).GetSafeNormal();
-			FVector TargetLocation = TargetEnemy->GetActorLocation() - (Direction * DashDistance);
-			
 			float AdjustedDashDuration = DashDuration;
 
 			// 추격 시스템 태스크 실행
-			UAT_MoveToTarget* MoveTask = UAT_MoveToTarget::MoveToTarget(this, TargetLocation, AdjustedDashDuration);
+			UAT_MoveToTarget* MoveTask = UAT_MoveToTarget::MoveToTarget(this, TargetEnemy, AdjustedDashDuration, DashDistance);
 			MoveTask->OnFinished.AddDynamic(this, &UGA_CommaAttackSword::OnMoveToTargetFinished);
 			MoveTask->ReadyForActivation();
 			

@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Comma.generated.h"
 
+class AShopKeeper;
 class UNiagaraComponent;
 class UWidgetComponent;
 class UPostProcessComponent;
@@ -248,6 +249,24 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Speed Boost")
 	float SpeedBoost = 1.5f;
+
+	/** Shop */
+public:
+	UFUNCTION(BlueprintCallable)
+	void OnInteractShop();
+	
+	UFUNCTION(BlueprintCallable)
+	void OnInteractShopCompleted();
+
+	void PurchaseHealPotion();
+
+	FTimerHandle PurchaseTimerHandle;
+
+	UPROPERTY()
+	TObjectPtr<AShopKeeper> ShopKeeperInRange;
+
+public:
+	void SetShopKeeper(AShopKeeper* ShopKeeper);
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")

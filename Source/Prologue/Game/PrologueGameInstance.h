@@ -53,6 +53,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Save System")
 	FString GetSavedLevelName() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void StartNewGame(const FString& LevelName);
+	
 	UFUNCTION(BlueprintCallable, Category = "PowerBank")
 	void OnPowerBankActivated(FName PowerBankID);
 

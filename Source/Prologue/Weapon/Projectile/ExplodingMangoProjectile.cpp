@@ -70,6 +70,21 @@ void AExplodingMangoProjectile::StickAndExplosion(const FHitResult& Hit)
 
 	ElapsedTime = 0.f;
 
+	FVector ProjectileLocation = GetActorLocation();
+	
+	if (ProjectileEffect)
+	{
+		UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			ExplosionEffect,
+			ProjectileLocation,
+			FRotator::ZeroRotator,
+			FVector(1.f, 1.f, 1.f),
+			true,
+			true
+		);
+	}
+	
 	GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &AExplodingMangoProjectile::Explode, TimeToExplode, false);
 }
 

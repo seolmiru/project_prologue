@@ -7,6 +7,7 @@
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
+#include "Components/SizeBox.h"
 #include "Prologue/Prologue.h"
 #include "Prologue/PrologueGameplayTags.h"
 
@@ -230,14 +231,20 @@ void UCommaWidget::InitializeHealPotionImages()
 
 	for (int32 i = 0; i < MaxDisplayHealPotions; i++)
 	{
-		UImage* PotionImage = NewObject<UImage>(this);
-		if (PotionImage)
+		USizeBox* SizeBox = NewObject<USizeBox>(this);
+		if (SizeBox)
 		{
-			if (FullHealPotionTexture)
+			SizeBox->SetWidthOverride(PotionImageSize.X);
+			SizeBox->SetHeightOverride(PotionImageSize.Y);
+
+			UImage* PotionImage = NewObject<UImage>(this);
+			if (PotionImage && FullHealPotionTexture)
 			{
 				PotionImage->SetBrushFromTexture(FullHealPotionTexture);
 
-				UHorizontalBoxSlot* BoxSlot = HealPotionContainer->AddChildToHorizontalBox(PotionImage);
+				SizeBox->AddChild(PotionImage);
+
+				HealPotionContainer->AddChildToHorizontalBox(SizeBox);
 
 				HealPotionImages.Add(PotionImage);
 			}

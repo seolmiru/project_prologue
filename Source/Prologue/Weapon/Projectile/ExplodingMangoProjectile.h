@@ -52,5 +52,8 @@ protected:
 	TObjectPtr<UNiagaraSystem> ExplosionEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|Effect")
+	TObjectPtr<UNiagaraSystem> ProjectileEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|Effect")
 	TObjectPtr<USoundBase> ExplosionSound;
 };
