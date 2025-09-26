@@ -28,17 +28,17 @@ public:
 	FString SpeakerName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	ESpeakerType SpeakerType;
+	ESpeakerType SpeakerType = ESpeakerType::NPC;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	FText DialogueText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	EDialogueType DialogueType;
+	EDialogueType DialogueType = EDialogueType::Normal;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	FName NextDialogueID;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	float Duration;
+	float Duration = 0.f;
 };
