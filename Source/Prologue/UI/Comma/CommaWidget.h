@@ -85,6 +85,12 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float CurrentMaxHealth = 0.0f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float HealthPercent = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FText HealthText;
+
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float CurrentGauge = 0.0f;
 
@@ -99,6 +105,9 @@ protected:
 	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	int32 Currency = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FText CurrencyText;
 	
 	// OverClock 활성화 시에 UI 교체
 	virtual void OnOverClockTagChanged(const FGameplayTag Tag, int32 NewCount);
@@ -111,4 +120,10 @@ protected:
 
 private:
 	void InitializeHealPotionImages();
+
+	void UpdateHealthBar();
+
+	void UpdateHealthText();
+	
+	void UpdateCurrencyText();
 };
