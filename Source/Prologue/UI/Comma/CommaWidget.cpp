@@ -88,6 +88,21 @@ void UCommaWidget::SetAbilitySystemComponent(AActor* InOwner)
 
 	if (ASC)
 	{
+		if (const UPrologueAttributeSet* AttributeSet = ASC->GetSet<UPrologueAttributeSet>())
+		{
+			CurrentHealth = AttributeSet->GetCurrentHealth();
+			CurrentMaxHealth = AttributeSet->GetMaxHealth();
+		}
+
+		if (const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>())
+		{
+			Currency = static_cast<int32>(SkillAttributeSet->GetCurrency());
+		}
+		
+		UpdateHealthBar();
+		UpdateHealthText();
+		UpdateCurrencyText();
+		
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetCurrentHealthAttribute()).AddUObject(this, &UCommaWidget::OnCurrentHealthChanged);
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetMaxHealthAttribute()).AddUObject(this, &UCommaWidget::OnMaxHealthChanged);
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueSkillAttributeSet::GetCurrentHealPotionAttribute()).AddUObject(this, &UCommaWidget::OnCurrentHealPotionChanged);
@@ -136,11 +151,17 @@ void UCommaWidget::SetAbilitySystemComponent(AActor* InOwner)
 void UCommaWidget::OnCurrentHealthChanged(const FOnAttributeChangeData& ChangeData)
 {
 	CurrentHealth = ChangeData.NewValue;
+
+	UpdateHealthBar();
+	UpdateHealthText();
 }
 
 void UCommaWidget::OnMaxHealthChanged(const FOnAttributeChangeData& ChangeData)
 {
 	CurrentMaxHealth = ChangeData.NewValue;
+
+	UpdateHealthBar();
+	UpdateHealthText();
 }
 
 void UCommaWidget::OnCooldownTagChanged(const FGameplayTag Tag, int32 NewCount)
@@ -156,18 +177,21 @@ void UCommaWidget::OnCooldownTagChanged(const FGameplayTag Tag, int32 NewCount)
 void UCommaWidget::OnCurrentHealPotionChanged(const FOnAttributeChangeData& ChangeData)
 {
 	CurrentHealPotion = ChangeData.NewValue;
+	
 	UpdateHealPotion(static_cast<int32>(CurrentHealPotion));
 }
 
 void UCommaWidget::OnMaxHealPotionChanged(const FOnAttributeChangeData& ChangeData)
 {
 	MaxHealPotion = ChangeData.NewValue;
+	
 	UpdateHealPotion(static_cast<int32>(CurrentHealPotion));
 }
 
 void UCommaWidget::OnCurrencyChanged(const FOnAttributeChangeData& ChangeData)
 {
 	Currency = ChangeData.NewValue;
+	UpdateCurrencyText();
 }
 
 void UCommaWidget::OnOverClockTagChanged(const FGameplayTag Tag, int32 NewCount)
@@ -250,4 +274,26 @@ void UCommaWidget::InitializeHealPotionImages()
 			}
 		}
 	}
+}
+
+void UCommaWidget::UpdateHealthBar()
+{
+	if (CurrentHealth > 0.f)
+	{
+		HealthPercent = CurrentHealth / CurrentMaxHealth;
+	}
+	else
+	{
+		HealthPercent = 0.f;
+	}
+}
+
+void UCommaWidget::UpdateHealthText()
+{
+	HealthText = FText::AsNumber(CurrentHealth);
+}
+
+void UCommaWidget::UpdateCurrencyText()
+{
+	CurrencyText = FText::AsNumber(Currency);
 }

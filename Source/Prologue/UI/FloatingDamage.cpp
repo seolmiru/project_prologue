@@ -12,6 +12,13 @@ void UFloatingDamage::SetAbilitySystemComponent(AActor* InOwner)
 
 	if (ASC)
 	{
+		if (const UPrologueAttributeSet* AttributeSet = ASC->GetSet<UPrologueAttributeSet>())
+		{
+			Damage = AttributeSet->GetDamage();
+		}
+
+		UpdateDamageText();
+		
 		ASC->GetGameplayAttributeValueChangeDelegate(UPrologueAttributeSet::GetDamageAttribute()).AddUObject(this, &UFloatingDamage::OnDamageChanged);
 	}
 }
@@ -19,4 +26,11 @@ void UFloatingDamage::SetAbilitySystemComponent(AActor* InOwner)
 void UFloatingDamage::OnDamageChanged(const FOnAttributeChangeData& ChangeData)
 {
 	Damage = ChangeData.NewValue;
+
+	UpdateDamageText();
+}
+
+void UFloatingDamage::UpdateDamageText()
+{
+	DamageText = FText::AsNumber(Damage);
 }
