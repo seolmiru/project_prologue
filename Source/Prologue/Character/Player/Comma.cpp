@@ -111,6 +111,9 @@ AComma::AComma()
 		DashPoint = World->SpawnActor<APlayerDashPoint>(DashRef.Class, GetActorLocation(), FRotator::ZeroRotator,
 		                                                SpawnParams);
 	}
+
+	// Pool 테스트
+	// TestPool = Pool<APlayerDashPoint>(World, DashRef.Class, 4);
 }
 
 void AComma::Tick(float DeltaSeconds)
