@@ -101,7 +101,8 @@ void AExplodingMangoProjectile::Explode()
 			FRotator::ZeroRotator,
 			FVector(1.f, 1.f, 1.f),
 			true,
-			true
+			true,
+			ENCPoolMethod::AutoRelease
 		);
 	}
 
