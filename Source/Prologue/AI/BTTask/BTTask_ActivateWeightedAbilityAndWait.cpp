@@ -38,7 +38,10 @@ EBTNodeResult::Type UBTTask_ActivateWeightedAbilityAndWait::ExecuteTask(UBehavio
 	float TotalWeight = 0.f;
 	for (const FWeightedAbilityTag& WeightedAbilityTag : WeightedAbilityTags)
 	{
-		TotalWeight += WeightedAbilityTag.Weight;
+		if (WeightedAbilityTag.AbilityTag != LastUsedAbility)
+		{
+			TotalWeight += WeightedAbilityTag.Weight;
+		}
 	}
 
 	if (TotalWeight <= 0.f)
@@ -52,6 +55,11 @@ EBTNodeResult::Type UBTTask_ActivateWeightedAbilityAndWait::ExecuteTask(UBehavio
 
 	for (const FWeightedAbilityTag& WeightedAbilityTag : WeightedAbilityTags)
 	{
+		if (!WeightedAbilityTag.AbilityTag.IsValid() || WeightedAbilityTag.AbilityTag == LastUsedAbility)
+		{
+			continue;
+		}
+		
 		CurrentWeightSum += WeightedAbilityTag.Weight;
 		if (RandomValue <= CurrentWeightSum)
 		{
@@ -102,6 +110,8 @@ void UBTTask_ActivateWeightedAbilityAndWait::OnAbilityEnded(const FAbilityEndedD
 	{
 		if (AbilityEndedData.AbilityThatEnded && AbilityEndedData.AbilityThatEnded->GetAssetTags().HasTag(ActivatedAbilityTag))
 		{
+			LastUsedAbility = ActivatedAbilityTag;
+			
 			CleanUp();
 			FinishLatentTask(*OwnerComp, EBTNodeResult::Succeeded);
 		}

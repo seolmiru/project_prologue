@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Prologue/Character/PrologueCharacter.h"
 #include "GameplayTagContainer.h"
+#include "PlayerDashPoint.h"
+#include "Prologue/Pool.h"
 #include "Comma.generated.h"
 
 class AShopKeeper;
@@ -311,4 +313,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category="Input")
 	bool bInputDash;
+
+	// class Pool<class APlayerDashPoint> TestPool;
 };
