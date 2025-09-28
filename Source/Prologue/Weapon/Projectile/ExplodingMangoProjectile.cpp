@@ -76,12 +76,13 @@ void AExplodingMangoProjectile::StickAndExplosion(const FHitResult& Hit)
 	{
 		UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
-			ExplosionEffect,
+			ProjectileEffect,
 			ProjectileLocation,
 			FRotator::ZeroRotator,
 			FVector(1.f, 1.f, 1.f),
 			true,
-			true
+			true,
+			ENCPoolMethod::AutoRelease
 		);
 	}
 	
