@@ -56,7 +56,7 @@ void AArenaGate::OpenGate()
 {
 	if (!bIsOpen)
 	{
-		GateEffect->DeactivateImmediate();
+		GateEffect->DestroyComponent();
 
 		const FVector GateEffectLocation = GateEffect->GetComponentLocation();
 
