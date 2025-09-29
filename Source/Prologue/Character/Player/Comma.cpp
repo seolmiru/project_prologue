@@ -649,7 +649,7 @@ void AComma::OnInteractShop()
 	const float CurrentPotions = SkillAttributeSet->GetCurrentHealPotion();
 	const float MaxPotions = SkillAttributeSet->GetMaxHealPotion();
 
-	if (CurrentCurrency >= ShopKeeperInRange->HealPotionCost && CurrentPotions <= MaxPotions)
+	if (CurrentCurrency >= ShopKeeperInRange->HealPotionCost && CurrentPotions < MaxPotions)
 	{
 		GetWorld()->GetTimerManager().SetTimer(PurchaseTimerHandle, this, &AComma::PurchaseHealPotion, 3.f, false);
 

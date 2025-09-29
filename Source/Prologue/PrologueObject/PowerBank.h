@@ -43,6 +43,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsInteracted = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCanInteracted = false;
+
 	/* Start Sejin */
 
 	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="UI")
