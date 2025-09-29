@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Prologue/Character/PrologueCharacter.h"
 #include "GameplayTagContainer.h"
+#include "PlayerDashPoint.h"
+#include "Prologue/Pool.h"
 #include "Comma.generated.h"
 
 class AShopKeeper;
@@ -57,10 +59,10 @@ protected:
 private:
 	/** Components */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
+	TObjectPtr<USpringArmComponent> CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
+	TObjectPtr<UCameraComponent> FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCapsuleComponent> DashCollision;
@@ -80,10 +82,10 @@ private:
 	
 	/** Inputs */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* DefaultMappingContext;
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
+	TObjectPtr<UInputAction> MoveAction = nullptr;
 
 	/** GAS */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StartUpData", meta = (AllowPrivateAccess = "true"))
@@ -311,4 +313,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category="Input")
 	bool bInputDash;
+
+	// class Pool<class APlayerDashPoint> TestPool;
 };

@@ -50,4 +50,7 @@ private:
 	TWeakObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 	FDelegateHandle OnAbilityEndedDelegate;
+
+	UPROPERTY()
+	FGameplayTag LastUsedAbility;
 };

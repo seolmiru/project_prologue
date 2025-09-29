@@ -26,7 +26,7 @@ void AMovingObject::BeginPlay()
 void AMovingObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
 	if (bIsMoving)
 	{
 		const FVector CurrentLocation = GetActorLocation();

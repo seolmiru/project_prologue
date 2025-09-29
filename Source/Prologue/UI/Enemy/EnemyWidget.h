@@ -17,16 +17,13 @@ class PROLOGUE_API UEnemyWidget : public UPrologueUserWidget
 	GENERATED_BODY()
 
 public:
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	
 	virtual void SetAbilitySystemComponent(AActor* InOwner) override;
 
 protected:
 	virtual void OnHealthChanged(const FOnAttributeChangeData& ChangeData);
 	virtual void OnMaxHealthChanged(const FOnAttributeChangeData& ChangeData);
-
-	// 체력바 애니메이션 함수
-	void UpdateDelayedHealthBar();
-
-	void StartHealthBarAnimation();
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -36,14 +33,22 @@ protected:
 	UProgressBar* DelayedHealthBar;
 
 	// 체력바 설정값
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float CurrentHealth = 0.0f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float CurrentMaxHealth = 0.1f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
 	float DelayedHealth = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float HealthPercent = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float DelayedHealthPercent = 0.f;
+
+	bool bIsDelayedHealth = false;
 
 	// 체력바 감소 애니메이션 설정값
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")

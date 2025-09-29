@@ -24,4 +24,10 @@ public:
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	float Damage = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FText DamageText;
+
+protected:
+	void UpdateDamageText();
 };
