@@ -80,6 +80,8 @@ void APowerBank::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
 
 	if (Comma)
 	{
+		bCanInteracted = true;
+		
 		Comma->GetGuideWidget()->SetVisibility(true);
 
 		if (IconWidget && IconWidget->IsInViewport())
@@ -101,6 +103,7 @@ void APowerBank::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Other
 
 	if (Comma)
 	{
+		bCanInteracted = false;
 		Comma->GetGuideWidget()->SetVisibility(false);
 	}
 
@@ -120,19 +123,22 @@ void APowerBank::Interact()
 {
 	AComma* Comma = Cast<AComma>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 
-	UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	if (GameInstance && !GameInstance->HasPowerBankInteracted(PowerBankID))
+	if (bCanInteracted)
 	{
-		if (MaterialTimeline)
+		UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		if (GameInstance && !GameInstance->HasPowerBankInteracted(PowerBankID))
 		{
-			MaterialTimeline->PlayFromStart();
+			if (MaterialTimeline)
+			{
+				MaterialTimeline->PlayFromStart();
+			}
+
+			GameInstance->OnPowerBankActivated(PowerBankID);
+
+			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+			Comma->GetGuideWidget()->SetVisibility(false);
 		}
-
-		GameInstance->OnPowerBankActivated(PowerBankID);
-
-		TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		Comma->GetGuideWidget()->SetVisibility(false);
 	}
 }
 
