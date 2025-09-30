@@ -169,7 +169,7 @@ void AExplodingMangoProjectile::Explode()
 			}
 		}
 	}
-
+	
 	Destroy();
 }
 

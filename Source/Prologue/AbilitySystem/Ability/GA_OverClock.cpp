@@ -230,7 +230,7 @@ void UGA_OverClock::CheckActorsInArea()
 		APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(ActorPtr);
 		if (Enemy)
 		{
-			Enemy->OnHealthChanged.AddDynamic(this, &UGA_OverClock::OnHitActor);
+			Enemy->OnHealthChanged.RemoveDynamic(this, &UGA_OverClock::OnHitActor);
 		}
 		// end Sejin
 
@@ -245,6 +245,11 @@ void UGA_OverClock::RestoreEnemyTime()
 	{
 		if (ActorPtr.IsValid())
 		{
+			if (APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(ActorPtr.Get()))
+			{
+				Enemy->OnHealthChanged.RemoveDynamic(this, &UGA_OverClock::OnHitActor);
+			}
+			
 			ActorPtr->CustomTimeDilation = 1.f;
 
 			if (AffectedActorMaterial.Contains(ActorPtr))
