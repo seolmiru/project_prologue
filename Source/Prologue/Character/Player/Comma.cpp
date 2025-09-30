@@ -97,21 +97,6 @@ AComma::AComma()
 
 	SwordWeaponMesh->SetVisibility(true);
 
-	/** Sejin */
-
-	// 대쉬 위치 오브젝트 소환
-	FActorSpawnParameters SpawnParams;
-	UWorld* World = GetWorld();
-
-	static ConstructorHelpers::FClassFinder<APlayerDashPoint> DashRef(
-		TEXT("/Script/Engine.Blueprint'/Game/Characters/Comma/Dash/BP_DashPoint.BP_DashPoint_C'"));
-
-	if (World && DashRef.Class)
-	{
-		DashPoint = World->SpawnActor<APlayerDashPoint>(DashRef.Class, GetActorLocation(), FRotator::ZeroRotator,
-		                                                SpawnParams);
-	}
-
 	// Pool 테스트
 	// TestPool = Pool<APlayerDashPoint>(World, DashRef.Class, 4);
 }
@@ -268,6 +253,23 @@ void AComma::BeginPlay()
 {
 	Super::BeginPlay();
 
+	/** Sejin */
+
+	if (DashPointClass)
+	{
+		// 대쉬 위치 오브젝트 소환
+		UWorld* World = GetWorld();
+		
+		if (World)
+		{
+			FActorSpawnParameters SpawnParam;
+			SpawnParam.Owner = this;
+			DashPoint = World->SpawnActor<APlayerDashPoint>(DashPointClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParam);
+		}
+	}
+	
+	/** Sejin */
+	
 	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
 	if (!MoveComp)
 	{

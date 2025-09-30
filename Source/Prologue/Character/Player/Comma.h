@@ -69,6 +69,9 @@ private:
 
 	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UNiagaraComponent> SwordAuraEffect;*/
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<APlayerDashPoint> DashPointClass;	
 	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
@@ -307,8 +310,10 @@ public:
 	
 	void InputDash(bool bInput);
 
-	bool GetInputDashState() const;	
+	bool GetInputDashState() const;
+	
 private:
+	UPROPERTY()
 	TObjectPtr<class APlayerDashPoint> DashPoint;
 
 	UPROPERTY(VisibleAnywhere, Category="Input")
