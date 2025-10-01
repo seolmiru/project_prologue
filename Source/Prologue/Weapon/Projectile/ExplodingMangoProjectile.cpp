@@ -21,7 +21,6 @@ AExplodingMangoProjectile::AExplodingMangoProjectile()
 	ProjectileCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
 	ProjectileCollision->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	ProjectileCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel7, ECR_Block);
-	ProjectileCollision->OnComponentHit.AddDynamic(this, &ThisClass::OnProjectileHit);
 
 	ProjectileMovement->InitialSpeed = 700.f;
 	ProjectileMovement->MaxSpeed = 5000.f;
@@ -32,6 +31,8 @@ AExplodingMangoProjectile::AExplodingMangoProjectile()
 	TimeToExplode = 3.f;
 
 	SetActorTickEnabled(false);
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
 }
 
 void AExplodingMangoProjectile::SetPoolRef(Pool<AExplodingMangoProjectile>* PoolRef)
@@ -43,8 +44,54 @@ void AExplodingMangoProjectile::Active(FVector Location, FRotator Rotation)
 {
 	SetActorLocation(Location);
 	SetActorRotation(Rotation);
-	ElapsedTime = 0.0f;
+	
+	ElapsedTime = 0.f;
+	bHasExploded = false;
+
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
 	SetActorTickEnabled(true);
+
+	ProjectileMovement->SetActive(true);
+	ProjectileMovement->Velocity = FVector(0.f, 0.f, -1.f) * ProjectileMovement->InitialSpeed;
+	ProjectileMovement->SetUpdatedComponent(ProjectileCollision);
+
+	ProjectileCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+	ProjectileCollision->OnComponentHit.RemoveDynamic(this, &ThisClass::OnProjectileHit);
+	ProjectileCollision->OnComponentHit.AddDynamic(this, &ThisClass::OnProjectileHit);
+
+	if (ProjectileNiagaraComponent)
+	{
+		ProjectileNiagaraComponent->Activate(true);
+	}
+
+	GetWorldTimerManager().ClearTimer(ExplosionTimerHandle);
+}
+
+void AExplodingMangoProjectile::Deactivate()
+{
+	GetWorldTimerManager().ClearTimer(ExplosionTimerHandle);
+
+	ProjectileMovement->StopMovementImmediately();
+	ProjectileMovement->SetActive(false);
+
+	ProjectileCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	ProjectileCollision->OnComponentHit.RemoveDynamic(this, &ThisClass::OnProjectileHit);
+
+	if (ProjectileNiagaraComponent)
+	{
+		ProjectileNiagaraComponent->Deactivate();
+	}
+
+	SetActorTickEnabled(false);
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
+
+	ElapsedTime = 0.f;
+	bHasExploded = false;
+	TargetActor = nullptr;
 }
 
 void AExplodingMangoProjectile::BeginPlay()
@@ -63,7 +110,7 @@ void AExplodingMangoProjectile::Tick(float DeltaTime)
 		Explode();
 		// Destroy();
 		// MyPool->Return(this);
-		SetActorTickEnabled(false);
+		//SetActorTickEnabled(false);
 		return;
 	}
 }
@@ -72,6 +119,11 @@ void AExplodingMangoProjectile::OnProjectileHit(UPrimitiveComponent* HitComp, AA
                                                 UPrimitiveComponent* OtherComp, FVector NormalImpulse,
                                                 const FHitResult& Hit)
 {
+	if (bHasExploded)
+	{
+		return;
+	}
+	
 	if (OtherComp && OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel7)
 	{
 		StickAndExplosion(Hit);
@@ -85,6 +137,8 @@ void AExplodingMangoProjectile::StickAndExplosion(const FHitResult& Hit)
 
 	ProjectileCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	ProjectileMovement->StopMovementImmediately();
+	
 	ElapsedTime = 0.f;
 
 	FVector ProjectileLocation = GetActorLocation();
@@ -109,6 +163,13 @@ void AExplodingMangoProjectile::StickAndExplosion(const FHitResult& Hit)
 
 void AExplodingMangoProjectile::Explode()
 {
+	if (bHasExploded)
+	{
+		return;
+	}
+
+	bHasExploded = true;
+	
 	FVector ExplosionLocation = GetActorLocation();
 
 	if (ExplosionEffect)
@@ -190,6 +251,7 @@ void AExplodingMangoProjectile::Explode()
 		}
 	}
 
+	Deactivate();
 	// Destroy();
 	MyPool->Return(this);
 }
