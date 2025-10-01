@@ -8,6 +8,7 @@
 #include "Prologue/Pool.h"
 #include "ExplodingMangoProjectile.generated.h"
 
+class UProjectilePoolComponent;
 class UProjectileMovementComponent;
 class UNiagaraComponent;
 class UBoxComponent;
@@ -24,7 +25,9 @@ public:
 	AExplodingMangoProjectile();
 
 	/* Sejin */
-	void SetPoolRef(Pool<AExplodingMangoProjectile>* PoolRef);
+	//void SetPoolRef(Pool<AExplodingMangoProjectile>* PoolRef);
+
+	void SetPoolComponent(UProjectilePoolComponent* PoolComp);
 
 	UFUNCTION()
 	void Active(FVector Location, FRotator Rotation);
@@ -64,6 +67,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|Effect")
 	TObjectPtr<USoundBase> ExplosionSound;
 
-	/* Sejin Section */
-	Pool<AExplodingMangoProjectile>* MyPool;
+private:
+	UPROPERTY()
+	TObjectPtr<UProjectilePoolComponent> PoolComponent;
 };

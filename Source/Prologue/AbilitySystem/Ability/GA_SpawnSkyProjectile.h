@@ -41,6 +41,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile|Spawn")
 	float RandomSpawnRadius = 300.f;
 
+private:
 	// Sejin Section
-	Pool<AExplodingMangoProjectile>* ProjectilePool;
+	//Pool<AExplodingMangoProjectile>* ProjectilePool = nullptr;
 };

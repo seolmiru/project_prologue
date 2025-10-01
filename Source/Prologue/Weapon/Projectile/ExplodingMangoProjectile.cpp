@@ -12,6 +12,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
+#include "Prologue/Component/ProjectilePoolComponent.h"
 
 AExplodingMangoProjectile::AExplodingMangoProjectile()
 {
@@ -34,10 +35,15 @@ AExplodingMangoProjectile::AExplodingMangoProjectile()
 	SetActorTickEnabled(false);
 }
 
-void AExplodingMangoProjectile::SetPoolRef(Pool<AExplodingMangoProjectile>* PoolRef)
+void AExplodingMangoProjectile::SetPoolComponent(UProjectilePoolComponent* PoolComp)
+{
+	PoolComponent = PoolComp;
+}
+
+/*void AExplodingMangoProjectile::SetPoolRef(Pool<AExplodingMangoProjectile>* PoolRef)
 {
 	MyPool = PoolRef;
-}
+}*/
 
 void AExplodingMangoProjectile::Active(FVector Location, FRotator Rotation)
 {
@@ -45,6 +51,13 @@ void AExplodingMangoProjectile::Active(FVector Location, FRotator Rotation)
 	SetActorRotation(Rotation);
 	ElapsedTime = 0.0f;
 	SetActorTickEnabled(true);
+	
+	ProjectileMovement->SetActive(true);
+	ProjectileMovement->Velocity = FVector(0.f, 0.f, -1.f) * ProjectileMovement->InitialSpeed;
+
+	ProjectileCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+	GetWorldTimerManager().ClearTimer(ExplosionTimerHandle);
 }
 
 void AExplodingMangoProjectile::BeginPlay()
@@ -154,7 +167,7 @@ void AExplodingMangoProjectile::Explode()
 	if (!TargetActor)
 	{
 		// Destroy();
-		MyPool->Return(this);
+		PoolComponent->Return(this);
 		return;
 	}
 
@@ -162,7 +175,7 @@ void AExplodingMangoProjectile::Explode()
 	if (DistSq > FMath::Square(ExplosionRadius))
 	{
 		// Destroy();
-		MyPool->Return(this);
+		PoolComponent->Return(this);
 		return;
 	}
 
@@ -191,5 +204,8 @@ void AExplodingMangoProjectile::Explode()
 	}
 
 	// Destroy();
-	MyPool->Return(this);
+	ProjectileMovement->StopMovementImmediately();
+	GetWorldTimerManager().ClearTimer(ExplosionTimerHandle);
+	
+	PoolComponent->Return(this);
 }

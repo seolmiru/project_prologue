@@ -19,13 +19,14 @@ private:
 	UWorld* World;
 	TSubclassOf<T> OriginRef;
 	TQueue<T*> PoolQueue;
+	FActorSpawnParameters SpawnInfo;
 
 	void Active(AActor* Target);
 	void Deactive(AActor* Target);
 	
 public:
 	Pool();
-	Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count);
+	Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count, const FActorSpawnParameters& SpawnParam);
 	T* Pop();
 	void Return(T* Target);
 };
@@ -52,14 +53,14 @@ Pool<T>::Pool()
 }
 
 template <typename T>
-Pool<T>::Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count)
+Pool<T>::Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count, const FActorSpawnParameters& SpawnParam)
 	: World(World), OriginRef(Origin)
 {
 	if (World && *Origin)
 	{
 		for (int32 i = 0; i < Count; i++)
 		{
-			T* _Obj = World->SpawnActor<T>(Origin, FTransform::Identity);
+			T* _Obj = World->SpawnActor<T>(Origin, FTransform::Identity, SpawnInfo);
 			Deactive(_Obj);
 			PoolQueue.Enqueue(_Obj);
 		}
@@ -71,7 +72,7 @@ T* Pool<T>::Pop()
 {
 	if (PoolQueue.IsEmpty())
 	{
-		T* _Obj = World->SpawnActor<T>(OriginRef, FTransform::Identity);
+		T* _Obj = World->SpawnActor<T>(OriginRef, FTransform::Identity, SpawnInfo);
 		LOG_SCREEN("Add Pool Object");
 		return _Obj;
 	}
