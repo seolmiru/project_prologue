@@ -26,7 +26,8 @@ AExplodingMangoProjectile::AExplodingMangoProjectile()
 	ProjectileMovement->MaxSpeed = 5000.f;
 	ProjectileMovement->Velocity = FVector(0.f, 0.f, -1.f);
 	ProjectileMovement->ProjectileGravityScale = 1.f;
-
+	ProjectileMovement->SetActive(false);
+	
 	ExplosionRadius = 400.f;
 	TimeToExplode = 3.f;
 
@@ -42,15 +43,15 @@ void AExplodingMangoProjectile::SetPoolRef(Pool<AExplodingMangoProjectile>* Pool
 
 void AExplodingMangoProjectile::Active(FVector Location, FRotator Rotation)
 {
-	SetActorLocation(Location);
-	SetActorRotation(Rotation);
-	
 	ElapsedTime = 0.f;
 	bHasExploded = false;
 
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
 	SetActorTickEnabled(true);
+	
+	SetActorLocation(Location);
+	SetActorRotation(Rotation);
 
 	ProjectileMovement->SetActive(true);
 	ProjectileMovement->Velocity = FVector(0.f, 0.f, -1.f) * ProjectileMovement->InitialSpeed;
@@ -214,7 +215,7 @@ void AExplodingMangoProjectile::Explode()
 
 	if (!TargetActor)
 	{
-		// Destroy();
+		Deactivate();
 		MyPool->Return(this);
 		return;
 	}
@@ -222,7 +223,7 @@ void AExplodingMangoProjectile::Explode()
 	const float DistSq = FVector::DistSquared(TargetActor->GetActorLocation(), GetActorLocation());
 	if (DistSq > FMath::Square(ExplosionRadius))
 	{
-		// Destroy();
+		Deactivate();
 		MyPool->Return(this);
 		return;
 	}
@@ -233,7 +234,7 @@ void AExplodingMangoProjectile::Explode()
 
 		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
 
-		if (TargetASC && SourceASC)
+		if (TargetASC)
 		{
 			FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
 			EffectContext.AddSourceObject(this);

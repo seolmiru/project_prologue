@@ -20,8 +20,8 @@ private:
 	TSubclassOf<T> OriginRef;
 	TQueue<T*> PoolQueue;
 
-	void Active(AActor* Target);
-	void Deactive(AActor* Target);
+	// void Active(AActor* Target);
+	// void Deactive(AActor* Target);
 	
 public:
 	Pool();
@@ -30,7 +30,7 @@ public:
 	void Return(T* Target);
 };
 
-template <typename T>
+/*template <typename T>
 void Pool<T>::Active(AActor* Target)
 {
 	Target->SetActorHiddenInGame(false);
@@ -44,7 +44,7 @@ void Pool<T>::Deactive(AActor* Target)
 	Target->SetActorHiddenInGame(true);
 	Target->SetActorEnableCollision(false);
 	Target->SetActorTickEnabled(false);
-}
+}*/
 
 template <typename T>
 Pool<T>::Pool()
@@ -60,7 +60,7 @@ Pool<T>::Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count)
 		for (int32 i = 0; i < Count; i++)
 		{
 			T* _Obj = World->SpawnActor<T>(Origin, FTransform::Identity);
-			Deactive(_Obj);
+			// Deactive(_Obj);
 			PoolQueue.Enqueue(_Obj);
 		}
 	}
@@ -78,7 +78,7 @@ T* Pool<T>::Pop()
 	
 	T* Target;
 	PoolQueue.Dequeue(Target);
-	Active(Target);
+	// Active(Target);
 	return Target;
 }
 
@@ -87,6 +87,6 @@ void Pool<T>::Return(T* Target)
 {
 	if (!Target) return;
 
-	Deactive(Target);
+	// Deactive(Target);
 	PoolQueue.Enqueue(Target);
 }

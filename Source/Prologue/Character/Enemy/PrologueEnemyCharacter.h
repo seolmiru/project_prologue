@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Prologue/Pool.h"
 #include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Prologue/Character/PrologueCharacter.h"
 #include "Prologue/UI/PrologueUserWidget.h"
+#include "Prologue/Weapon/Projectile/ExplodingMangoProjectile.h"
 #include "PrologueEnemyCharacter.generated.h"
 
 class UEnemyWidgetComponent;
@@ -34,10 +36,13 @@ class PROLOGUE_API APrologueEnemyCharacter : public APrologueCharacter
 
 public:
 	APrologueEnemyCharacter();
+	virtual ~APrologueEnemyCharacter() override;
 
 	UPROPERTY(BlueprintAssignable, Category = "Attributes")
 	FOnHealthChangedDelegate OnHealthChanged;
 
+	Pool<AExplodingMangoProjectile>* ProjectilePool;
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
@@ -76,6 +81,9 @@ protected:
 	bool TryActivateRandomAbilityWithWeights(const TArray<FWeightedAbilityInfo>& WeightedAbilities);
 
 	virtual void HealthAttributeChanged(const FOnAttributeChangeData& Data);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TSubclassOf<AExplodingMangoProjectile> MangoProjectileClass;
 	
 private:
 	FDelegateHandle DamageAttributeChangedHandle;

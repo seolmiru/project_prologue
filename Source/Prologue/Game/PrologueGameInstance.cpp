@@ -170,7 +170,7 @@ void UPrologueGameInstance::OnPreLoadMap(const FString& MapName)
 {
 	FLoadingScreenAttributes LoadingScreenAttributes;
 	LoadingScreenAttributes.bAutoCompleteWhenLoadingCompletes = false;
-	LoadingScreenAttributes.MinimumLoadingScreenDisplayTime = 10.f;
+	LoadingScreenAttributes.MinimumLoadingScreenDisplayTime = 5.f;
 	LoadingScreenAttributes.WidgetLoadingScreen = CreateRandomLoadingWidget();
 
 	GetMoviePlayer()->SetupLoadingScreen(LoadingScreenAttributes);
