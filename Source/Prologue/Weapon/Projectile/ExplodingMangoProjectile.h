@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "PrologueProjectileBase.h"
 #include "GameFramework/Actor.h"
+#include "Prologue/Pool.h"
 #include "ExplodingMangoProjectile.generated.h"
 
 class UProjectileMovementComponent;
@@ -22,13 +23,19 @@ class PROLOGUE_API AExplodingMangoProjectile : public APrologueProjectileBase
 public:
 	AExplodingMangoProjectile();
 
+	/* Sejin */
+	void SetPoolRef(Pool<AExplodingMangoProjectile>* PoolRef);
+
+	UFUNCTION()
+	void Active(FVector Location, FRotator Rotation);
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
 	UFUNCTION()
 	virtual void OnProjectileHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
+	
 	void StickAndExplosion(const FHitResult& Hit);
 	
 	void Explode();
@@ -56,4 +63,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|Effect")
 	TObjectPtr<USoundBase> ExplosionSound;
+
+	/* Sejin Section */
+	Pool<AExplodingMangoProjectile>* MyPool;
 };

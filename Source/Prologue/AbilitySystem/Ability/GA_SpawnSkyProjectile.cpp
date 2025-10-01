@@ -13,9 +13,20 @@ UGA_SpawnSkyProjectile::UGA_SpawnSkyProjectile()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
+UGA_SpawnSkyProjectile::~UGA_SpawnSkyProjectile()
+{
+	delete ProjectilePool;
+}
+
+void UGA_SpawnSkyProjectile::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+{
+	Super::OnGiveAbility(ActorInfo, Spec);
+	ProjectilePool = new Pool<AExplodingMangoProjectile>(GetWorld(), MangoProjectile, 32);
+}
+
 void UGA_SpawnSkyProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData)
+                                             const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                                             const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	
@@ -58,19 +69,23 @@ void UGA_SpawnSkyProjectile::SpawnSkyProjectile()
 		const FVector SpawnLocation = TargetLocation + RandomOffset + FVector(0.f, 0.f, SpawnHeightOffset);
 		const FRotator SpawnRotation = FRotator::ZeroRotator;
 
-		AExplodingMangoProjectile* Projectile = GetWorld()->SpawnActorDeferred<AExplodingMangoProjectile>(
-			MangoProjectile,
-			FTransform(SpawnRotation, SpawnLocation),
-			SpawnParams.Owner,
-			SpawnParams.Instigator,
-			SpawnParams.SpawnCollisionHandlingOverride
-		);
+		// AExplodingMangoProjectile* Projectile = GetWorld()->SpawnActorDeferred<AExplodingMangoProjectile>(
+		// 	MangoProjectile,
+		// 	FTransform(SpawnRotation, SpawnLocation),
+		// 	SpawnParams.Owner,
+		// 	SpawnParams.Instigator,
+		// 	SpawnParams.SpawnCollisionHandlingOverride
+		// );
+		LOG_SCREEN("Spawn Sky Projectile");
+		AExplodingMangoProjectile* Projectile = ProjectilePool->Pop();
+		Projectile->SetPoolRef(ProjectilePool);
+		Projectile->Active(SpawnLocation, SpawnRotation);
 
 		if (Projectile)
 		{
+			LOG_SCREEN("Success Sky Projectile");
 			Projectile->TargetActor = TargetActor;
-
-			Projectile->FinishSpawning(FTransform(SpawnRotation, SpawnLocation));
+			// Projectile->FinishSpawning(FTransform(SpawnRotation, SpawnLocation));
 		}
 	}
 }

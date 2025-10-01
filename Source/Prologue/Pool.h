@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Prologue.h"
 #include "GameFramework/Actor.h"
 #include "Templates/UnrealTemplate.h"
 
@@ -16,9 +17,8 @@ static_assert(TIsDerivedFrom<T, AActor>::IsDerived, "TPool<T> Type is not AActor
 	
 private:
 	UWorld* World;
-	TArray<T*> PoolArray;
-	int32 Max;
-	int32 Current;
+	TSubclassOf<T> OriginRef;
+	TQueue<T*> PoolQueue;
 
 	void Active(AActor* Target);
 	void Deactive(AActor* Target);
@@ -48,23 +48,20 @@ void Pool<T>::Deactive(AActor* Target)
 
 template <typename T>
 Pool<T>::Pool()
-	: Max(0)
 {
 }
 
 template <typename T>
 Pool<T>::Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count)
-	: World(World), Max(Count), Current(0)
+	: World(World), OriginRef(Origin)
 {
 	if (World && *Origin)
 	{
-		PoolArray.Reserve(Count);
-	
 		for (int32 i = 0; i < Count; i++)
 		{
 			T* _Obj = World->SpawnActor<T>(Origin, FTransform::Identity);
 			Deactive(_Obj);
-			PoolArray.Add(_Obj);
+			PoolQueue.Enqueue(_Obj);
 		}
 	}
 }
@@ -72,8 +69,15 @@ Pool<T>::Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count)
 template <typename T>
 T* Pool<T>::Pop()
 {
-	T* Target = PoolArray[Current];
-	Current = (Current + 1) % Max;
+	if (PoolQueue.IsEmpty())
+	{
+		T* _Obj = World->SpawnActor<T>(OriginRef, FTransform::Identity);
+		LOG_SCREEN("Add Pool Object");
+		return _Obj;
+	}
+	
+	T* Target;
+	PoolQueue.Dequeue(Target);
 	Active(Target);
 	return Target;
 }
@@ -84,4 +88,5 @@ void Pool<T>::Return(T* Target)
 	if (!Target) return;
 
 	Deactive(Target);
+	PoolQueue.Enqueue(Target);
 }

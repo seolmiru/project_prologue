@@ -97,8 +97,6 @@ AComma::AComma()
 
 	SwordWeaponMesh->SetVisibility(true);
 
-	// Pool 테스트
-	// TestPool = Pool<APlayerDashPoint>(World, DashRef.Class, 4);
 }
 
 void AComma::Tick(float DeltaSeconds)
@@ -267,6 +265,9 @@ void AComma::BeginPlay()
 			DashPoint = World->SpawnActor<APlayerDashPoint>(DashPointClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParam);
 		}
 	}
+	
+	// Pool 테스트
+	// TestPool = Pool<APlayerDashPoint>(World, DashRef.Class, 4);
 	
 	/** Sejin */
 	
