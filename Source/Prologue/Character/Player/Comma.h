@@ -70,7 +70,7 @@ private:
 	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UNiagaraComponent> SwordAuraEffect;*/
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Dash, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<APlayerDashPoint> DashPointClass;	
 	
 	/** Data */
