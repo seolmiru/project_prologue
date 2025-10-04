@@ -168,6 +168,11 @@ void UPrologueGameInstance::RegisterCenterHub(ACenterHub* Hub)
 
 void UPrologueGameInstance::OnPreLoadMap(const FString& MapName)
 {
+	if (!bIsInitialLoadComplete)
+	{
+		return;
+	}
+	
 	FLoadingScreenAttributes LoadingScreenAttributes;
 	LoadingScreenAttributes.bAutoCompleteWhenLoadingCompletes = false;
 	LoadingScreenAttributes.MinimumLoadingScreenDisplayTime = 5.f;
@@ -179,6 +184,20 @@ void UPrologueGameInstance::OnPreLoadMap(const FString& MapName)
 void UPrologueGameInstance::OnDestinationWorldLoaded(UWorld* LoadedWorld)
 {
 	GetMoviePlayer()->StopMovie();
+
+	if (!bIsInitialLoadComplete && LoadedWorld)
+	{
+		FString MainMenuMapName = TEXT("MainMenuMap");
+		FString CurrentMapName = LoadedWorld->GetMapName();
+
+		LOG_SCREEN_R("Map Loaded : %s, Comparing : %s", *CurrentMapName, *MainMenuMapName);
+		
+		if (CurrentMapName == MainMenuMapName)
+		{
+			LOG_SCREEN_R("Detected");
+			bIsInitialLoadComplete = true;
+		}
+	}
 }
 
 TSharedPtr<SWidget> UPrologueGameInstance::CreateRandomLoadingWidget()
