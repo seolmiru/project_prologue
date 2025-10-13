@@ -31,6 +31,8 @@ public:
 
 	UFUNCTION()
 	void Active(FVector Location, FRotator Rotation);
+
+	void Deactivate();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -45,6 +47,8 @@ protected:
 
 protected:
 	float ElapsedTime = 0.f;
+
+	bool bHasExploded = false;
 
 	FTimerHandle ExplosionTimerHandle;
 	

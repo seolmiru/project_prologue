@@ -19,19 +19,18 @@ private:
 	UWorld* World;
 	TSubclassOf<T> OriginRef;
 	TQueue<T*> PoolQueue;
-	FActorSpawnParameters SpawnInfo;
 
-	void Active(AActor* Target);
-	void Deactive(AActor* Target);
+	// void Active(AActor* Target);
+	// void Deactive(AActor* Target);
 	
 public:
 	Pool();
-	Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count, const FActorSpawnParameters& SpawnParam);
+	Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count);
 	T* Pop();
 	void Return(T* Target);
 };
 
-template <typename T>
+/*template <typename T>
 void Pool<T>::Active(AActor* Target)
 {
 	Target->SetActorHiddenInGame(false);
@@ -45,7 +44,7 @@ void Pool<T>::Deactive(AActor* Target)
 	Target->SetActorHiddenInGame(true);
 	Target->SetActorEnableCollision(false);
 	Target->SetActorTickEnabled(false);
-}
+}*/
 
 template <typename T>
 Pool<T>::Pool()
@@ -53,15 +52,15 @@ Pool<T>::Pool()
 }
 
 template <typename T>
-Pool<T>::Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count, const FActorSpawnParameters& SpawnParam)
+Pool<T>::Pool(UWorld* World, TSubclassOf<T> Origin, int32 Count)
 	: World(World), OriginRef(Origin)
 {
 	if (World && *Origin)
 	{
 		for (int32 i = 0; i < Count; i++)
 		{
-			T* _Obj = World->SpawnActor<T>(Origin, FTransform::Identity, SpawnInfo);
-			Deactive(_Obj);
+			T* _Obj = World->SpawnActor<T>(Origin, FTransform::Identity);
+			// Deactive(_Obj);
 			PoolQueue.Enqueue(_Obj);
 		}
 	}
@@ -72,14 +71,14 @@ T* Pool<T>::Pop()
 {
 	if (PoolQueue.IsEmpty())
 	{
-		T* _Obj = World->SpawnActor<T>(OriginRef, FTransform::Identity, SpawnInfo);
+		T* _Obj = World->SpawnActor<T>(OriginRef, FTransform::Identity);
 		LOG_SCREEN("Add Pool Object");
 		return _Obj;
 	}
 	
 	T* Target;
 	PoolQueue.Dequeue(Target);
-	Active(Target);
+	// Active(Target);
 	return Target;
 }
 
@@ -88,6 +87,6 @@ void Pool<T>::Return(T* Target)
 {
 	if (!Target) return;
 
-	Deactive(Target);
+	// Deactive(Target);
 	PoolQueue.Enqueue(Target);
 }

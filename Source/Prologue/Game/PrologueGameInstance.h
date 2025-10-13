@@ -72,6 +72,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UPrologueSaveGame> SaveGameData;
 
+	UPROPERTY()
+	bool bIsInitialLoadComplete = false;
+	
 private:
 	TSharedPtr<SWidget> CreateRandomLoadingWidget();
 	

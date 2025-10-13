@@ -19,9 +19,9 @@ class PROLOGUE_API UGA_SpawnSkyProjectile : public UGameplayAbility
 
 public:
 	UGA_SpawnSkyProjectile();
-	virtual ~UGA_SpawnSkyProjectile() override;
+	// virtual ~UGA_SpawnSkyProjectile() override;
 
-	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+	// virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
 protected:
@@ -41,7 +41,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile|Spawn")
 	float RandomSpawnRadius = 300.f;
 
-private:
 	// Sejin Section
-	//Pool<AExplodingMangoProjectile>* ProjectilePool = nullptr;
+	// Pool<AExplodingMangoProjectile>* ProjectilePool;
 };

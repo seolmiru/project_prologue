@@ -37,6 +37,17 @@ APrologueEnemyCharacter::APrologueEnemyCharacter()
 	HpBar->SetRelativeLocation(FVector(0.f, 0.f, 180.f));
 	HpBar->SetWidgetSpace(EWidgetSpace::Screen);
 	HpBar->SetWidgetClass(BP_EnemyWidget);
+
+	ProjectilePool = nullptr;
+}
+
+APrologueEnemyCharacter::~APrologueEnemyCharacter()
+{
+	if (ProjectilePool)
+	{
+		delete ProjectilePool;
+		ProjectilePool = nullptr;
+	}
 }
 
 void APrologueEnemyCharacter::BeginPlay()
@@ -58,6 +69,8 @@ void APrologueEnemyCharacter::BeginPlay()
 	{
 		DamageAttributeChangedHandle = ASC->GetGameplayAttributeValueChangeDelegate(Attributes->GetCurrentHealthAttribute()).AddUObject(this, &APrologueEnemyCharacter::OnDamageAttributeChanged);
 	}
+
+	ProjectilePool = new Pool<AExplodingMangoProjectile>(GetWorld(), MangoProjectileClass, 0);
 }
 
 void APrologueEnemyCharacter::OnDamageAttributeChanged(const FOnAttributeChangeData& Data)

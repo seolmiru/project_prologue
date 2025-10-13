@@ -5,7 +5,7 @@
 
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Prologue/PrologueBlackboardKey.h"
-#include "Prologue/Component/ProjectilePoolComponent.h"
+#include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Controller/PrologueAIController.h"
 #include "Prologue/Weapon/Projectile/ExplodingMangoProjectile.h"
 
@@ -14,15 +14,16 @@ UGA_SpawnSkyProjectile::UGA_SpawnSkyProjectile()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
-UGA_SpawnSkyProjectile::~UGA_SpawnSkyProjectile()
+/*UGA_SpawnSkyProjectile::~UGA_SpawnSkyProjectile()
 {
+	delete ProjectilePool;
 }
 
 void UGA_SpawnSkyProjectile::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
 	Super::OnGiveAbility(ActorInfo, Spec);
-	//ProjectilePool = new Pool<AExplodingMangoProjectile>(GetWorld(), MangoProjectile, 32);
-}
+	ProjectilePool = new Pool<AExplodingMangoProjectile>(GetWorld(), MangoProjectile, 32);
+}*/
 
 void UGA_SpawnSkyProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                              const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
@@ -38,17 +39,6 @@ void UGA_SpawnSkyProjectile::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 void UGA_SpawnSkyProjectile::SpawnSkyProjectile()
 {
 	AActor* AvatarActor = GetAvatarActorFromActorInfo();
-	if (!AvatarActor)
-	{
-		return;
-	}
-
-	UProjectilePoolComponent* PoolComponent = AvatarActor->FindComponentByClass<UProjectilePoolComponent>();
-	if (!PoolComponent)
-	{
-		LOG_SCREEN_R("FUCK");
-		return;
-	}
 	
 	APrologueAIController* AIController = Cast<APrologueAIController>(CurrentActorInfo->OwnerActor->GetInstigatorController());
 	if (!AIController)
@@ -56,6 +46,12 @@ void UGA_SpawnSkyProjectile::SpawnSkyProjectile()
 		return;
 	}
 
+	APrologueEnemyCharacter* EnemyCharacter = Cast<APrologueEnemyCharacter>(AvatarActor);
+	if (!EnemyCharacter)
+	{
+		return;
+	}
+	
 	// Blackboard에서 TargetActor 가져오기
 	UBlackboardComponent* BlackboardComponent = AIController->GetBlackboardComponent();
 	AActor* TargetActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(PrologueBlackboard::TargetActor));
@@ -67,10 +63,10 @@ void UGA_SpawnSkyProjectile::SpawnSkyProjectile()
 	
 	const FVector TargetLocation = TargetActor->GetActorLocation();
 	
-	/*FActorSpawnParameters SpawnParams;
+	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetAvatarActorFromActorInfo();
 	SpawnParams.Instigator = Cast<APawn>(GetAvatarActorFromActorInfo());
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;*/
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	// SpawnProjectiles 수만큼 투사체 소환
 	for (int32 i = 0; i < SpawnProjectiles; ++i)
@@ -89,15 +85,19 @@ void UGA_SpawnSkyProjectile::SpawnSkyProjectile()
 		// 	SpawnParams.Instigator,
 		// 	SpawnParams.SpawnCollisionHandlingOverride
 		// );
+		
 		LOG_SCREEN("Spawn Sky Projectile");
-		AExplodingMangoProjectile* Projectile = PoolComponent->Pop();
-		//Projectile->SetPoolRef(ProjectilePool);
-
+		AExplodingMangoProjectile* Projectile = EnemyCharacter->ProjectilePool->Pop();
+		
 		if (Projectile)
 		{
-			LOG_SCREEN("Success Sky Projectile");
-			Projectile->SetPoolComponent(PoolComponent);
+			Projectile->SetOwner(SpawnParams.Owner);
+			Projectile->SetInstigator(SpawnParams.Instigator);
+
+			Projectile->SetPoolRef(EnemyCharacter->ProjectilePool);
 			Projectile->Active(SpawnLocation, SpawnRotation);
+			
+			LOG_SCREEN("Success Sky Projectile");
 			Projectile->TargetActor = TargetActor;
 			// Projectile->FinishSpawning(FTransform(SpawnRotation, SpawnLocation));
 		}
