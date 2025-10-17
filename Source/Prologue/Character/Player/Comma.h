@@ -138,6 +138,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_GuideWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> ShopWidgetComponent;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_ShopWidget;
+	
 	void Input_Move(const FInputActionValue& InputActionValue);
 
 	/** Camera Settings Function */

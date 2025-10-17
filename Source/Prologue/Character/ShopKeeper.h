@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "ShopKeeper.generated.h"
 
+class UWidgetComponent;
 class UCapsuleComponent;
 class UGameplayEffect;
 class UBoxComponent;
@@ -38,6 +39,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ShopKeeper")
 	TObjectPtr<UCapsuleComponent> CapsuleComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ShopKeeper")
+	TObjectPtr<UWidgetComponent> ShopKeeperWidgetComponent;
 	
 protected:
 	UFUNCTION(BlueprintCallable)
