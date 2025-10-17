@@ -89,6 +89,12 @@ AComma::AComma()
 	GuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	GuideWidgetComponent->SetVisibility(false);
 
+	ShopWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("ShopWidgetComponent"));
+	ShopWidgetComponent->SetupAttachment(RootComponent);
+	ShopWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	ShopWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	ShopWidgetComponent->SetVisibility(false);
+
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
 	SmashAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
@@ -96,7 +102,6 @@ AComma::AComma()
 	SpeedBoostTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.Boost"));
 
 	SwordWeaponMesh->SetVisibility(true);
-
 }
 
 void AComma::Tick(float DeltaSeconds)
@@ -658,10 +663,12 @@ void AComma::OnInteractShop()
 
 		LOG_SCREEN_R("포션 구매 진행중");
 		// UI 추가 예정
+		ShopWidgetComponent->SetVisibility(true);
 	}
 	else
 	{
 		LOG_SCREEN_R("포션 구매 불가. 돈이 부족하거나 포션이 가득 참");
+		ShopWidgetComponent->SetVisibility(true);
 	}
 }
 
@@ -699,6 +706,7 @@ void AComma::PurchaseHealPotion()
 	}
 
 	LOG_SCREEN_R("포션 구매 완료");
+	ShopWidgetComponent->SetVisibility(false);
 }
 
 void AComma::SetShopKeeper(AShopKeeper* ShopKeeper)
