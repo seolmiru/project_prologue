@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "PlayerDashPoint.h"
 #include "Prologue/Pool.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Comma.generated.h"
 
 class AShopKeeper;
@@ -23,6 +24,8 @@ class UCameraComponent;
 class UDataAsset_InputConfig;
 class UFallPreventionComponent;
 struct FInputActionValue;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCanBuyPotionChanged, bool, bCanBuyPotionState);
 
 UCLASS()
 class PROLOGUE_API AComma : public APrologueCharacter
@@ -143,6 +146,9 @@ private:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_ShopWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_CantShopWidget;
 	
 	void Input_Move(const FInputActionValue& InputActionValue);
 
@@ -261,7 +267,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Speed Boost")
 	float SpeedBoost = 1.5f;
 
-	/** Shop */
+	/** Shop Start*/
+	
 public:
 	UFUNCTION(BlueprintCallable)
 	void OnInteractShop();
@@ -276,8 +283,30 @@ public:
 	UPROPERTY()
 	TObjectPtr<AShopKeeper> ShopKeeperInRange;
 
+	UPROPERTY(BlueprintAssignable, Category = "Shop")
+	FOnCanBuyPotionChanged OnCanBuyPotionChanged;
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Shop")
+	bool bCanBuyPotion = false;
+
+	UFUNCTION()
+	void OnChangedPotionState();
+
+	void UpdateCanBuyPotionState();
+
+	void OnPotionAttributeChanged(const FOnAttributeChangeData& Data);
+
 public:
 	void SetShopKeeper(AShopKeeper* ShopKeeper);
+
+	UFUNCTION(BlueprintCallable, Category = "Shop")
+	void SetCanBuyPotion(bool bCanBuyPotionState);
+
+	UFUNCTION(BlueprintCallable, Category = "Shop")
+	bool GetCanBuyPotion() const { return bCanBuyPotion; }
+	
+	/** Shop End*/
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")

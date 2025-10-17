@@ -229,6 +229,16 @@ void AComma::PossessedBy(AController* NewController)
 		}
 	}
 
+	if (ASC)
+	{
+		const UPrologueSkillAttributeSet* Attribute = ASC->GetSet<UPrologueSkillAttributeSet>();
+		if (Attribute)
+		{
+			ASC->GetGameplayAttributeValueChangeDelegate(Attribute->GetCurrencyAttribute()).AddUObject(this, &AComma::OnPotionAttributeChanged);
+			ASC->GetGameplayAttributeValueChangeDelegate(Attribute->GetCurrentHealPotionAttribute()).AddUObject(this, &AComma::OnPotionAttributeChanged);
+		}
+	}
+
 	if (BP_CommaWidget)
 	{
 		CommaWidget = CreateWidget<UCommaWidget>(GetWorld(), BP_CommaWidget);
@@ -662,12 +672,13 @@ void AComma::OnInteractShop()
 		GetWorld()->GetTimerManager().SetTimer(PurchaseTimerHandle, this, &AComma::PurchaseHealPotion, 3.f, false);
 
 		LOG_SCREEN_R("포션 구매 진행중");
-		// UI 추가 예정
+		ShopWidgetComponent->SetWidgetClass(BP_ShopWidget);
 		ShopWidgetComponent->SetVisibility(true);
 	}
 	else
 	{
 		LOG_SCREEN_R("포션 구매 불가. 돈이 부족하거나 포션이 가득 참");
+		ShopWidgetComponent->SetWidgetClass(BP_CantShopWidget);
 		ShopWidgetComponent->SetVisibility(true);
 	}
 }
@@ -709,6 +720,41 @@ void AComma::PurchaseHealPotion()
 	ShopWidgetComponent->SetVisibility(false);
 }
 
+void AComma::OnChangedPotionState()
+{
+	OnCanBuyPotionChanged.Broadcast(bCanBuyPotion);
+}
+
+void AComma::UpdateCanBuyPotionState()
+{
+	if (!ShopKeeperInRange || !ASC)
+	{
+		SetCanBuyPotion(false);
+		return;
+	}
+
+	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
+	if (!SkillAttributeSet)
+	{
+		SetCanBuyPotion(false);
+		return;
+	}
+
+	const float CurrentCurrency = SkillAttributeSet->GetCurrency();
+	const float CurrentPotions = SkillAttributeSet->GetCurrentHealPotion();
+	const float MaxPotions = SkillAttributeSet->GetMaxHealPotion();
+	const float PotionCost = ShopKeeperInRange->HealPotionCost;
+
+	const bool bCanBuy = (CurrentCurrency >= PotionCost && CurrentPotions < MaxPotions);
+
+	SetCanBuyPotion(bCanBuy);
+}
+
+void AComma::OnPotionAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	UpdateCanBuyPotionState();
+}
+
 void AComma::SetShopKeeper(AShopKeeper* ShopKeeper)
 {
 	ShopKeeperInRange = ShopKeeper;
@@ -716,8 +762,16 @@ void AComma::SetShopKeeper(AShopKeeper* ShopKeeper)
 	if (!ShopKeeperInRange)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+	}
+}
 
-		// UI 추가 예정
+void AComma::SetCanBuyPotion(bool bCanBuyPotionState)
+{
+	if (bCanBuyPotion != bCanBuyPotionState)
+	{
+		bCanBuyPotion = bCanBuyPotionState;
+
+		OnChangedPotionState();
 	}
 }
 
