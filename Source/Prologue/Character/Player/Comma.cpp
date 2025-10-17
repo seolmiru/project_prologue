@@ -652,6 +652,13 @@ void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)
 
 void AComma::OnInteractShop()
 {
+	if (GetWorld()->GetTimerManager().IsTimerActive(PurchaseTimerHandle))
+	{
+		OnInteractShopCompleted();
+		ShopWidgetComponent->SetVisibility(false);
+		return;
+	}
+	
 	if (!ShopKeeperInRange || !ASC)
 	{
 		return;
@@ -672,21 +679,22 @@ void AComma::OnInteractShop()
 		GetWorld()->GetTimerManager().SetTimer(PurchaseTimerHandle, this, &AComma::PurchaseHealPotion, 3.f, false);
 
 		LOG_SCREEN_R("포션 구매 진행중");
+		SetCanBuyPotion(true);
 		ShopWidgetComponent->SetWidgetClass(BP_ShopWidget);
 		ShopWidgetComponent->SetVisibility(true);
 	}
 	else
 	{
 		LOG_SCREEN_R("포션 구매 불가. 돈이 부족하거나 포션이 가득 참");
-		ShopWidgetComponent->SetWidgetClass(BP_CantShopWidget);
-		ShopWidgetComponent->SetVisibility(true);
+		SetCanBuyPotion(false);
+		//ShopWidgetComponent->SetWidgetClass(BP_CantShopWidget);
+		//ShopWidgetComponent->SetVisibility(true);
 	}
 }
 
 void AComma::OnInteractShopCompleted()
 {
 	GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
-	// UI 추가 예정
 }
 
 void AComma::PurchaseHealPotion()
@@ -762,7 +770,14 @@ void AComma::SetShopKeeper(AShopKeeper* ShopKeeper)
 	if (!ShopKeeperInRange)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+
+		if (ShopWidgetComponent && ShopWidgetComponent->IsVisible())
+		{
+			ShopWidgetComponent->SetVisibility(false);
+		}
 	}
+
+	UpdateCanBuyPotionState();
 }
 
 void AComma::SetCanBuyPotion(bool bCanBuyPotionState)
