@@ -270,12 +270,10 @@ protected:
 	/** Shop Start*/
 	
 public:
-	UFUNCTION(BlueprintCallable)
-	void OnInteractShop();
+	void StartShopInteraction();
 	
-	UFUNCTION(BlueprintCallable)
-	void OnInteractShopCompleted();
-
+	void CancelShopInteraction();
+	
 	void PurchaseHealPotion();
 
 	FTimerHandle PurchaseTimerHandle;
@@ -297,6 +295,13 @@ protected:
 
 	void OnPotionAttributeChanged(const FOnAttributeChangeData& Data);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Shop")
+	float PurchaseTime = 3.f;
+
+	float PurchaseStartTime = 0.f;
+
+	void UpdateShopUIProgress(float Progress);
+	
 public:
 	void SetShopKeeper(AShopKeeper* ShopKeeper);
 
@@ -305,6 +310,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Shop")
 	bool GetCanBuyPotion() const { return bCanBuyPotion; }
+
+private:
+	bool bIsPurchaseInProgress = false;
 	
 	/** Shop End*/
 	

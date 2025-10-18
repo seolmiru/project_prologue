@@ -22,7 +22,12 @@ public class Prologue : ModuleRules
 			"MoviePlayer",
 			"MotionWarping",
 			"MediaAssets",
-			"MetasoundEngine"
+			"MetasoundEngine",
+		});
+		
+		PublicIncludePaths.AddRange(
+			new string[] {
+				"Prologue"
 		});
 	}
 }
