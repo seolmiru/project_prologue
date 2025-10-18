@@ -24,6 +24,7 @@
 #include "Prologue/Component/InputBufferComponent.h"
 #include "Prologue/PlayerState/ProloguePlayerState.h"
 #include "Prologue/UI/Comma/CommaWidget.h"
+#include "Prologue/Interface/ShopProgressInterface.h"
 
 
 AComma::AComma()
@@ -91,10 +92,11 @@ AComma::AComma()
 
 	ShopWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("ShopWidgetComponent"));
 	ShopWidgetComponent->SetupAttachment(RootComponent);
+	ShopWidgetComponent->SetWidgetClass(BP_ShopWidget);
 	ShopWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 	ShopWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	ShopWidgetComponent->SetVisibility(false);
-
+	
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
 	SmashAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
@@ -167,6 +169,13 @@ void AComma::Tick(float DeltaSeconds)
 	{
 		FRotator FixedRotation = FRotator::ZeroRotator;
 		UIAnchorComponent->SetWorldRotation(FixedRotation);
+	}
+
+	if (bIsPurchaseInProgress)
+	{
+		const float ElapsedTime = GetWorld()->GetTimeSeconds() - PurchaseStartTime;
+		const float Progress = FMath::Clamp(ElapsedTime / PurchaseTime, 0.f, 1.f);
+		UpdateShopUIProgress(Progress);
 	}
 }
 
@@ -353,19 +362,26 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AComma::Input_Move);
 		FGameplayTag DashTag = FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash"));
 
+		const FGameplayTag InteractTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Interact"));
+
 		if (InputConfigDataAsset)
 		{
 			for (auto InputAction : InputConfigDataAsset->InputActions)
 			{
-				EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this,
-				                                   &AComma::InputGAS, InputAction.Tag);
-
-				if (InputAction.Tag == DashTag)
+				if (InputAction.Tag == InteractTag)
 				{
-					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this,
-					                                   &AComma::InputDash, true);
-					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this,
-					                                   &AComma::InputDash, false);
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::StartShopInteraction);
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this, &AComma::CancelShopInteraction);
+				}
+				else
+				{
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputGAS, InputAction.Tag);
+					
+					if (InputAction.Tag == DashTag)
+					{
+						EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputDash, true);
+						EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this, &AComma::InputDash, false);
+					}
 				}
 
 				LOG_SCREEN("%s", *InputAction.Tag.ToString());
@@ -650,25 +666,15 @@ void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)
 	}
 }
 
-void AComma::OnInteractShop()
+void AComma::StartShopInteraction()
 {
-	if (GetWorld()->GetTimerManager().IsTimerActive(PurchaseTimerHandle))
-	{
-		OnInteractShopCompleted();
-		ShopWidgetComponent->SetVisibility(false);
-		return;
-	}
-	
-	if (!ShopKeeperInRange || !ASC)
+	if (bIsPurchaseInProgress || !ShopKeeperInRange)
 	{
 		return;
 	}
 
 	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
-	if (!SkillAttributeSet)
-	{
-		return;
-	}
+	if (!SkillAttributeSet) return;
 
 	const float CurrentCurrency = SkillAttributeSet->GetCurrency();
 	const float CurrentPotions = SkillAttributeSet->GetCurrentHealPotion();
@@ -676,12 +682,14 @@ void AComma::OnInteractShop()
 
 	if (CurrentCurrency >= ShopKeeperInRange->HealPotionCost && CurrentPotions < MaxPotions)
 	{
-		GetWorld()->GetTimerManager().SetTimer(PurchaseTimerHandle, this, &AComma::PurchaseHealPotion, 3.f, false);
+		bIsPurchaseInProgress = true;
+		PurchaseStartTime = GetWorld()->GetTimeSeconds();
+		GetWorld()->GetTimerManager().SetTimer(PurchaseTimerHandle, this, &AComma::PurchaseHealPotion, PurchaseTime, false);
 
-		LOG_SCREEN_R("포션 구매 진행중");
 		SetCanBuyPotion(true);
-		ShopWidgetComponent->SetWidgetClass(BP_ShopWidget);
 		ShopWidgetComponent->SetVisibility(true);
+		UpdateShopUIProgress(0.f);
+		LOG_SCREEN_R("포션 구매 진행중");
 	}
 	else
 	{
@@ -692,20 +700,29 @@ void AComma::OnInteractShop()
 	}
 }
 
-void AComma::OnInteractShopCompleted()
+void AComma::CancelShopInteraction()
 {
-	GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+	if (bIsPurchaseInProgress)
+	{
+		bIsPurchaseInProgress = false;
+		GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+
+		ShopWidgetComponent->SetVisibility(false);
+		UpdateShopUIProgress(0.f);
+	}
 }
 
 void AComma::PurchaseHealPotion()
 {
 	if (!ShopKeeperInRange || !ASC)
 	{
+		bIsPurchaseInProgress = false;
 		return;
 	}
 
 	if (!ShopKeeperInRange->CostEffect || !ShopKeeperInRange->RewardEffect)
 	{
+		bIsPurchaseInProgress = false;
 		return;
 	}
 
@@ -726,6 +743,8 @@ void AComma::PurchaseHealPotion()
 
 	LOG_SCREEN_R("포션 구매 완료");
 	ShopWidgetComponent->SetVisibility(false);
+
+	bIsPurchaseInProgress = false;
 }
 
 void AComma::OnChangedPotionState()
@@ -763,6 +782,19 @@ void AComma::OnPotionAttributeChanged(const FOnAttributeChangeData& Data)
 	UpdateCanBuyPotionState();
 }
 
+void AComma::UpdateShopUIProgress(float Progress)
+{
+	if (ShopWidgetComponent)
+	{
+		UUserWidget* Widget = ShopWidgetComponent->GetUserWidgetObject();
+
+		if (Widget && Widget->GetClass()->ImplementsInterface(UShopProgressInterface::StaticClass()))
+		{
+			IShopProgressInterface::Execute_UpdatePurchaseProgress(Widget, Progress);
+		}
+	}
+}
+
 void AComma::SetShopKeeper(AShopKeeper* ShopKeeper)
 {
 	ShopKeeperInRange = ShopKeeper;
@@ -770,6 +802,7 @@ void AComma::SetShopKeeper(AShopKeeper* ShopKeeper)
 	if (!ShopKeeperInRange)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+		bIsPurchaseInProgress = false;
 
 		if (ShopWidgetComponent && ShopWidgetComponent->IsVisible())
 		{

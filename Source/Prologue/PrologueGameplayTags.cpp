@@ -10,8 +10,9 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Sword, "InputTag.Attack.Sword");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Bow, "InputTag.Attack.Bow");
 
-	UE_DEFINE_GAMEPLAY_TAG(InputTag_Interact_Started, "InputTag.Interact.Started");
-	UE_DEFINE_GAMEPLAY_TAG(InputTag_Interact_Completed, "InputTag.Interact.Completed");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Interact, "InputTag.Interact");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_InteractStarted, "InputTag.InteractStarted");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_InteractCompleted, "InputTag.InteractCompleted");
 
 	/** Comma Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Sword, "Comma.Weapon.Sword");
