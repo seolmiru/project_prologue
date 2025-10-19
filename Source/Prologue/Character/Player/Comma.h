@@ -295,7 +295,7 @@ protected:
 
 	void OnPotionAttributeChanged(const FOnAttributeChangeData& Data);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Shop")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Shop")
 	float PurchaseTime = 3.f;
 
 	float PurchaseStartTime = 0.f;
