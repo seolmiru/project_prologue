@@ -55,7 +55,6 @@ void UCooldownWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		}
 		else
 		{
-			LOG_SCREEN_R("CooldownWidget : SSival");
 			UpdateCooldownGaugePercent(1.f);
 		}
 	}
