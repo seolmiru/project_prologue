@@ -24,10 +24,5 @@ public class Prologue : ModuleRules
 			"MediaAssets",
 			"MetasoundEngine",
 		});
-		
-		PublicIncludePaths.AddRange(
-			new string[] {
-				"Prologue"
-		});
 	}
 }
