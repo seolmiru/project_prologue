@@ -5,6 +5,7 @@
 
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Player/Comma.h"
 
 AShopKeeper::AShopKeeper()
@@ -22,6 +23,12 @@ AShopKeeper::AShopKeeper()
 
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
 	CapsuleComponent->SetupAttachment(Mesh);
+
+	ShopKeeperWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("ShopKeeperWidget"));
+	ShopKeeperWidgetComponent->SetupAttachment(Mesh);
+	ShopKeeperWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	ShopKeeperWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	ShopKeeperWidgetComponent->SetVisibility(false);
 
 	HealPotionCost = 200.f;
 }

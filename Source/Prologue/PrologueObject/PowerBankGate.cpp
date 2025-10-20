@@ -38,23 +38,26 @@ void APowerBankGate::OpenGate()
 	
 	if (LoadedSaveData && LoadedSaveData->ActivatedPowerBankCount >= GateOpenCost)
 	{
-		GateCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		GateEffect->DestroyComponent();
-		
-		FVector GateEffectLocation = GateEffect->GetComponentLocation();
-	
-		// Gate 열릴 때 나오는 Niagara 생성
-		if (GateDestroyEffect)
+		if (IsValid(GateEffect))
 		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				GateDestroyEffect,
-				GateEffectLocation,
-				FRotator(0, 0, 0),
-				FVector(1.f, 1.f, 1.f),
-				true,
-				true
-			);
+			FVector GateEffectLocation = GateEffect->GetComponentLocation();
+		
+			GateCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			GateEffect->DestroyComponent();
+		
+			// Gate 열릴 때 나오는 Niagara 생성
+			if (GateDestroyEffect)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					GetWorld(),
+					GateDestroyEffect,
+					GateEffectLocation,
+					FRotator(0, 0, 0),
+					FVector(1.f, 1.f, 1.f),
+					true,
+					true
+				);
+			}
 		}
 	}
 }

@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "PlayerDashPoint.h"
 #include "Prologue/Pool.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Comma.generated.h"
 
 class AShopKeeper;
@@ -23,6 +24,8 @@ class UCameraComponent;
 class UDataAsset_InputConfig;
 class UFallPreventionComponent;
 struct FInputActionValue;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCanBuyPotionChanged, bool, bCanBuyPotionState);
 
 UCLASS()
 class PROLOGUE_API AComma : public APrologueCharacter
@@ -138,6 +141,15 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_GuideWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> ShopWidgetComponent;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_ShopWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_CantShopWidget;
+	
 	void Input_Move(const FInputActionValue& InputActionValue);
 
 	/** Camera Settings Function */
@@ -255,14 +267,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Speed Boost")
 	float SpeedBoost = 1.5f;
 
-	/** Shop */
-public:
-	UFUNCTION(BlueprintCallable)
-	void OnInteractShop();
+	/** Shop Start*/
 	
-	UFUNCTION(BlueprintCallable)
-	void OnInteractShopCompleted();
-
+public:
+	void StartShopInteraction();
+	
+	void CancelShopInteraction();
+	
 	void PurchaseHealPotion();
 
 	FTimerHandle PurchaseTimerHandle;
@@ -270,8 +281,40 @@ public:
 	UPROPERTY()
 	TObjectPtr<AShopKeeper> ShopKeeperInRange;
 
+	UPROPERTY(BlueprintAssignable, Category = "Shop")
+	FOnCanBuyPotionChanged OnCanBuyPotionChanged;
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Shop")
+	bool bCanBuyPotion = false;
+
+	UFUNCTION()
+	void OnChangedPotionState();
+
+	void UpdateCanBuyPotionState();
+
+	void OnPotionAttributeChanged(const FOnAttributeChangeData& Data);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Shop")
+	float PurchaseTime = 3.f;
+
+	float PurchaseStartTime = 0.f;
+
+	void UpdateShopUIProgress(float Progress);
+	
 public:
 	void SetShopKeeper(AShopKeeper* ShopKeeper);
+
+	UFUNCTION(BlueprintCallable, Category = "Shop")
+	void SetCanBuyPotion(bool bCanBuyPotionState);
+
+	UFUNCTION(BlueprintCallable, Category = "Shop")
+	bool GetCanBuyPotion() const { return bCanBuyPotion; }
+
+private:
+	bool bIsPurchaseInProgress = false;
+	
+	/** Shop End*/
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
