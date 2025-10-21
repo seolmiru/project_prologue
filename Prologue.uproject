@@ -53,10 +53,6 @@
 		{
 			"Name": "ActorPalette",
 			"Enabled": true
-		},
-		{
-			"Name": "GameFeatures",
-			"Enabled": true
 		}
 	]
 }
