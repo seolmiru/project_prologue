@@ -83,7 +83,7 @@ void ADialogueManager::EndDialogue()
 
 void ADialogueManager::SetupInputComponent()
 {
-	if (!PlayerController || !DialogueInputAction)
+	if (!PlayerController || !DialogueInputEAction || !DialogueInputSpaceAction || !DialogueInputLeftButtonAction)
 	{
 		return;
 	}
@@ -92,7 +92,9 @@ void ADialogueManager::SetupInputComponent()
 	{
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
-			DialogueInputBindingHandle = EnhancedInputComponent->BindAction(DialogueInputAction, ETriggerEvent::Started, this, &ADialogueManager::HandleDialogueInput).GetHandle();
+			DialogueInputBindingHandle = EnhancedInputComponent->BindAction(DialogueInputEAction, ETriggerEvent::Started, this, &ADialogueManager::HandleDialogueInput).GetHandle();
+			DialogueInputBindingHandle = EnhancedInputComponent->BindAction(DialogueInputSpaceAction, ETriggerEvent::Started, this, &ADialogueManager::HandleDialogueInput).GetHandle();
+			DialogueInputBindingHandle = EnhancedInputComponent->BindAction(DialogueInputLeftButtonAction, ETriggerEvent::Started, this, &ADialogueManager::HandleDialogueInput).GetHandle();
 		}
 	}
 }
