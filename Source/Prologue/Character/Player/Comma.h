@@ -343,8 +343,10 @@ private:
 	bool bCommaWidgetVisibility = true;
 	bool bCooldownWidgetVisibility = true;
 
+	bool bUseCameraRelativeMovement = false;
+	
 	void UpdateDamageEffect();
-
+	
 	/** Sejin */
 public:
 	class APlayerDashPoint* GetDashPoint() const;
