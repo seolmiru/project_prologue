@@ -36,11 +36,17 @@ protected:
 	TSubclassOf<UDialogueWidget> DialogueWidgetClass;
 
 	UPROPERTY()
-	UDialogueWidget* DialogueWidget;
+	TObjectPtr<UDialogueWidget> DialogueWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	UInputAction* DialogueInputAction;
+	TObjectPtr<UInputAction> DialogueInputEAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> DialogueInputSpaceAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> DialogueInputLeftButtonAction;
+	
 	UFUNCTION()
 	void HandleDialogueInput();
 
