@@ -94,6 +94,12 @@ AComma::AComma()
 	ShopWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 	ShopWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	ShopWidgetComponent->SetVisibility(false);
+
+	InteractGuideWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractGuideWidgetComponent"));
+	InteractGuideWidgetComponent->SetupAttachment(RootComponent);
+	InteractGuideWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	InteractGuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	InteractGuideWidgetComponent->SetVisibility(false);
 	
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
@@ -622,6 +628,18 @@ void AComma::OnAttackEnded()
 {
 	bIsUsingSmoothRotation = false;
 	TargetRotation = FRotator::ZeroRotator;
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		if (bUseCameraRelativeMovement)
+		{
+			MoveComp->bOrientRotationToMovement = true;
+		}
+		else
+		{
+			MoveComp->bOrientRotationToMovement = false;
+		}
+	}
 }
 
 void AComma::OnSmashAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const
