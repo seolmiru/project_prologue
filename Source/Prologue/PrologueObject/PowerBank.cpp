@@ -82,7 +82,7 @@ void APowerBank::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
 	{
 		bCanInteracted = true;
 		
-		Comma->GetGuideWidget()->SetVisibility(true);
+		Comma->GetInteractGuideWidget()->SetVisibility(true);
 
 		if (IconWidget && IconWidget->IsInViewport())
 		{
@@ -104,7 +104,7 @@ void APowerBank::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Other
 	if (Comma)
 	{
 		bCanInteracted = false;
-		Comma->GetGuideWidget()->SetVisibility(false);
+		Comma->GetInteractGuideWidget()->SetVisibility(false);
 	}
 
 	UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(GetGameInstance());
