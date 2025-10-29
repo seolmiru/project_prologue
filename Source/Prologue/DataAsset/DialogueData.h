@@ -24,21 +24,26 @@ struct FDialogueData : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	FString SpeakerName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	ESpeakerType SpeakerType = ESpeakerType::NPC;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	FText DialogueText;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	EDialogueType DialogueType = EDialogueType::Normal;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	FName NextDialogueID;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialouge|Voice")
+	TSoftObjectPtr<USoundBase> SpeakerVoice;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	float Duration = 0.f;
+
+	
 };

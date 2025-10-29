@@ -62,6 +62,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FName CurrentDialogueID;
 
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> CurrentSpeakerVoice;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	bool bIsDialogueActive;
 
@@ -79,4 +82,6 @@ protected:
 
 private:
 	void UpdateCharacterIconStates(const FString& SpeakerName);
+
+	void StopCurrentSound();
 };

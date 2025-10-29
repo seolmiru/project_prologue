@@ -94,6 +94,12 @@ AComma::AComma()
 	ShopWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 	ShopWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	ShopWidgetComponent->SetVisibility(false);
+
+	InteractGuideWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractGuideWidgetComponent"));
+	InteractGuideWidgetComponent->SetupAttachment(RootComponent);
+	InteractGuideWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	InteractGuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	InteractGuideWidgetComponent->SetVisibility(false);
 	
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
@@ -411,24 +417,30 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 
 	if (Controller != nullptr)
 	{
-		// get forward vector
-		const FVector ForwardDirection = FVector(1.f, 0.f, 0.f);
+		FVector ForwardDirection;
+		FVector RightDirection;
 
-		// get right vector 
-		const FVector RightDirection = FVector(0.f, 1.f, 0.f);
+		const float TargetYaw = TargetCameraRelativeRotation.Yaw;
+		const FRotator YawRotation(0.f, TargetYaw, 0.f);
+
+		ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 
-		if (!MovementVector.IsNearlyZero())
+		if (!bUseCameraRelativeMovement)
 		{
-			FVector WorldMovementDirection = ForwardDirection * MovementVector.Y + RightDirection * MovementVector.X;
-			WorldMovementDirection.Z = 0.f;
-			WorldMovementDirection.Normalize();
+			if (!MovementVector.IsNearlyZero())
+			{
+				FVector WorldMovementDirection = ForwardDirection * MovementVector.Y + RightDirection * MovementVector.X;
+				WorldMovementDirection.Z = 0.f;
+				WorldMovementDirection.Normalize();
 
-			FRotator NewRotation = WorldMovementDirection.Rotation();
-			SetActorRotation(NewRotation);
+				FRotator NewRotation = WorldMovementDirection.Rotation();
+				SetActorRotation(NewRotation);
+			}
 		}
 	}
 }
@@ -436,11 +448,23 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 void AComma::ActivateRotateCamera(FRotator NewTargetRotation)
 {
 	TargetCameraRelativeRotation = NewTargetRotation;
+	bUseCameraRelativeMovement = true;
+
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+	}
 }
 
 void AComma::DeactivateRotateCamera()
 {
 	TargetCameraRelativeRotation = DefaultCameraRelativeRotation;
+	bUseCameraRelativeMovement = false;
+
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
 }
 
 void AComma::ActivateAdjustCamera(float NewTargetArmLength)
@@ -604,6 +628,18 @@ void AComma::OnAttackEnded()
 {
 	bIsUsingSmoothRotation = false;
 	TargetRotation = FRotator::ZeroRotator;
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		if (bUseCameraRelativeMovement)
+		{
+			MoveComp->bOrientRotationToMovement = true;
+		}
+		else
+		{
+			MoveComp->bOrientRotationToMovement = false;
+		}
+	}
 }
 
 void AComma::OnSmashAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const

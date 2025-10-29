@@ -3,8 +3,10 @@
 
 #include "DialogueWidget.h"
 
+#include "Components/AudioComponent.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
 #include "Prologue/Prologue.h"
 
 void UDialogueWidget::NativeConstruct()
@@ -32,6 +34,7 @@ void UDialogueWidget::NativeConstruct()
 void UDialogueWidget::NativeDestruct()
 {
 	GetWorld()->GetTimerManager().ClearTimer(TypewriterTimerHandle);
+	StopCurrentSound();
 
 	Super::NativeDestruct();
 }
@@ -115,6 +118,8 @@ void UDialogueWidget::EndDialogue()
 
 	GetWorld()->GetTimerManager().ClearTimer(TypewriterTimerHandle);
 
+	StopCurrentSound();
+	
 	SetVisibility(ESlateVisibility::Collapsed);
 
 	OnDialogueCompleted.Broadcast();
@@ -124,6 +129,8 @@ void UDialogueWidget::EndDialogue()
 
 void UDialogueWidget::SetCurrentDialogue(const FDialogueData& DialogueData)
 {
+	StopCurrentSound();
+	
 	if (SpeakerNameText)
 	{
 		SpeakerNameText->SetText(FText::FromString(DialogueData.SpeakerName));
@@ -142,6 +149,16 @@ void UDialogueWidget::SetCurrentDialogue(const FDialogueData& DialogueData)
 		}
 
 		GetWorld()->GetTimerManager().SetTimer(TypewriterTimerHandle, this, &UDialogueWidget::TypewriterEffect, TypewriterSpeed, true);
+
+		USoundBase* SoundToPlay = DialogueData.SpeakerVoice.LoadSynchronous();
+
+		if (SoundToPlay)
+		{
+			CurrentSpeakerVoice = UGameplayStatics::SpawnSound2D(
+				GetWorld(),
+				SoundToPlay
+			);
+		}
 	}
 }
 
@@ -189,4 +206,14 @@ void UDialogueWidget::UpdateCharacterIconStates(const FString& SpeakerName)
 		MinuteHand->SetVisibility(ESlateVisibility::Hidden);
 		HourHand->SetVisibility(ESlateVisibility::Visible);
 	}
+}
+
+void UDialogueWidget::StopCurrentSound()
+{
+	if (CurrentSpeakerVoice && CurrentSpeakerVoice->IsPlaying())
+	{
+		CurrentSpeakerVoice->Stop();
+	}
+
+	CurrentSpeakerVoice = nullptr;
 }
