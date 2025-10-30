@@ -399,14 +399,6 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 	CachedMovementInput = MovementVector;
 
-	/** Sejin */
-
-	// 대쉬 위치 오브젝트에 입력 방향 전달
-	if (DashPoint != nullptr)
-	{
-		DashPoint->SetDirection(FVector(MovementVector.X, MovementVector.Y, 0.f).GetSafeNormal());
-	}
-
 	if (ASC)
 	{
 		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
@@ -426,6 +418,18 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 		ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
+		FVector WorldMovementDirection = (ForwardDirection * MovementVector.Y) + (RightDirection * MovementVector.X);
+		WorldMovementDirection.Z = 0.f;
+
+		// 대시 입력 방향
+		if (DashPoint != nullptr)
+		{
+			if (!WorldMovementDirection.IsNearlyZero())
+			{
+				DashPoint->SetDirection(WorldMovementDirection.GetSafeNormal(), false);
+			}
+		}
+		
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
@@ -434,10 +438,6 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 		{
 			if (!MovementVector.IsNearlyZero())
 			{
-				FVector WorldMovementDirection = ForwardDirection * MovementVector.Y + RightDirection * MovementVector.X;
-				WorldMovementDirection.Z = 0.f;
-				WorldMovementDirection.Normalize();
-
 				FRotator NewRotation = WorldMovementDirection.Rotation();
 				SetActorRotation(NewRotation);
 			}
