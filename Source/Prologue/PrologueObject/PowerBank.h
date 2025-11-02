@@ -8,6 +8,7 @@
 #include "Prologue/UI/Object/PowerBankIconWidget.h"
 #include "PowerBank.generated.h"
 
+class UNiagaraComponent;
 class UTimelineComponent;
 class UBoxComponent;
 
@@ -25,9 +26,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
 	TObjectPtr<UBoxComponent> TriggerVolume;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
 	TObjectPtr<UStaticMeshComponent> PowerBankMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	TObjectPtr<UNiagaraComponent> ActivateNiagara;
+ 	
 	UPROPERTY()
 	TObjectPtr<UTimelineComponent> MaterialTimeline;
 

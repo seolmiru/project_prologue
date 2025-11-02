@@ -47,6 +47,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	bool bIsCompleted = false;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FName CheckTag;
+
 private:
 	float TimeDilation = 1.f;
 };
