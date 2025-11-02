@@ -60,9 +60,9 @@ void APrologueEnemyCharacter::BeginPlay()
 		HpBar->SetVisibility(false);
 	}
 	
-	if (MangoHpBarWidget)
+	if (BossHpBarWidget)
 	{
-		MangoHpBarWidget->SetVisibility(ESlateVisibility::Hidden);
+		BossHpBarWidget->SetVisibility(ESlateVisibility::Hidden);
 	}
 	
 	if (ASC && Attributes)
@@ -145,9 +145,16 @@ void APrologueEnemyCharacter::PossessedBy(AController* NewController)
 	
 	if (BP_MangoWidget)
 	{
-		MangoHpBarWidget = CreateWidget<UEnemyWidget>(GetWorld(), BP_MangoWidget);
-		MangoHpBarWidget->SetAbilitySystemComponent(this);
-		MangoHpBarWidget->AddToViewport();
+		BossHpBarWidget = CreateWidget<UEnemyWidget>(GetWorld(), BP_MangoWidget);
+		BossHpBarWidget->SetAbilitySystemComponent(this);
+		BossHpBarWidget->AddToViewport();
+	}
+
+	if (BP_ChronosWidget)
+	{
+		BossHpBarWidget = CreateWidget<UEnemyWidget>(GetWorld(), BP_ChronosWidget);\
+		BossHpBarWidget->SetAbilitySystemComponent(this);
+		BossHpBarWidget->AddToViewport();
 	}
 }
 
