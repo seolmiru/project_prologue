@@ -12,13 +12,17 @@ ABossClock::ABossClock()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	ClockHandRoot = CreateDefaultSubobject<USceneComponent>("ClockHandRoot");
+	ClockHandRoot->SetupAttachment(RootComponent);
+	
 	ClockCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("ClockCollision"));
-	SetRootComponent(ClockCollision);
+	ClockCollision->SetupAttachment(ClockHandRoot);
 	ClockCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	ClockCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+	ClockCollision->bHiddenInGame = false;
 
 	ClockHandNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ClockHandNiagaraComponent"));
-	ClockHandNiagaraComponent->SetupAttachment(RootComponent);
+	ClockHandNiagaraComponent->SetupAttachment(ClockCollision);
 }
 
 void ABossClock::BeginPlay()
