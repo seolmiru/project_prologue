@@ -673,6 +673,24 @@ void AComma::TriggerDamageEffect(float DamageAmount)
 	GetWorld()->GetTimerManager().SetTimer(DamageEffectTimerHandle, this, &AComma::UpdateDamageEffect, 0.05f, true);
 }
 
+void AComma::TriggerLowHealth()
+{
+	GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
+	
+	if (DamagePostProcessMID)
+	{
+		DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), LowHealthEffectIntensity);
+	}
+}
+
+void AComma::InitDamageEffect()
+{
+	if (DamagePostProcessMID)
+	{
+		DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), 0.f);
+	}
+}
+
 void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)
 {
 	UCharacterMovementComponent* MoveComp = GetCharacterMovement();

@@ -208,6 +208,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 	float DamageEffectIntensity = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
+	float LowHealthEffectIntensity = 0.5f;
 	
 public:
 	FORCEINLINE FVector2D GetDirection() const { return Direction; }
@@ -258,6 +261,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void TriggerDamageEffect(float DamageAmount = 1.f);
+	
+	void TriggerLowHealth();
+
+	void InitDamageEffect();
 
 	/** Speed Boost */
 protected:
