@@ -145,7 +145,6 @@ void UPrologueGameInstance::OnPowerBankActivated(FName PowerBankID)
 
 	if (WorldCenterHub)
 	{
-		LOG_SCREEN_R("CenterHub is Register");
 		WorldCenterHub->UpdateAppearance(SaveGameData->ActivatedPowerBankCount);
 	}
 	else

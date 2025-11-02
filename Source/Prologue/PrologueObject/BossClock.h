@@ -25,6 +25,9 @@ protected:
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Clock")
+	TObjectPtr<USceneComponent> ClockHandRoot;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Clock")
 	TObjectPtr<UNiagaraComponent> ClockHandNiagaraComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Clock")
