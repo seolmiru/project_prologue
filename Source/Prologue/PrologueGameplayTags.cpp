@@ -138,6 +138,13 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_LaserHitCheck, "Enemy.Event.LaserHitCheck");
 
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_Stun, "Enemy.Event.Stun");
+
+	/** Chronos Tags */
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Ability_SummonClock, "Chronos.Ability.SummonClock");
+
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_SummonClock, "Chronos.Event.SummonClock");
+
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_State_SecondPhase, "Chronos.State.SecondPhase");
 	
 	/** Shared Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Ability_Death, "Shared.Ability.Death");
