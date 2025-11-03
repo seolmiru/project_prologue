@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "CenterHub.generated.h"
 
+class UNiagaraComponent;
+
 UCLASS()
 class PROLOGUE_API ACenterHub : public AActor
 {
@@ -20,6 +22,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> CenterHubMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<UNiagaraComponent> ActivateNiagara;
+	
 	UPROPERTY(EditAnywhere, Category = "Appearance")
 	TArray<TObjectPtr<UTexture>> TextureStates;
 
@@ -32,4 +37,6 @@ private:
 
 public:
 	void UpdateAppearance(int32 ActivatedCount);
+
+	void ActivateCenterHubNiagara();
 };

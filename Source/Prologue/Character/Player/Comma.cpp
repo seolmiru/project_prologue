@@ -13,10 +13,8 @@
 #include "Prologue/DataAsset/Input/DataAsset_InputConfig.h"
 #include "EnhancedInputComponent.h"
 #include "AbilitySystemComponent.h"
-#include "NiagaraComponent.h"
 #include "PlayerDashPoint.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/PostProcessComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/AbilitySystem/Ability/GA_CommaAttackSword.h"
@@ -24,6 +22,7 @@
 #include "Prologue/Component/InputBufferComponent.h"
 #include "Prologue/PlayerState/ProloguePlayerState.h"
 #include "Prologue/UI/Comma/CommaWidget.h"
+#include "Prologue/Interface/ShopProgressInterface.h"
 
 
 AComma::AComma()
@@ -89,6 +88,19 @@ AComma::AComma()
 	GuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	GuideWidgetComponent->SetVisibility(false);
 
+	ShopWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("ShopWidgetComponent"));
+	ShopWidgetComponent->SetupAttachment(RootComponent);
+	ShopWidgetComponent->SetWidgetClass(BP_ShopWidget);
+	ShopWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	ShopWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	ShopWidgetComponent->SetVisibility(false);
+
+	InteractGuideWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractGuideWidgetComponent"));
+	InteractGuideWidgetComponent->SetupAttachment(RootComponent);
+	InteractGuideWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	InteractGuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	InteractGuideWidgetComponent->SetVisibility(false);
+	
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
 	SmashAttackSwordTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.SwitchAttack.Sword"));
@@ -96,7 +108,6 @@ AComma::AComma()
 	SpeedBoostTag = FGameplayTag::RequestGameplayTag(FName("Comma.State.Boost"));
 
 	SwordWeaponMesh->SetVisibility(true);
-
 }
 
 void AComma::Tick(float DeltaSeconds)
@@ -163,6 +174,13 @@ void AComma::Tick(float DeltaSeconds)
 		FRotator FixedRotation = FRotator::ZeroRotator;
 		UIAnchorComponent->SetWorldRotation(FixedRotation);
 	}
+
+	if (bIsPurchaseInProgress)
+	{
+		const float ElapsedTime = GetWorld()->GetTimeSeconds() - PurchaseStartTime;
+		const float Progress = FMath::Clamp(ElapsedTime / PurchaseTime, 0.f, 1.f);
+		UpdateShopUIProgress(Progress);
+	}
 }
 
 void AComma::NotifyControllerChanged()
@@ -221,6 +239,16 @@ void AComma::PossessedBy(AController* NewController)
 			FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(GameplayAbilitySpec);
 
 			ASC->TryActivateAbility(SpecHandle);
+		}
+	}
+
+	if (ASC)
+	{
+		const UPrologueSkillAttributeSet* Attribute = ASC->GetSet<UPrologueSkillAttributeSet>();
+		if (Attribute)
+		{
+			ASC->GetGameplayAttributeValueChangeDelegate(Attribute->GetCurrencyAttribute()).AddUObject(this, &AComma::OnPotionAttributeChanged);
+			ASC->GetGameplayAttributeValueChangeDelegate(Attribute->GetCurrentHealPotionAttribute()).AddUObject(this, &AComma::OnPotionAttributeChanged);
 		}
 	}
 
@@ -338,19 +366,26 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AComma::Input_Move);
 		FGameplayTag DashTag = FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash"));
 
+		const FGameplayTag InteractTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Interact"));
+
 		if (InputConfigDataAsset)
 		{
 			for (auto InputAction : InputConfigDataAsset->InputActions)
 			{
-				EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this,
-				                                   &AComma::InputGAS, InputAction.Tag);
-
-				if (InputAction.Tag == DashTag)
+				if (InputAction.Tag == InteractTag)
 				{
-					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this,
-					                                   &AComma::InputDash, true);
-					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this,
-					                                   &AComma::InputDash, false);
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::StartShopInteraction);
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this, &AComma::CancelShopInteraction);
+				}
+				else
+				{
+					EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputGAS, InputAction.Tag);
+					
+					if (InputAction.Tag == DashTag)
+					{
+						EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Started, this, &AComma::InputDash, true);
+						EnhancedInputComponent->BindAction(InputAction.InputAction, ETriggerEvent::Completed, this, &AComma::InputDash, false);
+					}
 				}
 
 				LOG_SCREEN("%s", *InputAction.Tag.ToString());
@@ -364,12 +399,30 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 	CachedMovementInput = MovementVector;
 
-	/** Sejin */
+	if (Controller == nullptr)
+	{
+		return;
+	}
 
-	// 대쉬 위치 오브젝트에 입력 방향 전달
+	FVector ForwardDirection;
+	FVector RightDirection;
+	
+	const float TargetYaw = TargetCameraRelativeRotation.Yaw;
+	const FRotator YawRotation(0.f, TargetYaw, 0.f);
+
+	ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+	FVector WorldMovementDirection = (ForwardDirection * MovementVector.Y) + (RightDirection * MovementVector.X);
+	WorldMovementDirection.Z = 0.f;
+
+	// 대시 입력 방향
 	if (DashPoint != nullptr)
 	{
-		DashPoint->SetDirection(FVector(MovementVector.X, MovementVector.Y, 0.f).GetSafeNormal());
+		if (!WorldMovementDirection.IsNearlyZero())
+		{
+			DashPoint->SetDirection(WorldMovementDirection.GetSafeNormal(), false);
+		}
 	}
 
 	if (ASC)
@@ -379,25 +432,15 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 			return;
 		}
 	}
+		
+	// add movement 
+	AddMovementInput(ForwardDirection, MovementVector.Y);
+	AddMovementInput(RightDirection, MovementVector.X);
 
-	if (Controller != nullptr)
+	if (!bUseCameraRelativeMovement)
 	{
-		// get forward vector
-		const FVector ForwardDirection = FVector(1.f, 0.f, 0.f);
-
-		// get right vector 
-		const FVector RightDirection = FVector(0.f, 1.f, 0.f);
-
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
-
 		if (!MovementVector.IsNearlyZero())
 		{
-			FVector WorldMovementDirection = ForwardDirection * MovementVector.Y + RightDirection * MovementVector.X;
-			WorldMovementDirection.Z = 0.f;
-			WorldMovementDirection.Normalize();
-
 			FRotator NewRotation = WorldMovementDirection.Rotation();
 			SetActorRotation(NewRotation);
 		}
@@ -407,11 +450,23 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 void AComma::ActivateRotateCamera(FRotator NewTargetRotation)
 {
 	TargetCameraRelativeRotation = NewTargetRotation;
+	bUseCameraRelativeMovement = true;
+
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+	}
 }
 
 void AComma::DeactivateRotateCamera()
 {
 	TargetCameraRelativeRotation = DefaultCameraRelativeRotation;
+	bUseCameraRelativeMovement = false;
+
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
 }
 
 void AComma::ActivateAdjustCamera(float NewTargetArmLength)
@@ -575,6 +630,18 @@ void AComma::OnAttackEnded()
 {
 	bIsUsingSmoothRotation = false;
 	TargetRotation = FRotator::ZeroRotator;
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		if (bUseCameraRelativeMovement)
+		{
+			MoveComp->bOrientRotationToMovement = true;
+		}
+		else
+		{
+			MoveComp->bOrientRotationToMovement = false;
+		}
+	}
 }
 
 void AComma::OnSmashAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const
@@ -608,6 +675,24 @@ void AComma::TriggerDamageEffect(float DamageAmount)
 	GetWorld()->GetTimerManager().SetTimer(DamageEffectTimerHandle, this, &AComma::UpdateDamageEffect, 0.05f, true);
 }
 
+void AComma::TriggerLowHealth()
+{
+	GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
+	
+	if (DamagePostProcessMID)
+	{
+		DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), LowHealthEffectIntensity);
+	}
+}
+
+void AComma::InitDamageEffect()
+{
+	if (DamagePostProcessMID)
+	{
+		DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), 0.f);
+	}
+}
+
 void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)
 {
 	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
@@ -635,18 +720,15 @@ void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)
 	}
 }
 
-void AComma::OnInteractShop()
+void AComma::StartShopInteraction()
 {
-	if (!ShopKeeperInRange || !ASC)
+	if (bIsPurchaseInProgress || !ShopKeeperInRange)
 	{
 		return;
 	}
 
 	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
-	if (!SkillAttributeSet)
-	{
-		return;
-	}
+	if (!SkillAttributeSet) return;
 
 	const float CurrentCurrency = SkillAttributeSet->GetCurrency();
 	const float CurrentPotions = SkillAttributeSet->GetCurrentHealPotion();
@@ -654,32 +736,47 @@ void AComma::OnInteractShop()
 
 	if (CurrentCurrency >= ShopKeeperInRange->HealPotionCost && CurrentPotions < MaxPotions)
 	{
-		GetWorld()->GetTimerManager().SetTimer(PurchaseTimerHandle, this, &AComma::PurchaseHealPotion, 3.f, false);
+		bIsPurchaseInProgress = true;
+		PurchaseStartTime = GetWorld()->GetTimeSeconds();
+		GetWorld()->GetTimerManager().SetTimer(PurchaseTimerHandle, this, &AComma::PurchaseHealPotion, PurchaseTime, false);
 
+		SetCanBuyPotion(true);
+		ShopWidgetComponent->SetVisibility(true);
+		UpdateShopUIProgress(0.f);
 		LOG_SCREEN_R("포션 구매 진행중");
-		// UI 추가 예정
 	}
 	else
 	{
 		LOG_SCREEN_R("포션 구매 불가. 돈이 부족하거나 포션이 가득 참");
+		SetCanBuyPotion(false);
+		//ShopWidgetComponent->SetWidgetClass(BP_CantShopWidget);
+		//ShopWidgetComponent->SetVisibility(true);
 	}
 }
 
-void AComma::OnInteractShopCompleted()
+void AComma::CancelShopInteraction()
 {
-	GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
-	// UI 추가 예정
+	if (bIsPurchaseInProgress)
+	{
+		bIsPurchaseInProgress = false;
+		GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+
+		ShopWidgetComponent->SetVisibility(false);
+		UpdateShopUIProgress(0.f);
+	}
 }
 
 void AComma::PurchaseHealPotion()
 {
 	if (!ShopKeeperInRange || !ASC)
 	{
+		bIsPurchaseInProgress = false;
 		return;
 	}
 
 	if (!ShopKeeperInRange->CostEffect || !ShopKeeperInRange->RewardEffect)
 	{
+		bIsPurchaseInProgress = false;
 		return;
 	}
 
@@ -699,6 +796,57 @@ void AComma::PurchaseHealPotion()
 	}
 
 	LOG_SCREEN_R("포션 구매 완료");
+	ShopWidgetComponent->SetVisibility(false);
+
+	bIsPurchaseInProgress = false;
+}
+
+void AComma::OnChangedPotionState()
+{
+	OnCanBuyPotionChanged.Broadcast(bCanBuyPotion);
+}
+
+void AComma::UpdateCanBuyPotionState()
+{
+	if (!ShopKeeperInRange || !ASC)
+	{
+		SetCanBuyPotion(false);
+		return;
+	}
+
+	const UPrologueSkillAttributeSet* SkillAttributeSet = ASC->GetSet<UPrologueSkillAttributeSet>();
+	if (!SkillAttributeSet)
+	{
+		SetCanBuyPotion(false);
+		return;
+	}
+
+	const float CurrentCurrency = SkillAttributeSet->GetCurrency();
+	const float CurrentPotions = SkillAttributeSet->GetCurrentHealPotion();
+	const float MaxPotions = SkillAttributeSet->GetMaxHealPotion();
+	const float PotionCost = ShopKeeperInRange->HealPotionCost;
+
+	const bool bCanBuy = (CurrentCurrency >= PotionCost && CurrentPotions < MaxPotions);
+
+	SetCanBuyPotion(bCanBuy);
+}
+
+void AComma::OnPotionAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	UpdateCanBuyPotionState();
+}
+
+void AComma::UpdateShopUIProgress(float Progress)
+{
+	if (ShopWidgetComponent)
+	{
+		UUserWidget* Widget = ShopWidgetComponent->GetUserWidgetObject();
+
+		if (Widget && Widget->GetClass()->ImplementsInterface(UShopProgressInterface::StaticClass()))
+		{
+			IShopProgressInterface::Execute_UpdatePurchaseProgress(Widget, Progress);
+		}
+	}
 }
 
 void AComma::SetShopKeeper(AShopKeeper* ShopKeeper)
@@ -708,8 +856,24 @@ void AComma::SetShopKeeper(AShopKeeper* ShopKeeper)
 	if (!ShopKeeperInRange)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(PurchaseTimerHandle);
+		bIsPurchaseInProgress = false;
 
-		// UI 추가 예정
+		if (ShopWidgetComponent && ShopWidgetComponent->IsVisible())
+		{
+			ShopWidgetComponent->SetVisibility(false);
+		}
+	}
+
+	UpdateCanBuyPotionState();
+}
+
+void AComma::SetCanBuyPotion(bool bCanBuyPotionState)
+{
+	if (bCanBuyPotion != bCanBuyPotionState)
+	{
+		bCanBuyPotion = bCanBuyPotionState;
+
+		OnChangedPotionState();
 	}
 }
 

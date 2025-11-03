@@ -13,7 +13,7 @@
 template<typename T>
 class Pool
 {
-static_assert(TIsDerivedFrom<T, AActor>::IsDerived, "TPool<T> Type is not AActor children (sejin code)");
+	static_assert(TIsDerivedFrom<T, AActor>::IsDerived, "TPool<T> Type is not AActor children (sejin code)");
 	
 private:
 	UWorld* World;

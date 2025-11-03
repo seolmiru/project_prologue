@@ -22,7 +22,7 @@ public class Prologue : ModuleRules
 			"MoviePlayer",
 			"MotionWarping",
 			"MediaAssets",
-			"MetasoundEngine"
+			"MetasoundEngine",
 		});
 	}
 }

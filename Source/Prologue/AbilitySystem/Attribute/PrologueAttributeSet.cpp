@@ -99,6 +99,28 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 		OnOutOfBrokenGauge.Broadcast();
 	}
 
+	if (GetCurrentHealth() <= 30.f)
+	{
+		if (AActor* TargetActor = Data.Target.GetAvatarActor())
+		{
+			if (AComma* Comma = Cast<AComma>(TargetActor))
+			{
+				Comma->TriggerLowHealth();
+			}
+		}
+	}
+
+	if (GetCurrentHealth() > 30.f)
+	{
+		if (AActor* TargetActor = Data.Target.GetAvatarActor())
+		{
+			if (AComma* Comma = Cast<AComma>(TargetActor))
+			{
+				Comma->InitDamageEffect();
+			}
+		}
+	}
+
 	bOutOfHealth = (GetCurrentHealth() <= 0.0f);
 
 	bOutOfBrokenGauge = (GetCurrentBrokenGauge() <= 0.0f);

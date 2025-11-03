@@ -16,7 +16,8 @@ void UGA_MontageAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	
-	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayMontage"), AnimMontage, 1.0f);
+	UAbilityTask_PlayMontageAndWait* PlayTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this, TEXT("PlayMontage"), AnimMontage, 1.0f);
 	PlayTask->OnCompleted.AddDynamic(this, &UGA_MontageAbility::OnComplete);
 	PlayTask->OnInterrupted.AddDynamic(this, &UGA_MontageAbility::OnInterrupted);
 	PlayTask->ReadyForActivation();
