@@ -144,6 +144,17 @@ void APowerBank::Interact()
 
 			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+			if (ActivateSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(
+					GetWorld(),
+					ActivateSound,
+					GetActorLocation(),
+					1.f,
+					1.f
+				);
+			}
+			
 			Comma->GetGuideWidget()->SetVisibility(false);
 		}
 	}

@@ -27,6 +27,14 @@ AExplodingMangoProjectile::AExplodingMangoProjectile()
 	ProjectileMovement->Velocity = FVector(0.f, 0.f, -1.f);
 	ProjectileMovement->ProjectileGravityScale = 1.f;
 	ProjectileMovement->SetActive(false);
+
+	ExplosionEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ExplosionEffectComponent"));
+	ExplosionEffectComponent->SetupAttachment(RootComponent);
+	ExplosionEffectComponent->SetAutoActivate(false);
+
+	ProjectileEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ProjectileEffectComponent"));
+	ProjectileEffectComponent->SetupAttachment(RootComponent);
+	ProjectileEffectComponent->SetAutoActivate(false);
 	
 	ExplosionRadius = 400.f;
 	TimeToExplode = 3.f;
@@ -86,6 +94,16 @@ void AExplodingMangoProjectile::Deactivate()
 		ProjectileNiagaraComponent->Deactivate();
 	}
 
+	if (ExplosionEffectComponent)
+	{
+		ExplosionEffectComponent->Deactivate();
+	}
+
+	if (ProjectileEffectComponent)
+	{
+		ProjectileEffectComponent->Deactivate();
+	}
+	
 	SetActorTickEnabled(false);
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
@@ -98,6 +116,16 @@ void AExplodingMangoProjectile::Deactivate()
 void AExplodingMangoProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (ExplosionEffect)
+	{
+		ExplosionEffectComponent->SetAsset(ExplosionEffect);
+	}
+
+	if (ProjectileEffect)
+	{
+		ProjectileEffectComponent->SetAsset(ProjectileEffect);
+	}
 }
 
 void AExplodingMangoProjectile::Tick(float DeltaTime)
@@ -144,7 +172,7 @@ void AExplodingMangoProjectile::StickAndExplosion(const FHitResult& Hit)
 
 	FVector ProjectileLocation = GetActorLocation();
 
-	if (ProjectileEffect)
+	/*if (ProjectileEffect)
 	{
 		UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
@@ -156,6 +184,11 @@ void AExplodingMangoProjectile::StickAndExplosion(const FHitResult& Hit)
 			true,
 			ENCPoolMethod::AutoRelease
 		);
+	}*/
+
+	if (ProjectileEffectComponent)
+	{
+		ProjectileEffectComponent->Activate(true);
 	}
 
 	GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &AExplodingMangoProjectile::Explode, TimeToExplode,
@@ -173,7 +206,7 @@ void AExplodingMangoProjectile::Explode()
 	
 	FVector ExplosionLocation = GetActorLocation();
 
-	if (ExplosionEffect)
+	/*if (ExplosionEffect)
 	{
 		UNiagaraComponent* ExplosionComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
@@ -185,6 +218,12 @@ void AExplodingMangoProjectile::Explode()
 			true,
 			ENCPoolMethod::AutoRelease
 		);
+	}*/
+
+	if (ExplosionEffectComponent)
+	{
+		ExplosionEffectComponent->SetWorldLocation(ExplosionLocation);
+		ExplosionEffectComponent->Activate(true);
 	}
 
 	if (ExplosionSound)
@@ -247,7 +286,6 @@ void AExplodingMangoProjectile::Explode()
 
 				FGameplayCueParameters CueParams;
 				CueParams.EffectContext = EffectContext;
-				TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_PlayerHit, CueParams);
 			}
 		}
 	}

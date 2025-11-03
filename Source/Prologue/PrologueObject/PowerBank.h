@@ -55,14 +55,17 @@ protected:
 	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="UI")
 	// TObjectPtr<UWidgetComponent> WidgetComponent;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "UI")
 	TObjectPtr<USceneComponent> AttachPoint;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "UI")
 	TSubclassOf<UPowerBankIconWidget> BP_IconWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UPowerBankIconWidget> IconWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<USoundBase> ActivateSound;
 	
 	/* End Sejin */
 protected:
