@@ -8,6 +8,7 @@
 #include "MoviePlayer.h"
 #include "PrologueGameInstance.generated.h"
 
+class UPrologueIntroWidget;
 class ACenterHub;
 class UPrologueSaveGame;
 class AComma;
@@ -61,6 +62,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "PowerBank")
 	void RegisterCenterHub(ACenterHub* Hub);
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	bool HasSeenInitialIntro() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void MarkInitialIntroSeen();	
 	
 protected:
 	void OnPreLoadMap(const FString& MapName);
@@ -74,6 +81,14 @@ protected:
 
 	UPROPERTY()
 	bool bIsInitialLoadComplete = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Loading Screen")
+	TSoftClassPtr<UPrologueIntroWidget> IntroAnimationWidgetClass;
+
+	void OpenStage();
+
+	UFUNCTION()
+	void OnIntroAnimationFinished();
 	
 private:
 	TSharedPtr<SWidget> CreateRandomLoadingWidget();
@@ -87,4 +102,6 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<ACenterHub> WorldCenterHub;
+
+	FString LevelToLoad;
 };
