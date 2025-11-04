@@ -141,6 +141,8 @@ namespace PrologueGameplayTags
 
 	/** Chronos Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Ability_SummonClock);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Ability_Skill3);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Ability_SecondPhase);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Event_SummonClock);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Event_AttackHitCheck);

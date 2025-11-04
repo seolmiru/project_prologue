@@ -62,6 +62,12 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 			SetDamage(0.f);
 			return;
 		}
+
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Chronos_State_Invincible))
+		{
+			SetDamage(0.f);
+			return;
+		}
 		
 		const float LocalDamage = GetDamage();
 		

@@ -163,10 +163,6 @@ void UPrologueGameInstance::StartNewGame(const FString& LevelName)
 	{
 		OpenStage();
 	}
-
-	UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
-
-	UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelName), true);
 }
 
 void UPrologueGameInstance::OnPowerBankActivated(FName PowerBankID)

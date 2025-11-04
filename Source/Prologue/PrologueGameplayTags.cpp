@@ -141,7 +141,9 @@ namespace PrologueGameplayTags
 
 	/** Chronos Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Chronos_Ability_SummonClock, "Chronos.Ability.SummonClock");
-
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Ability_Skill3, "Chronos.Ability.Skill3");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Ability_SecondPhase, "Chronos.Ability.SecondPhase");
+	
 	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_SummonClock, "Chronos.Event.SummonClock");
 	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_AttackHitCheck, "Chronos.Event.AttackHitCheck");
 

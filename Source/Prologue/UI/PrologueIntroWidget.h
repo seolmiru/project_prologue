@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "PrologueIntroWidget.generated.h"
 
+class UMediaSoundComponent;
 class UMediaPlayer;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FonIntroFinished);
 
@@ -39,6 +40,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Media")
 	TObjectPtr<UMediaPlayer> IntroMediaPlayer;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Media")
+	TObjectPtr<UMediaSoundComponent> IntroSoundComponent;	
 
 private:
 	bool bHasFinished = false;
