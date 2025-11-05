@@ -4,6 +4,7 @@
 #include "GA_Chronos_Summon_ClockHand.h"
 
 #include "AbilitySystemComponent.h"
+#include "Prologue/PrologueObject/BossClock.h"
 
 void UGA_Chronos_Summon_ClockHand::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                                    const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
@@ -11,9 +12,4 @@ void UGA_Chronos_Summon_ClockHand::ActivateAbility(const FGameplayAbilitySpecHan
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	// Invincible Effect
-	FGameplayEffectContextHandle InvincibleEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-	InvincibleEffectContextHandle.AddSourceObject(this);
-	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(InvincibleEffect, 0.f, InvincibleEffectContextHandle);
-	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
 }

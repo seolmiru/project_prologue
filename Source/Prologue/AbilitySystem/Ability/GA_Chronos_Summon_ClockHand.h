@@ -6,11 +6,12 @@
 #include "GA_MontageAbility.h"
 #include "GA_Chronos_Summon_ClockHand.generated.h"
 
+class ABossClock;
 /**
  * 
  */
 UCLASS()
-class PROLOGUE_API UGA_Chronos_Summon_ClockHand : public UGA_MontageAbility
+class PROLOGUE_API UGA_Chronos_Summon_ClockHand : public UGameplayAbility
 {
 	GENERATED_BODY()
 
@@ -18,6 +19,6 @@ public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	TSubclassOf<UGameplayEffect> InvincibleEffect;
+	UPROPERTY(EditDefaultsOnly, Category = "Clock Hand")
+	TSubclassOf<ABossClock> ClockHand;
 };
