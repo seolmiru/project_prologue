@@ -3,6 +3,7 @@
 
 #include "PowerBank.h"
 
+#include "NiagaraComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/TimelineComponent.h"
@@ -26,6 +27,10 @@ APowerBank::APowerBank()
 	TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &APowerBank::OnOverlapBegin);
 	TriggerVolume->OnComponentEndOverlap.AddDynamic(this, &APowerBank::OnOverlapEnd);
 
+	ActivateNiagara = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ActivateNiagara"));
+	ActivateNiagara->SetupAttachment(PowerBankMesh);
+	ActivateNiagara->SetAutoActivate(false);
+	
 	MaterialTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("MaterialTimeline"));
 
 	AttachPoint = CreateDefaultSubobject<USceneComponent>(TEXT("AttachPoint"));
@@ -128,6 +133,8 @@ void APowerBank::Interact()
 		UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 		if (GameInstance && !GameInstance->HasPowerBankInteracted(PowerBankID))
 		{
+			ActivateNiagara->Activate();
+			
 			if (MaterialTimeline)
 			{
 				MaterialTimeline->PlayFromStart();
@@ -137,6 +144,17 @@ void APowerBank::Interact()
 
 			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+			if (ActivateSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(
+					GetWorld(),
+					ActivateSound,
+					GetActorLocation(),
+					1.f,
+					1.f
+				);
+			}
+			
 			Comma->GetGuideWidget()->SetVisibility(false);
 		}
 	}

@@ -10,6 +10,7 @@
 APrologueProjectileBase::APrologueProjectileBase()
 {
 	ProjectileCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("ProjectileCollision"));
+	ProjectileCollision->SetCollisionObjectType(ECC_GameTraceChannel5);
 	SetRootComponent(ProjectileCollision);
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));

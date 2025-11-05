@@ -50,7 +50,9 @@ namespace PrologueGameplayTags
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_SpeedBoost);
 
-	/** Comma State Tags */
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_LowHealth);
+	
+	/** Comma Event Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_Sword);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_JustDash);
@@ -136,6 +138,17 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Event_LaserHitCheck);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Event_Stun);
+
+	/** Chronos Tags */
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Ability_SummonClock);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Ability_Skill3);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Ability_SecondPhase);
+	
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Event_SummonClock);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Event_AttackHitCheck);
+	
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_State_SecondPhase);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_State_Invincible);
 	
 	/** Shared Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Shared_Ability_Death);

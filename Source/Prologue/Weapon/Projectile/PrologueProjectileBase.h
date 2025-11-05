@@ -20,20 +20,20 @@ public:
 	APrologueProjectileBase();
 
 	// GA_SpawnSkyProjectile을 통해서 Blackboard에서 TargetActor를 가져오기 위한 변수
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Explosion|Target")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Projectile|Target")
 	TObjectPtr<AActor> TargetActor;
 	
 protected:
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	TObjectPtr<UBoxComponent> ProjectileCollision;
 	
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	TObjectPtr<UNiagaraComponent> ProjectileNiagaraComponent;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|GAS")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile|GAS")
 	TSubclassOf<UGameplayEffect> DamageEffect;
 
 	UPROPERTY(EditAnywhere, Category = "GAS")

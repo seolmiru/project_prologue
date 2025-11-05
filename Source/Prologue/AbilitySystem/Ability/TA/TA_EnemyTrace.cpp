@@ -23,7 +23,8 @@ FGameplayAbilityTargetDataHandle ATA_EnemyTrace::MakeTargetData() const
 		TSet<AActor*> HitActors;
 		
 		const FVector Forward = Character->GetActorForwardVector();
-		const FVector StartBase = Character->GetActorLocation() + Forward * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
+		const float StartDistance = Character->GetCapsuleComponent()->GetScaledCapsuleRadius() + TraceStartOffset;
+		const FVector StartBase = Character->GetActorLocation() + Forward * StartDistance;
 
 		const float HalfFanAngle = Angle * 0.5f;
 		const float AngleStep = (NumTraces > 1) ? Angle / (NumTraces - 1) : 0.0f;
@@ -72,7 +73,8 @@ FGameplayAbilityTargetDataHandle ATA_EnemyTrace::MakeTargetData() const
 	{
 		FHitResult HitResult;
 		const FVector Forward = Character->GetActorForwardVector();
-		const FVector Start = Character->GetActorLocation() + Forward * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
+		const float StartDistance = Character->GetCapsuleComponent()->GetScaledCapsuleRadius() + TraceStartOffset;
+		const FVector Start = Character->GetActorLocation() + Forward * StartDistance;
 		const FVector End = Start + Forward * TraceLength;
 
 		bool bTraceResult = UKismetSystemLibrary::SphereTraceSingle(

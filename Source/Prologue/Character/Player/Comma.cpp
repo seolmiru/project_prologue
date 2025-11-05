@@ -399,6 +399,32 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 	CachedMovementInput = MovementVector;
 
+	if (Controller == nullptr)
+	{
+		return;
+	}
+
+	FVector ForwardDirection;
+	FVector RightDirection;
+	
+	const float TargetYaw = TargetCameraRelativeRotation.Yaw;
+	const FRotator YawRotation(0.f, TargetYaw, 0.f);
+
+	ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+	FVector WorldMovementDirection = (ForwardDirection * MovementVector.Y) + (RightDirection * MovementVector.X);
+	WorldMovementDirection.Z = 0.f;
+
+	// 대시 입력 방향
+	if (DashPoint != nullptr)
+	{
+		if (!WorldMovementDirection.IsNearlyZero())
+		{
+			DashPoint->SetDirection(WorldMovementDirection.GetSafeNormal(), false);
+		}
+	}
+
 	if (ASC)
 	{
 		if (ASC->HasMatchingGameplayTag(PrologueGameplayTags::Shared_State_IsAttacking))
@@ -406,41 +432,17 @@ void AComma::Input_Move(const FInputActionValue& InputActionValue)
 			return;
 		}
 	}
-
-	if (Controller != nullptr)
-	{
-		FVector ForwardDirection;
-		FVector RightDirection;
-
-		const float TargetYaw = TargetCameraRelativeRotation.Yaw;
-		const FRotator YawRotation(0.f, TargetYaw, 0.f);
-
-		ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		FVector WorldMovementDirection = (ForwardDirection * MovementVector.Y) + (RightDirection * MovementVector.X);
-		WorldMovementDirection.Z = 0.f;
-
-		// 대시 입력 방향
-		if (DashPoint != nullptr)
-		{
-			if (!WorldMovementDirection.IsNearlyZero())
-			{
-				DashPoint->SetDirection(WorldMovementDirection.GetSafeNormal(), false);
-			}
-		}
 		
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+	// add movement 
+	AddMovementInput(ForwardDirection, MovementVector.Y);
+	AddMovementInput(RightDirection, MovementVector.X);
 
-		if (!bUseCameraRelativeMovement)
+	if (!bUseCameraRelativeMovement)
+	{
+		if (!MovementVector.IsNearlyZero())
 		{
-			if (!MovementVector.IsNearlyZero())
-			{
-				FRotator NewRotation = WorldMovementDirection.Rotation();
-				SetActorRotation(NewRotation);
-			}
+			FRotator NewRotation = WorldMovementDirection.Rotation();
+			SetActorRotation(NewRotation);
 		}
 	}
 }
@@ -671,6 +673,24 @@ void AComma::TriggerDamageEffect(float DamageAmount)
 
 	GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
 	GetWorld()->GetTimerManager().SetTimer(DamageEffectTimerHandle, this, &AComma::UpdateDamageEffect, 0.05f, true);
+}
+
+void AComma::TriggerLowHealth()
+{
+	GetWorld()->GetTimerManager().ClearTimer(DamageEffectTimerHandle);
+	
+	if (DamagePostProcessMID)
+	{
+		DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), LowHealthEffectIntensity);
+	}
+}
+
+void AComma::InitDamageEffect()
+{
+	if (DamagePostProcessMID)
+	{
+		DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), 0.f);
+	}
 }
 
 void AComma::OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount)

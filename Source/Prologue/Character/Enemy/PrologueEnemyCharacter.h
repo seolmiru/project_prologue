@@ -68,11 +68,14 @@ protected:
 	TSubclassOf<UUserWidget> BP_EnemyWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UEnemyWidget> MangoHpBarWidget;	
+	TObjectPtr<UEnemyWidget> BossHpBarWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_MangoWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_ChronosWidget;
+	
 protected:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	bool TryActivateAbilityByTag(FGameplayTag AbilityTagToActivate);

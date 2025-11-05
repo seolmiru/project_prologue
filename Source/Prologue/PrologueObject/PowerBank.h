@@ -8,6 +8,7 @@
 #include "Prologue/UI/Object/PowerBankIconWidget.h"
 #include "PowerBank.generated.h"
 
+class UNiagaraComponent;
 class UTimelineComponent;
 class UBoxComponent;
 
@@ -25,9 +26,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
 	TObjectPtr<UBoxComponent> TriggerVolume;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
 	TObjectPtr<UStaticMeshComponent> PowerBankMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	TObjectPtr<UNiagaraComponent> ActivateNiagara;
+ 	
 	UPROPERTY()
 	TObjectPtr<UTimelineComponent> MaterialTimeline;
 
@@ -51,14 +55,17 @@ protected:
 	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="UI")
 	// TObjectPtr<UWidgetComponent> WidgetComponent;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "UI")
 	TObjectPtr<USceneComponent> AttachPoint;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "UI")
 	TSubclassOf<UPowerBankIconWidget> BP_IconWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UPowerBankIconWidget> IconWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<USoundBase> ActivateSound;
 	
 	/* End Sejin */
 protected:

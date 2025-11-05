@@ -3,6 +3,7 @@
 
 #include "CenterHub.h"
 
+#include "NiagaraComponent.h"
 #include "Prologue/Game/PrologueGameInstance.h"
 
 ACenterHub::ACenterHub()
@@ -11,6 +12,10 @@ ACenterHub::ACenterHub()
 
 	CenterHubMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CenterHubMesh"));
 	RootComponent = CenterHubMesh;
+
+	ActivateNiagara = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ActivateNiagara"));
+	ActivateNiagara->SetupAttachment(RootComponent);
+	ActivateNiagara->SetAutoActivate(false);
 }
 
 void ACenterHub::BeginPlay()
@@ -34,6 +39,19 @@ void ACenterHub::UpdateAppearance(int32 ActivatedCount)
 	if (DynamicMaterial && TextureStates.IsValidIndex(ActivatedCount) && TextureStates[ActivatedCount])
 	{
 		DynamicMaterial->SetTextureParameterValue(TextureParameterName, TextureStates[ActivatedCount]);
+
+		if (ActivatedCount == 3)
+		{
+			ActivateCenterHubNiagara();
+		}
+	}
+}
+
+void ACenterHub::ActivateCenterHubNiagara()
+{
+	if (ActivateNiagara)
+	{
+		ActivateNiagara->Activate();
 	}
 }
 
