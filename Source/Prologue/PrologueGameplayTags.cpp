@@ -51,6 +51,8 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_Boost, "Comma.State.Boost");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_LowHealth, "Comma.State.LowHealth");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_CutScene, "Comma.State.CutScene");
 	
 	/** Comma Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_Sword, "Comma.Event.Sword");

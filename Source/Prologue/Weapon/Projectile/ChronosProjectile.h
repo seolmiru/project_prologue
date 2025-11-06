@@ -6,13 +6,6 @@
 #include "PrologueProjectileBase.h"
 #include "ChronosProjectile.generated.h"
 
-UENUM(BlueprintType)
-enum class EProjectileState : uint8
-{
-	MovingForward,
-	Returning
-};
-
 UCLASS()
 class PROLOGUE_API AChronosProjectile : public APrologueProjectileBase
 {
@@ -20,22 +13,13 @@ class PROLOGUE_API AChronosProjectile : public APrologueProjectileBase
 
 public:
 	AChronosProjectile();
-
+	
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
-	float MaxTravelDistance = 2000.f;
-	
-public:
-	virtual void Tick(float DeltaTime) override;
+	UFUNCTION()
+	virtual void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
-protected:
 	UFUNCTION()
 	virtual void OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-	
-private:
-	FVector StartLocation;
-
-	EProjectileState CurrentState;
 };

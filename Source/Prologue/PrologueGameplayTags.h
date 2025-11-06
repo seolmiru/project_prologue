@@ -51,6 +51,8 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_SpeedBoost);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_LowHealth);
+
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_State_CutScene);
 	
 	/** Comma Event Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Comma_Event_Sword);
