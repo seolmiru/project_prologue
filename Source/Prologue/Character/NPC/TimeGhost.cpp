@@ -6,7 +6,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
-#include "Player/Comma.h"
+#include "Prologue/Character/Player/Comma.h"
 
 ATimeGhost::ATimeGhost()
 {
