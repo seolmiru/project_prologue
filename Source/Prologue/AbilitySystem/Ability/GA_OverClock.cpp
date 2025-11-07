@@ -9,7 +9,6 @@
 #include "Prologue/Character/Enemy/PrologueEnemyCharacter.h"
 #include "Prologue/Character/Player/Comma.h"
 #include "Prologue/Weapon/Projectile/BazierProjectile.h"
-#include "Prologue/Weapon/Projectile/EggBallProjectile.h"
 
 bool UGA_OverClock::bIsOverClockActive = false;
 float UGA_OverClock::OverClockTimeScale = 1.0f;
@@ -132,6 +131,11 @@ void UGA_OverClock::OnOverClockFinished()
 
 void UGA_OverClock::CheckActorsInArea()
 {
+	// 검사할 오브젝트 타입
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypeQuery;
+	ObjectTypeQuery.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel2));
+	ObjectTypeQuery.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel5));
+	
 	// 현재 프레임에서 OverClock 영역 내에 있는 Actor 저장
 	TSet<TWeakObjectPtr<AActor>> ActorsInAreaNow;
 	TArray<AActor*> OverlappingActors;
@@ -141,7 +145,7 @@ void UGA_OverClock::CheckActorsInArea()
 		GetWorld(),
 		CenterLocation,
 		FVector(Radius, Radius, HalfHeight),
-		TArray<TEnumAsByte<EObjectTypeQuery>>(),
+		ObjectTypeQuery,
 		AActor::StaticClass(),
 		TArray<AActor*>(),
 		OverlappingActors
@@ -149,12 +153,10 @@ void UGA_OverClock::CheckActorsInArea()
 
 	for (AActor* Actor : OverlappingActors)
 	{
-		// Sejin
 		APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(Actor);
-		// end Sejin
 
 		// OverClock의 영향을 받을 대상인지 검사
-		if (Enemy || Cast<ABazierProjectile>(Actor) || Cast<AEggBallProjectile>(Actor))
+		if (Enemy || Cast<ABazierProjectile>(Actor) || Cast<APrologueProjectileBase>(Actor))
 		{
 			// 영향을 받고 있지 않은 새로운 Actor일 때 OverClock 효과 적용
 			if (!AffectedActors.Contains(Actor))
@@ -162,13 +164,11 @@ void UGA_OverClock::CheckActorsInArea()
 				Actor->CustomTimeDilation = TimeScale;
 				AffectedActors.Add(Actor);
 
-				// Sejin
 				if (Enemy)
 				{
 					UE_LOG(LogTemp, Log, TEXT("Is Enemy"));
 					Enemy->OnHealthChanged.AddDynamic(this, &UGA_OverClock::OnHitActor);
 				}
-				// end Sejin
 
 				// MaterialInstanceDynamic 생성
 				TArray<UMaterialInstanceDynamic*> MDIs;
@@ -226,13 +226,11 @@ void UGA_OverClock::CheckActorsInArea()
 			}
 		}
 
-		// Sejin
 		APrologueEnemyCharacter* Enemy = Cast<APrologueEnemyCharacter>(ActorPtr);
 		if (Enemy)
 		{
 			Enemy->OnHealthChanged.RemoveDynamic(this, &UGA_OverClock::OnHitActor);
 		}
-		// end Sejin
 
 		AffectedActors.Remove(ActorPtr);
 	}

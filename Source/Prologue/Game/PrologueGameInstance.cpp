@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/Prologue.h"
 #include "Prologue/PrologueObject/CenterHub.h"
+#include "Prologue/UI/PrologueIntroWidget.h"
 
 void UPrologueGameInstance::Init()
 {
@@ -22,6 +23,11 @@ void UPrologueGameInstance::Init()
 		LoadingScreenWidgets.Add(TSoftClassPtr<UUserWidget>(FSoftObjectPath(TEXT("/Game/UI/Widget/WBP_LoadingScreen_Second.WBP_LoadingScreen_Second_C"))));
 	}
 
+	if (IntroAnimationWidgetClass.IsNull())
+	{
+		IntroAnimationWidgetClass = TSoftClassPtr<UPrologueIntroWidget>(FSoftObjectPath(TEXT("/Game/UI/Widget/MainMenu/WBP_IntroAnimation.WBP_IntroAnimation_C")));
+	}
+	
 	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
 	{
 		SaveGameData = Cast<UPrologueSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
@@ -42,6 +48,7 @@ void UPrologueGameInstance::SetHasIntroDialoguePlayed(bool bPlayed)
 {
 	if (SaveGameData)
 	{
+		bHasIntroDialoguePlayed = bPlayed;
 		SaveGameData->bHasIntroDialoguePlayed = bPlayed;
 		UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
 	}
@@ -127,9 +134,35 @@ void UPrologueGameInstance::StartNewGame(const FString& LevelName)
 	InteractedPowerBankIDs.Empty();
 	bHasIntroDialoguePlayed = false;
 
-	UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
+	LevelToLoad = LevelName;
 
-	UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelName), true);
+	const FString FirstStageLevelName = TEXT("1Stage_VillageofTimekeepers");
+
+	if (!HasSeenInitialIntro() && LevelName.Contains(FirstStageLevelName))
+	{
+		UClass* WidgetClass = IntroAnimationWidgetClass.LoadSynchronous();
+		if (WidgetClass)
+		{
+			UPrologueIntroWidget* AnimWidget = CreateWidget<UPrologueIntroWidget>(this, WidgetClass);
+			if (AnimWidget)
+			{
+				AnimWidget->OnIntroFinished.AddDynamic(this, &UPrologueGameInstance::OnIntroAnimationFinished);
+
+				AnimWidget->AddToViewport(100);
+
+				AnimWidget->PlayIntroAnimation();
+			}
+		}
+		else
+		{
+			LOG_SCREEN_R("Failed Load Intro Animation");
+			OpenStage();
+		}
+	}
+	else
+	{
+		OpenStage();
+	}
 }
 
 void UPrologueGameInstance::OnPowerBankActivated(FName PowerBankID)
@@ -145,7 +178,6 @@ void UPrologueGameInstance::OnPowerBankActivated(FName PowerBankID)
 
 	if (WorldCenterHub)
 	{
-		LOG_SCREEN_R("CenterHub is Register");
 		WorldCenterHub->UpdateAppearance(SaveGameData->ActivatedPowerBankCount);
 	}
 	else
@@ -164,6 +196,38 @@ void UPrologueGameInstance::RegisterCenterHub(ACenterHub* Hub)
 	{
 		WorldCenterHub->UpdateAppearance(SaveGameData->ActivatedPowerBankCount);
 	}
+}
+
+bool UPrologueGameInstance::HasSeenInitialIntro() const
+{
+	return SaveGameData ? SaveGameData->bHasSeenInitialIntro : false;
+}
+
+void UPrologueGameInstance::MarkInitialIntroSeen()
+{
+	if (SaveGameData)
+	{
+		SaveGameData->bHasSeenInitialIntro = true;
+	}
+}
+
+void UPrologueGameInstance::OpenStage()
+{
+	if (!LevelToLoad.IsEmpty() && SaveGameData)
+	{
+		UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
+
+		UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelToLoad), true);
+
+		LevelToLoad.Empty();
+	}
+}
+
+void UPrologueGameInstance::OnIntroAnimationFinished()
+{
+	MarkInitialIntroSeen();
+
+	OpenStage();
 }
 
 void UPrologueGameInstance::OnPreLoadMap(const FString& MapName)

@@ -44,4 +44,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "PlayerStats")
 	float SavedCurrency;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
+	bool bHasSeenInitialIntro = false;
 };

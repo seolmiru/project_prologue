@@ -62,6 +62,12 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 			SetDamage(0.f);
 			return;
 		}
+
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Chronos_State_Invincible))
+		{
+			SetDamage(0.f);
+			return;
+		}
 		
 		const float LocalDamage = GetDamage();
 		
@@ -97,6 +103,28 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 	{
 		Data.Target.AddLooseGameplayTag(PrologueGameplayTags::Shared_State_Broken);
 		OnOutOfBrokenGauge.Broadcast();
+	}
+
+	if (GetCurrentHealth() <= 30.f)
+	{
+		if (AActor* TargetActor = Data.Target.GetAvatarActor())
+		{
+			if (AComma* Comma = Cast<AComma>(TargetActor))
+			{
+				Comma->TriggerLowHealth();
+			}
+		}
+	}
+
+	if (GetCurrentHealth() > 30.f)
+	{
+		if (AActor* TargetActor = Data.Target.GetAvatarActor())
+		{
+			if (AComma* Comma = Cast<AComma>(TargetActor))
+			{
+				Comma->InitDamageEffect();
+			}
+		}
 	}
 
 	bOutOfHealth = (GetCurrentHealth() <= 0.0f);

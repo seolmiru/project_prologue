@@ -41,7 +41,7 @@ void UAttackTutorialWidget::NativeConstruct()
 
 void UAttackTutorialWidget::OnAbilityActivated(UGameplayAbility* ActivatedAbility)
 {
-	if (ActivatedAbility->GetAssetTags().HasTag(FGameplayTag::RequestGameplayTag("Comma.Ability.Attack.Sword")))
+	if (ActivatedAbility->GetAssetTags().HasTag(FGameplayTag::RequestGameplayTag(CheckTag)))
 	{
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), TimeDilation);
 
