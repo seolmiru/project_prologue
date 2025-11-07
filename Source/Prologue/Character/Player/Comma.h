@@ -41,6 +41,8 @@ public:
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
+	virtual void FellOutOfWorld(const class UDamageType& dmgType) override;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Combo")
 	int32 CurrentSwordCombo = 0;
 	
@@ -152,6 +154,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWidgetComponent> InteractGuideWidgetComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_RespawnWidget;
+		
+	UPROPERTY()
+	TObjectPtr<UUserWidget> RespawnWidgetInstance;
 	
 	void Input_Move(const FInputActionValue& InputActionValue);
 
@@ -358,6 +366,15 @@ private:
 	bool bUseCameraRelativeMovement = false;
 	
 	void UpdateDamageEffect();
+
+private:
+	FTimerHandle SafeLocationUpdateTimerHandle;
+
+	FVector LastSafeGroundLocation;
+
+	void UpdateLastSafeGroundLocation();
+
+	void FinalizeRespawn();
 	
 	/** Sejin */
 public:

@@ -279,6 +279,16 @@ void AComma::BeginPlay()
 {
 	Super::BeginPlay();
 
+	LastSafeGroundLocation = GetActorLocation();
+
+	GetWorldTimerManager().SetTimer(
+		SafeLocationUpdateTimerHandle,
+		this,
+		&AComma::UpdateLastSafeGroundLocation,
+		1.f,
+		true
+	);
+	
 	/** Sejin */
 
 	if (DashPointClass)
@@ -344,6 +354,8 @@ void AComma::BeginPlay()
 
 void AComma::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	GetWorldTimerManager().ClearTimer(SafeLocationUpdateTimerHandle);
+	
 	if (ASC && SmashAttackSwordTag.IsValid())
 	{
 		ASC->RegisterGameplayTagEvent(SmashAttackSwordTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
@@ -392,6 +404,38 @@ void AComma::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 			}
 		}
 	}
+}
+
+void AComma::FellOutOfWorld(const class UDamageType& dmgType)
+{
+	LOG_SCREEN("Warning : FellOutOfWorld");
+	
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->StopMovementImmediately();
+		GetCharacterMovement()->SetMovementMode(MOVE_None);
+	}
+
+	if (BP_RespawnWidget && !RespawnWidgetInstance)
+	{
+		RespawnWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), BP_RespawnWidget);
+		if (RespawnWidgetInstance)
+		{
+			RespawnWidgetInstance->AddToViewport(100);
+		}
+	}
+
+	FVector RespawnLocation = LastSafeGroundLocation + FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	TeleportTo(RespawnLocation, GetActorRotation(), false, true);
+
+	FTimerHandle RespawnTimerHandle;
+	GetWorldTimerManager().SetTimer(
+		RespawnTimerHandle,
+		this,
+		&AComma::FinalizeRespawn,
+		1.5f,
+		false
+	);
 }
 
 void AComma::Input_Move(const FInputActionValue& InputActionValue)
@@ -895,6 +939,29 @@ void AComma::UpdateDamageEffect()
 
 	float CurrentIntensity = DamageEffectIntensity * (5.f - Alpha);
 	DamagePostProcessMID->SetScalarParameterValue(FName("DamageIntensity"), CurrentIntensity);
+}
+
+void AComma::UpdateLastSafeGroundLocation()
+{
+	if (GetCharacterMovement() && GetCharacterMovement()->IsMovingOnGround())
+	{
+		LastSafeGroundLocation = GetActorLocation();
+	}
+}
+
+void AComma::FinalizeRespawn()
+{
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		GetCharacterMovement()->Velocity = FVector::ZeroVector;
+	}
+
+	if (RespawnWidgetInstance)
+	{
+		RespawnWidgetInstance->RemoveFromParent();
+		RespawnWidgetInstance = nullptr;
+	}
 }
 
 APlayerDashPoint* AComma::GetDashPoint() const
