@@ -120,6 +120,7 @@ void AExplodingMangoProjectile::BeginPlay()
 	if (ExplosionEffect)
 	{
 		ExplosionEffectComponent->SetAsset(ExplosionEffect);
+		ExplosionEffectComponent->OnSystemFinished.AddDynamic(this, &AExplodingMangoProjectile::OnExplosionEffectFinished);
 	}
 
 	if (ProjectileEffect)
@@ -254,16 +255,16 @@ void AExplodingMangoProjectile::Explode()
 
 	if (!TargetActor)
 	{
-		Deactivate();
-		MyPool->Return(this);
+		//Deactivate();
+		//MyPool->Return(this);
 		return;
 	}
 
 	const float DistSq = FVector::DistSquared(TargetActor->GetActorLocation(), GetActorLocation());
 	if (DistSq > FMath::Square(ExplosionRadius))
 	{
-		Deactivate();
-		MyPool->Return(this);
+		//Deactivate();
+		//MyPool->Return(this);
 		return;
 	}
 
@@ -290,7 +291,12 @@ void AExplodingMangoProjectile::Explode()
 		}
 	}
 
+	//Deactivate();
+	//MyPool->Return(this);
+}
+
+void AExplodingMangoProjectile::OnExplosionEffectFinished(UNiagaraComponent* Niagara)
+{
 	Deactivate();
-	// Destroy();
 	MyPool->Return(this);
 }

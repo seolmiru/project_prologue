@@ -42,6 +42,8 @@ protected:
 	
 	void Explode();
 
+	void OnExplosionEffectFinished(UNiagaraComponent* Niagara);
+
 protected:
 	float ElapsedTime = 0.f;
 
