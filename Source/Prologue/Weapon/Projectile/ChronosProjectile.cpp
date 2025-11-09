@@ -34,6 +34,7 @@ void AChronosProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	ProjectileCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 }
 
 void AChronosProjectile::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
@@ -88,8 +89,6 @@ void AChronosProjectile::OnProjectileBeginOverlap(UPrimitiveComponent* Overlappe
 				//TargetASC->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_EnemyHit, CueParams);
 			}
 		}
-
-		Destroy();
 	}
 }
 

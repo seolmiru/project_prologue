@@ -85,12 +85,10 @@ void AEggBallProjectile::OnProjectileBeginOverlap(UPrimitiveComponent* Overlappe
 
 			// 체력과 강인도를 감소시키는 Effect 적용
 			FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(DamageEffect, 1.f, EffectContext);
-			FGameplayEffectSpecHandle HitReactSpecHandle = SourceASC->MakeOutgoingSpec(ToughnessDamageEffect, 1.f, EffectContext);
 			
 			if (SpecHandle.IsValid())
 			{
 				SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data, TargetASC);
-				SourceASC->ApplyGameplayEffectSpecToTarget(*HitReactSpecHandle.Data, TargetASC);
 
 				FGameplayCueParameters CueParams;
 				CueParams.EffectContext = EffectContext;

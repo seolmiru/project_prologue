@@ -35,7 +35,4 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile|GAS")
 	TSubclassOf<UGameplayEffect> DamageEffect;
-
-	UPROPERTY(EditAnywhere, Category = "GAS")
-	TSubclassOf<UGameplayEffect> ToughnessDamageEffect;
 };
