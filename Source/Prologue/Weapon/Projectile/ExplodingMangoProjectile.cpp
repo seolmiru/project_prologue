@@ -35,6 +35,8 @@ AExplodingMangoProjectile::AExplodingMangoProjectile()
 	ProjectileEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ProjectileEffectComponent"));
 	ProjectileEffectComponent->SetupAttachment(RootComponent);
 	ProjectileEffectComponent->SetAutoActivate(false);
+
+	ExplosionEffectComponent->OnSystemFinished.AddDynamic(this, &AExplodingMangoProjectile::OnExplosionEffectFinished);
 	
 	ExplosionRadius = 400.f;
 	TimeToExplode = 3.f;
@@ -51,7 +53,6 @@ void AExplodingMangoProjectile::SetPoolRef(Pool<AExplodingMangoProjectile>* Pool
 
 void AExplodingMangoProjectile::Active(FVector Location, FRotator Rotation)
 {
-	ElapsedTime = 0.f;
 	bHasExploded = false;
 
 	SetActorHiddenInGame(false);
@@ -76,10 +77,13 @@ void AExplodingMangoProjectile::Active(FVector Location, FRotator Rotation)
 	}
 
 	GetWorldTimerManager().ClearTimer(ExplosionTimerHandle);
+	GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &AExplodingMangoProjectile::Explode, TimeToExplode, false);
 }
 
 void AExplodingMangoProjectile::Deactivate()
 {
+	LOG_SCREEN_R("DEACTIVATE");
+	
 	GetWorldTimerManager().ClearTimer(ExplosionTimerHandle);
 
 	ProjectileMovement->StopMovementImmediately();
@@ -97,6 +101,7 @@ void AExplodingMangoProjectile::Deactivate()
 	if (ExplosionEffectComponent)
 	{
 		ExplosionEffectComponent->Deactivate();
+		LOG_SCREEN_R("DEACTIVATE EXPLODE");
 	}
 
 	if (ProjectileEffectComponent)
@@ -108,7 +113,6 @@ void AExplodingMangoProjectile::Deactivate()
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
 
-	ElapsedTime = 0.f;
 	bHasExploded = false;
 	TargetActor = nullptr;
 }
@@ -116,33 +120,11 @@ void AExplodingMangoProjectile::Deactivate()
 void AExplodingMangoProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (ExplosionEffect)
-	{
-		ExplosionEffectComponent->SetAsset(ExplosionEffect);
-		ExplosionEffectComponent->OnSystemFinished.AddDynamic(this, &AExplodingMangoProjectile::OnExplosionEffectFinished);
-	}
-
-	if (ProjectileEffect)
-	{
-		ProjectileEffectComponent->SetAsset(ProjectileEffect);
-	}
 }
 
 void AExplodingMangoProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	ElapsedTime += DeltaTime;
-
-	if (ElapsedTime > TimeToExplode)
-	{
-		Explode();
-		// Destroy();
-		// MyPool->Return(this);
-		//SetActorTickEnabled(false);
-		return;
-	}
 }
 
 void AExplodingMangoProjectile::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
@@ -168,8 +150,6 @@ void AExplodingMangoProjectile::StickAndExplosion(const FHitResult& Hit)
 	ProjectileCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	ProjectileMovement->StopMovementImmediately();
-	
-	ElapsedTime = 0.f;
 
 	FVector ProjectileLocation = GetActorLocation();
 
@@ -192,8 +172,10 @@ void AExplodingMangoProjectile::StickAndExplosion(const FHitResult& Hit)
 		ProjectileEffectComponent->Activate(true);
 	}
 
-	GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &AExplodingMangoProjectile::Explode, TimeToExplode,
-	                                false);
+	
+	GetWorldTimerManager().ClearTimer(ExplosionTimerHandle);
+
+	GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &AExplodingMangoProjectile::Explode, TimeToExplode, false);
 }
 
 void AExplodingMangoProjectile::Explode()
@@ -253,50 +235,47 @@ void AExplodingMangoProjectile::Explode()
 		);
 	}
 
-	if (!TargetActor)
+	if (TargetActor)
 	{
-		//Deactivate();
-		//MyPool->Return(this);
-		return;
-	}
-
-	const float DistSq = FVector::DistSquared(TargetActor->GetActorLocation(), GetActorLocation());
-	if (DistSq > FMath::Square(ExplosionRadius))
-	{
-		//Deactivate();
-		//MyPool->Return(this);
-		return;
-	}
-
-	if (TargetActor->Implements<UAbilitySystemInterface>() && DamageEffect)
-	{
-		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
-
-		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
-
-		if (TargetASC)
+		const float DistSq = FVector::DistSquared(TargetActor->GetActorLocation(), GetActorLocation());
+		if (DistSq <= FMath::Square(ExplosionRadius))
 		{
-			FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
-			EffectContext.AddSourceObject(this);
-
-			FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(DamageEffect, 1.f, EffectContext);
-
-			if (SpecHandle.IsValid())
+			if (TargetActor->Implements<UAbilitySystemInterface>() && DamageEffect)
 			{
-				SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data, TargetASC);
+				UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 
-				FGameplayCueParameters CueParams;
-				CueParams.EffectContext = EffectContext;
+				UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
+
+				if (TargetASC)
+				{
+					FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
+					EffectContext.AddSourceObject(this);
+
+					FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(DamageEffect, 1.f, EffectContext);
+
+					if (SpecHandle.IsValid())
+					{
+						SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data, TargetASC);
+
+						FGameplayCueParameters CueParams;
+						CueParams.EffectContext = EffectContext;
+					}
+				}
 			}
 		}
 	}
-
-	//Deactivate();
-	//MyPool->Return(this);
 }
 
-void AExplodingMangoProjectile::OnExplosionEffectFinished(UNiagaraComponent* Niagara)
+void AExplodingMangoProjectile::OnExplosionEffectFinished(UNiagaraComponent* NiagaraComponent)
 {
-	Deactivate();
-	MyPool->Return(this);
+	if (!bHasExploded)
+	{
+		return;
+	}
+
+	if (MyPool)
+	{
+		Deactivate();
+		MyPool->Return(this);
+	}
 }

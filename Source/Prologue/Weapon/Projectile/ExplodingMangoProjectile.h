@@ -42,11 +42,10 @@ protected:
 	
 	void Explode();
 
-	void OnExplosionEffectFinished(UNiagaraComponent* Niagara);
+	UFUNCTION()
+	void OnExplosionEffectFinished(UNiagaraComponent* NiagaraComponent);
 
 protected:
-	float ElapsedTime = 0.f;
-
 	bool bHasExploded = false;
 
 	FTimerHandle ExplosionTimerHandle;
@@ -57,15 +56,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion")
 	float TimeToExplode = 3.f;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion")
 	bool bShowDebug = true;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|Effect")
-	TObjectPtr<UNiagaraSystem> ExplosionEffect;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|Effect")
-	TObjectPtr<UNiagaraSystem> ProjectileEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion|Effect")
 	TObjectPtr<UNiagaraComponent> ExplosionEffectComponent;
