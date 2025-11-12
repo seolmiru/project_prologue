@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "TimeGhost.generated.h"
 
+class UTimeGhostChat;
 class UCapsuleComponent;
 class UWidgetComponent;
 class UBoxComponent;
@@ -34,6 +35,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UWidgetComponent> GhostChatBoxWidgetComponent;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UTimeGhostChat> BP_GhostChatWidget;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText InstanceMessage;
+	
 protected:
 	UFUNCTION(BlueprintCallable)
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

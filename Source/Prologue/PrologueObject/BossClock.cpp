@@ -19,7 +19,6 @@ ABossClock::ABossClock()
 	ClockCollision->SetupAttachment(ClockHandRoot);
 	ClockCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	ClockCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
-	ClockCollision->bHiddenInGame = false;
 
 	ClockHandNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ClockHandNiagaraComponent"));
 	ClockHandNiagaraComponent->SetupAttachment(ClockCollision);
@@ -30,6 +29,8 @@ void ABossClock::BeginPlay()
 	Super::BeginPlay();
 
 	ClockCollision->OnComponentBeginOverlap.AddDynamic(this, &ABossClock::OnBoxOverlap);
+
+	GetWorld()->GetTimerManager().SetTimer(ClockLifeTimeHandle, this, &ABossClock::BossClockFinished, ClockLifeTime, false);
 }
 
 void ABossClock::Tick(float DeltaTime)
@@ -43,8 +44,15 @@ void ABossClock::Tick(float DeltaTime)
 	AddActorLocalRotation(DeltaRotation);
 }
 
+void ABossClock::BossClockFinished()
+{
+	GetWorld()->GetTimerManager().ClearTimer(ClockLifeTimeHandle);
+
+	Destroy();
+}
+
 void ABossClock::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor == GetInstigator() || !DamageEffectClass)
 	{

@@ -17,6 +17,9 @@ class PROLOGUE_API ABossClock : public AActor
 
 public:
 	ABossClock();
+
+	UFUNCTION()
+	void OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -45,6 +48,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Clock|Time")
 	float DamageInterval = 1.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Clock|Time")
+	float ClockLifeTime = 5.f;
+
+	FTimerHandle ClockLifeTimeHandle;
+
+protected:
 	UFUNCTION()
-	void OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void BossClockFinished();
 };

@@ -83,6 +83,9 @@ void UGA_OverClock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	// OverClock Niagara 생성
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_OverClock);
+
+	// OverClock Sound 재생
+	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_OverClockSound);
 }
 
 void UGA_OverClock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -161,7 +164,7 @@ void UGA_OverClock::CheckActorsInArea()
 			// 영향을 받고 있지 않은 새로운 Actor일 때 OverClock 효과 적용
 			if (!AffectedActors.Contains(Actor))
 			{
-				Actor->CustomTimeDilation = TimeScale;
+				Actor->CustomTimeDilation = 0.f;
 				AffectedActors.Add(Actor);
 
 				if (Enemy)
@@ -195,6 +198,21 @@ void UGA_OverClock::CheckActorsInArea()
 				if (MDIs.Num() > 0)
 				{
 					AffectedActorMaterial.Add(Actor, MDIs);
+				}
+			}
+			// OverClock 영역 내에 있는 Actor들의 시간 점진적으로 복구
+			else
+			{
+				if (Actor->CustomTimeDilation < 1.f)
+				{
+					float NewTimeDilation = FMath::FInterpTo(
+						Actor->CustomTimeDilation,
+						1.f,
+						CheckInterval,
+						TimeRestoreSpeed
+					);
+
+					Actor->CustomTimeDilation = NewTimeDilation;
 				}
 			}
 

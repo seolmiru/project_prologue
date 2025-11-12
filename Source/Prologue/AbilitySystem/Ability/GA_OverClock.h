@@ -53,6 +53,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "OverClock")
 	float CheckInterval = 0.1f;
 
+	UPROPERTY(EditAnywhere, Category = "OverClock")
+	float TimeRestoreSpeed = 1.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
 	bool bShowDebug = true;
 	

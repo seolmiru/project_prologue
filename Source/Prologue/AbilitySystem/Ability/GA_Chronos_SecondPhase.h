@@ -20,4 +20,7 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TSubclassOf<UGameplayEffect> InvincibleEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
+	TSubclassOf<UGameplayEffect> PhaseEffect;
 };

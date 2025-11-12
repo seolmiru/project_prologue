@@ -15,10 +15,30 @@ void AClockwork::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	const float PitchValue = RotationSpeed * DeltaTime;
+	if (RotationAxis == ERotationAxis::None)
+	{
+		return;
+	}
 
-	const FRotator DeltaRotation = FRotator(PitchValue, 0.f, 0.f);
+	const float AxisValue = RotationSpeed * DeltaTime;
 
+	FRotator DeltaRotation = FRotator::ZeroRotator;
+
+	switch (RotationAxis)
+	{
+		case ERotationAxis::Pitch:
+			DeltaRotation.Pitch = AxisValue;
+			break;
+		case ERotationAxis::Yaw:
+			DeltaRotation.Yaw = AxisValue;
+			break;
+		case ERotationAxis::Roll:
+			DeltaRotation.Roll = AxisValue;
+			break;
+		default:
+			break;
+	}
+	
 	AddActorLocalRotation(DeltaRotation);
 }
 

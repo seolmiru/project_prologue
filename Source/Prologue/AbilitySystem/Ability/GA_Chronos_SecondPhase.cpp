@@ -16,4 +16,10 @@ void UGA_Chronos_SecondPhase::ActivateAbility(const FGameplayAbilitySpecHandle H
 	InvincibleEffectContextHandle.AddSourceObject(this);
 	FGameplayEffectSpecHandle InvincibleEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(InvincibleEffect, 0.f, InvincibleEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*InvincibleEffectSpecHandle.Data.Get());
+
+	// Phase Effect
+	FGameplayEffectContextHandle PhaseEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	PhaseEffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle PhaseEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(PhaseEffect, 0.f, PhaseEffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*PhaseEffectSpecHandle.Data.Get());
 }

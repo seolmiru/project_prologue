@@ -97,6 +97,8 @@ namespace PrologueGameplayTags
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_OverClock);
 
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_OverClockSound);
+	
 	/** Event Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_AttackHitCheck);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_SecondAttackHitCheck);
@@ -148,6 +150,9 @@ namespace PrologueGameplayTags
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Event_SummonClock);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Event_AttackHitCheck);
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Event_SpawnSwordAura);
+
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_Event_HideWeapon);
 	
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_State_SecondPhase);
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chronos_State_Invincible);
