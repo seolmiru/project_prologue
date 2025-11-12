@@ -39,29 +39,32 @@ public:
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	UImage* HourHand;
+	TObjectPtr<UImage> HourHand;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* MinuteHand;
+	TObjectPtr<UImage> MinuteHand;
 	
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* SpeakerNameText;
+	TObjectPtr<UTextBlock> SpeakerNameText;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* DialogueText;
+	TObjectPtr<UTextBlock> DialogueText;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* DialogueBackground;
+	TObjectPtr<UImage> DialogueBackground;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* ContinueText;
+	TObjectPtr<UTextBlock> ContinueText;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> DialogueCutScene;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	UDataTable* DialogueDataTable;
+	TObjectPtr<UDataTable> DialogueDataTable;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FName CurrentDialogueID;
-
+	
 	UPROPERTY()
 	TObjectPtr<UAudioComponent> CurrentSpeakerVoice;
 	

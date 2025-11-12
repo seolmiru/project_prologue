@@ -27,6 +27,11 @@ void UDialogueWidget::NativeConstruct()
 	{
 		MinuteHand->SetVisibility(ESlateVisibility::Hidden);
 	}
+
+	if (DialogueCutScene)
+	{
+		DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
+	}
 	
 	SetVisibility(ESlateVisibility::Collapsed);
 }
@@ -119,6 +124,11 @@ void UDialogueWidget::EndDialogue()
 	GetWorld()->GetTimerManager().ClearTimer(TypewriterTimerHandle);
 
 	StopCurrentSound();
+
+	if (DialogueCutScene)
+	{
+		DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
+	}
 	
 	SetVisibility(ESlateVisibility::Collapsed);
 
@@ -130,6 +140,21 @@ void UDialogueWidget::EndDialogue()
 void UDialogueWidget::SetCurrentDialogue(const FDialogueData& DialogueData)
 {
 	StopCurrentSound();
+
+	if (DialogueCutScene)
+	{
+		UTexture2D* ImageToDisplay = DialogueData.CutSceneImage.LoadSynchronous();
+
+		if (ImageToDisplay)
+		{
+			DialogueCutScene->SetBrushFromTexture(ImageToDisplay);
+			DialogueCutScene->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 	
 	if (SpeakerNameText)
 	{
