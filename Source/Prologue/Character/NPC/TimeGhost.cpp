@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Prologue/Character/Player/Comma.h"
+#include "Prologue/UI/NPC/TimeGhostChat.h"
 
 ATimeGhost::ATimeGhost()
 {
@@ -39,6 +40,16 @@ void ATimeGhost::BeginPlay()
 
 	TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ATimeGhost::OnOverlapBegin);
 	TriggerVolume->OnComponentEndOverlap.AddDynamic(this, &ATimeGhost::OnOverlapEnd);
+
+	if (BP_GhostChatWidget)
+	{
+		GhostChatBoxWidgetComponent->SetWidgetClass(BP_GhostChatWidget);
+
+		if (UTimeGhostChat* ChatWidget = Cast<UTimeGhostChat>(GhostChatBoxWidgetComponent->GetUserWidgetObject()))
+		{
+			ChatWidget->SetChatMessage(InstanceMessage);
+		}
+	}
 }
 
 void ATimeGhost::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,

@@ -6,6 +6,15 @@
 #include "GameFramework/Actor.h"
 #include "Clockwork.generated.h"
 
+UENUM(BlueprintType)
+enum class ERotationAxis : uint8
+{
+	None UMETA(DisplayName  = "None"),
+	Pitch UMETA(DisplayName  = "Pitch"),
+	Yaw UMETA(DisplayName  = "Yaw"),
+	Roll UMETA(DisplayName  = "Roll")
+};
+
 UCLASS()
 class PROLOGUE_API AClockwork : public AActor
 {
@@ -22,4 +31,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float RotationSpeed = -30.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	ERotationAxis RotationAxis = ERotationAxis::Pitch;	
 };
