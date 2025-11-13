@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/Prologue.h"
+#include "Prologue/Character/Player/DialogueManager.h"
 #include "Prologue/PrologueObject/CenterHub.h"
 #include "Prologue/UI/PrologueIntroWidget.h"
 
@@ -41,6 +42,7 @@ void UPrologueGameInstance::Init()
 	{
 		PlayedTriggerIDs = TSet<FName>(SaveGameData->PlayedTriggerID);
 		InteractedPowerBankIDs = TSet<FName>(SaveGameData->InteractedPowerBankID);
+		DestroyedAI_IDs = TSet<FName>(SaveGameData->DestroyedAI_IDs);
 	}
 }
 
@@ -132,8 +134,10 @@ void UPrologueGameInstance::StartNewGame(const FString& LevelName)
 
 	PlayedTriggerIDs.Empty();
 	InteractedPowerBankIDs.Empty();
+	DestroyedAI_IDs.Empty();
+	
 	bHasIntroDialoguePlayed = false;
-
+	
 	LevelToLoad = LevelName;
 
 	const FString FirstStageLevelName = TEXT("1Stage_VillageofTimekeepers");
@@ -211,6 +215,27 @@ void UPrologueGameInstance::MarkInitialIntroSeen()
 	}
 }
 
+void UPrologueGameInstance::TriggerDialogueCutScene(FName TriggerID, FName DialogueID)
+{
+	if (HasTriggerPlayed(TriggerID))
+	{
+		return;
+	}
+
+	MarkTriggerPlayed(TriggerID);
+
+	ADialogueManager* DialogueManager = Cast<ADialogueManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ADialogueManager::StaticClass()));
+
+	if (DialogueManager)
+	{
+		DialogueManager->StartDialogue(DialogueID);
+	}
+	else
+	{
+		LOG_SCREEN_R("Dialogue CutScene : Failed to find ADialogueManager");
+	}
+}
+
 void UPrologueGameInstance::OpenStage()
 {
 	if (!LevelToLoad.IsEmpty() && SaveGameData)
@@ -282,4 +307,22 @@ TSharedPtr<SWidget> UPrologueGameInstance::CreateRandomLoadingWidget()
 	}
 
 	return FLoadingScreenAttributes::NewTestLoadingScreenWidget();
+}
+
+bool UPrologueGameInstance::HasAIDBeenDestroyed(FName AI_ID) const
+{
+	return DestroyedAI_IDs.Contains(AI_ID);
+}
+
+void UPrologueGameInstance::MarkAIDestroyed(FName AI_ID)
+{
+	if (!SaveGameData || HasAIDBeenDestroyed(AI_ID))
+	{
+		return;
+	}
+
+	DestroyedAI_IDs.Add(AI_ID);
+	SaveGameData->DestroyedAI_IDs.Add(AI_ID);
+
+	UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
 }

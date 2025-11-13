@@ -67,7 +67,10 @@ public:
 	bool HasSeenInitialIntro() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Save System")
-	void MarkInitialIntroSeen();	
+	void MarkInitialIntroSeen();
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void TriggerDialogueCutScene(FName TriggerID, FName DialogueID);	
 	
 protected:
 	void OnPreLoadMap(const FString& MapName);
@@ -104,4 +107,13 @@ private:
 	TObjectPtr<ACenterHub> WorldCenterHub;
 
 	FString LevelToLoad;
+
+	TSet<FName> DestroyedAI_IDs;
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	bool HasAIDBeenDestroyed(FName AI_ID) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void MarkAIDestroyed(FName AI_ID);
 };

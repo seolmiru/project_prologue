@@ -27,6 +27,11 @@ void UDialogueWidget::NativeConstruct()
 	{
 		MinuteHand->SetVisibility(ESlateVisibility::Hidden);
 	}
+
+	if (DialogueCutScene)
+	{
+		DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
+	}
 	
 	SetVisibility(ESlateVisibility::Collapsed);
 }
@@ -119,6 +124,11 @@ void UDialogueWidget::EndDialogue()
 	GetWorld()->GetTimerManager().ClearTimer(TypewriterTimerHandle);
 
 	StopCurrentSound();
+
+	if (DialogueCutScene)
+	{
+		DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
+	}
 	
 	SetVisibility(ESlateVisibility::Collapsed);
 
@@ -130,12 +140,27 @@ void UDialogueWidget::EndDialogue()
 void UDialogueWidget::SetCurrentDialogue(const FDialogueData& DialogueData)
 {
 	StopCurrentSound();
+
+	if (DialogueCutScene)
+	{
+		UTexture2D* ImageToDisplay = DialogueData.CutSceneImage.LoadSynchronous();
+
+		if (ImageToDisplay)
+		{
+			DialogueCutScene->SetBrushFromTexture(ImageToDisplay);
+			DialogueCutScene->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 	
 	if (SpeakerNameText)
 	{
 		SpeakerNameText->SetText(FText::FromString(DialogueData.SpeakerName));
 
-		UpdateCharacterIconStates(DialogueData.SpeakerName);
+		UpdateCharacterIconStates(DialogueData.SpeakerName, DialogueData.EmotionID);
 		
 		FullDialogueText = DialogueData.DialogueText.ToString();
 
@@ -192,19 +217,51 @@ void UDialogueWidget::CompleteTypewriter()
 	CurrentCharIndex = FullDialogueText.Len();
 }
 
-void UDialogueWidget::UpdateCharacterIconStates(const FString& SpeakerName)
+void UDialogueWidget::UpdateCharacterIconStates(const FString& SpeakerName, FName EmotionID)
 {
+	const FSpeakerPortraitSet* FoundSet = SpeakerPortraitSets.FindByPredicate(
+		[&SpeakerName](const FSpeakerPortraitSet& Set)
+	{
+		return Set.SpeakerName == SpeakerName;	
+	});
+
+	UTexture2D* PortraitToDisplay = nullptr;
+
+	if (FoundSet)
+	{
+		const TSoftObjectPtr<UTexture2D>* FoundEmotionTexture = FoundSet->EmotionPortraits.Find(EmotionID);
+
+		if (FoundEmotionTexture && !FoundEmotionTexture->IsNull())
+		{
+			PortraitToDisplay = FoundEmotionTexture->LoadSynchronous();
+		}
+
+		if (!PortraitToDisplay && !FoundSet->DefaultPortrait.IsNull())
+		{
+			PortraitToDisplay = FoundSet->DefaultPortrait.LoadSynchronous();
+		}
+	}
+	
 	bool bIsLeftSpeaker = SpeakerName.Contains(TEXT("분침"));
 
-	if (bIsLeftSpeaker)
+	UImage* TargetImageWidget = bIsLeftSpeaker ? MinuteHand : HourHand;
+	UImage* OtherImageWidget = bIsLeftSpeaker ? HourHand : MinuteHand;
+
+	if (TargetImageWidget && OtherImageWidget)
 	{
-		MinuteHand->SetVisibility(ESlateVisibility::Visible);
-		HourHand->SetVisibility(ESlateVisibility::Hidden);
-	}
-	else
-	{
-		MinuteHand->SetVisibility(ESlateVisibility::Hidden);
-		HourHand->SetVisibility(ESlateVisibility::Visible);
+		if (PortraitToDisplay)
+		{
+			TargetImageWidget->SetBrushFromTexture(PortraitToDisplay);
+			TargetImageWidget->SetVisibility(ESlateVisibility::Visible);
+			OtherImageWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+		else
+		{
+			TargetImageWidget->SetVisibility(ESlateVisibility::Hidden);
+			OtherImageWidget->SetVisibility(ESlateVisibility::Hidden);
+
+			LOG_SCREEN_R("Portrait not found");
+		}
 	}
 }
 

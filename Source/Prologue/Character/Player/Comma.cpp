@@ -438,6 +438,14 @@ void AComma::FellOutOfWorld(const class UDamageType& dmgType)
 	);
 }
 
+void AComma::DisableInput(class APlayerController* PlayerController)
+{
+	Super::DisableInput(PlayerController);
+
+	bInputDash = false;
+	CachedMovementInput = FVector2D::ZeroVector;
+}
+
 void AComma::Input_Move(const FInputActionValue& InputActionValue)
 {
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();

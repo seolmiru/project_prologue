@@ -11,6 +11,21 @@ class UImage;
 class UTextBlock;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueCompleted);
 
+USTRUCT(BlueprintType)
+struct FSpeakerPortraitSet
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	FString SpeakerName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	TMap<FName, TSoftObjectPtr<UTexture2D>> EmotionPortraits;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	TSoftObjectPtr<UTexture2D> DefaultPortrait;
+};
+
 /**
  * 
  */
@@ -39,29 +54,35 @@ public:
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	UImage* HourHand;
+	TObjectPtr<UImage> HourHand;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* MinuteHand;
+	TObjectPtr<UImage> MinuteHand;
 	
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* SpeakerNameText;
+	TObjectPtr<UTextBlock> SpeakerNameText;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* DialogueText;
+	TObjectPtr<UTextBlock> DialogueText;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* DialogueBackground;
+	TObjectPtr<UImage> DialogueBackground;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* ContinueText;
+	TObjectPtr<UTextBlock> ContinueText;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> DialogueCutScene;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	TArray<FSpeakerPortraitSet> SpeakerPortraitSets;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	UDataTable* DialogueDataTable;
+	TObjectPtr<UDataTable> DialogueDataTable;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FName CurrentDialogueID;
-
+	
 	UPROPERTY()
 	TObjectPtr<UAudioComponent> CurrentSpeakerVoice;
 	
@@ -81,7 +102,7 @@ protected:
 	void CompleteTypewriter();
 
 private:
-	void UpdateCharacterIconStates(const FString& SpeakerName);
+	void UpdateCharacterIconStates(const FString& SpeakerName, FName EmotionID);
 
 	void StopCurrentSound();
 };

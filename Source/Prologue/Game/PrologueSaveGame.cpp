@@ -16,6 +16,8 @@ void UPrologueSaveGame::ResetToDefault()
 	InteractedPowerBankID.Empty();
 	ActivatedPowerBankCount = 0;
 
+	DestroyedAI_IDs.Empty();
+
 	SavedHealth = 100.f;
 	SavedCurrency = 0.f;
 }

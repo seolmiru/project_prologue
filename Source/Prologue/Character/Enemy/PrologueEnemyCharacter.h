@@ -83,6 +83,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	bool TryActivateRandomAbilityWithWeights(const TArray<FWeightedAbilityInfo>& WeightedAbilities);
 
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void MarkSelfAsDestroyed();
+	
 	virtual void HealthAttributeChanged(const FOnAttributeChangeData& Data);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")

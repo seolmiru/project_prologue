@@ -10,10 +10,12 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Prologue/Component/EnemyWidgetComponent.h"
 #include "Prologue/Controller/PrologueAIController.h"
+#include "Prologue/Game/PrologueGameInstance.h"
 #include "Prologue/UI/Enemy/EnemyWidget.h"
 
 APrologueEnemyCharacter::APrologueEnemyCharacter()
@@ -52,6 +54,31 @@ APrologueEnemyCharacter::~APrologueEnemyCharacter()
 
 void APrologueEnemyCharacter::BeginPlay()
 {
+	UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	if (GameInstance)
+	{
+		const FName MyID = GetFName();
+
+		if (GameInstance->HasAIDBeenDestroyed(MyID))
+		{
+			if (AController* C = GetController())
+			{
+				C->UnPossess();
+				C->Destroy();
+			}
+
+			SetActorHiddenInGame(true);
+
+			SetActorEnableCollision(false);
+
+			SetActorTickEnabled(false);
+				
+			Destroy();
+			return;
+		}
+	}
+	
 	Super::BeginPlay();
 
 	// 전투 시작 전에는 체력바를 안 보이게 설정
@@ -227,6 +254,18 @@ bool APrologueEnemyCharacter::TryActivateRandomAbilityWithWeights(const TArray<F
 	}
 
 	return false;
+}
+
+void APrologueEnemyCharacter::MarkSelfAsDestroyed()
+{
+	UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	if (GameInstance)
+	{
+		const FName MyID = GetFName();
+
+		GameInstance->MarkAIDestroyed(MyID);
+	}
 }
 
 void APrologueEnemyCharacter::HealthAttributeChanged(const FOnAttributeChangeData& Data)
