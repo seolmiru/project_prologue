@@ -69,9 +69,6 @@ protected:
 	TObjectPtr<UImage> DialogueBackground;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> ContinueText;
-
-	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> DialogueCutScene;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
