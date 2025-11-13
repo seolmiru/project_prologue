@@ -67,7 +67,10 @@ public:
 	bool HasSeenInitialIntro() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Save System")
-	void MarkInitialIntroSeen();	
+	void MarkInitialIntroSeen();
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void TriggerDialogueCutScene(FName TriggerID, FName DialogueID);	
 	
 protected:
 	void OnPreLoadMap(const FString& MapName);

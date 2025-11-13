@@ -11,6 +11,21 @@ class UImage;
 class UTextBlock;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueCompleted);
 
+USTRUCT(BlueprintType)
+struct FSpeakerPortraitSet
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	FString SpeakerName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	TMap<FName, TSoftObjectPtr<UTexture2D>> EmotionPortraits;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	TSoftObjectPtr<UTexture2D> DefaultPortrait;
+};
+
 /**
  * 
  */
@@ -58,6 +73,9 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> DialogueCutScene;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	TArray<FSpeakerPortraitSet> SpeakerPortraitSets;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	TObjectPtr<UDataTable> DialogueDataTable;
@@ -84,7 +102,7 @@ protected:
 	void CompleteTypewriter();
 
 private:
-	void UpdateCharacterIconStates(const FString& SpeakerName);
+	void UpdateCharacterIconStates(const FString& SpeakerName, FName EmotionID);
 
 	void StopCurrentSound();
 };

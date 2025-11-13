@@ -39,6 +39,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	FName NextDialogueID;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialouge")
+	FName EmotionID;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialouge|Voice")
 	TSoftObjectPtr<USoundBase> SpeakerVoice;
 

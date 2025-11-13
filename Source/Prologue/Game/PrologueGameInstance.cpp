@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Prologue/Prologue.h"
+#include "Prologue/Character/Player/DialogueManager.h"
 #include "Prologue/PrologueObject/CenterHub.h"
 #include "Prologue/UI/PrologueIntroWidget.h"
 
@@ -211,6 +212,27 @@ void UPrologueGameInstance::MarkInitialIntroSeen()
 	if (SaveGameData)
 	{
 		SaveGameData->bHasSeenInitialIntro = true;
+	}
+}
+
+void UPrologueGameInstance::TriggerDialogueCutScene(FName TriggerID, FName DialogueID)
+{
+	if (HasTriggerPlayed(TriggerID))
+	{
+		return;
+	}
+
+	MarkTriggerPlayed(TriggerID);
+
+	ADialogueManager* DialogueManager = Cast<ADialogueManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ADialogueManager::StaticClass()));
+
+	if (DialogueManager)
+	{
+		DialogueManager->StartDialogue(DialogueID);
+	}
+	else
+	{
+		LOG_SCREEN_R("Dialogue CutScene : Failed to find ADialogueManager");
 	}
 }
 
