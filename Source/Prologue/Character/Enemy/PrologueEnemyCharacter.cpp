@@ -62,6 +62,18 @@ void APrologueEnemyCharacter::BeginPlay()
 
 		if (GameInstance->HasAIDBeenDestroyed(MyID))
 		{
+			if (AController* C = GetController())
+			{
+				C->UnPossess();
+				C->Destroy();
+			}
+
+			SetActorHiddenInGame(true);
+
+			SetActorEnableCollision(false);
+
+			SetActorTickEnabled(false);
+				
 			Destroy();
 			return;
 		}
