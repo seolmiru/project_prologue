@@ -137,6 +137,8 @@ void UPrologueGameInstance::StartNewGame(const FString& LevelName)
 	DestroyedAI_IDs.Empty();
 	
 	bHasIntroDialoguePlayed = false;
+
+	SaveGameData->bHasSeenInitialIntro = false;
 	
 	LevelToLoad = LevelName;
 

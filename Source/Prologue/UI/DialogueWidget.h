@@ -10,6 +10,7 @@
 class UImage;
 class UTextBlock;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueCompleted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRequestOpenWidget, TSoftClassPtr<UUserWidget>, WidgetClass);
 
 USTRUCT(BlueprintType)
 struct FSpeakerPortraitSet
@@ -51,6 +52,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Dialogue")
 	FOnDialogueCompleted OnDialogueCompleted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dialogue")
+	FOnRequestOpenWidget OnRequestOpenWidget;	
 
 protected:
 	UPROPERTY(meta = (BindWidget))

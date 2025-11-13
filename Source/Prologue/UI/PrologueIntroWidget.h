@@ -41,9 +41,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Media")
 	TObjectPtr<UMediaPlayer> IntroMediaPlayer;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Media")
-	TObjectPtr<UMediaSoundComponent> IntroSoundComponent;	
-
 private:
 	bool bHasFinished = false;
 };
