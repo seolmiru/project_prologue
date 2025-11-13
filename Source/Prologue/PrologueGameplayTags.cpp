@@ -155,7 +155,9 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_HideWeapon, "Chronos.Event.HideWeapon");
 	
 	UE_DEFINE_GAMEPLAY_TAG(Chronos_State_SecondPhase, "Chronos.State.SecondPhase");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_State_IsInSecondPhase, "Chronos.State.IsInSecondPhase");
 	UE_DEFINE_GAMEPLAY_TAG(Chronos_State_Invincible, "Chronos.State.Invincible");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_State_Boss, "Chronos.State.Boss");
 	
 	/** Shared Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Ability_Death, "Shared.Ability.Death");

@@ -9,6 +9,7 @@
 #include "Prologue/Prologue.h"
 #include "Prologue/AbilitySystem/PrologueAbilitySystemComponent.h"
 #include "Prologue/Character/Player/Comma.h"
+#include "Prologue/Game/Subsystem/SecondStageMusicSubSystem.h"
 
 UPrologueAttributeSet::UPrologueAttributeSet()
 {
@@ -130,4 +131,29 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 	bOutOfHealth = (GetCurrentHealth() <= 0.0f);
 
 	bOutOfBrokenGauge = (GetCurrentBrokenGauge() <= 0.0f);
+
+	if (!Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Chronos_State_IsInSecondPhase))
+	{
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Chronos_State_Boss))
+		{
+			if (GetMaxHealth() > 0.f)
+			{
+				const float SecondPhaseThreshold = GetMaxHealth() * 0.5f;
+
+				if (GetCurrentHealth() <= SecondPhaseThreshold)
+				{
+					if (AActor* OwnerActor = Data.Target.GetAvatarActor())
+					{
+						if (UWorld* World = OwnerActor->GetWorld())
+						{
+							if (USecondStageMusicSubSystem* MusicSubSystem = World->GetSubsystem<USecondStageMusicSubSystem>())
+							{
+								MusicSubSystem->HandleBossStartSecondPhase();	
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }

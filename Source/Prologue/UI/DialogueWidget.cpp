@@ -13,11 +13,6 @@ void UDialogueWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if (ContinueText)
-	{
-		ContinueText->SetText(FText::FromString(TEXT("Press E")));
-	}
-
 	if (HourHand)
 	{
 		HourHand->SetVisibility(ESlateVisibility::Hidden);
