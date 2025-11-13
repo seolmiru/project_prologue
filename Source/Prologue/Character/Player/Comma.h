@@ -43,6 +43,8 @@ public:
 
 	virtual void FellOutOfWorld(const class UDamageType& dmgType) override;
 
+	virtual void DisableInput(class APlayerController* PlayerController) override;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Combo")
 	int32 CurrentSwordCombo = 0;
 	
