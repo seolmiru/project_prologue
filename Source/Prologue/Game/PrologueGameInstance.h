@@ -104,4 +104,13 @@ private:
 	TObjectPtr<ACenterHub> WorldCenterHub;
 
 	FString LevelToLoad;
+
+	TSet<FName> DestroyedAI_IDs;
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	bool HasAIDBeenDestroyed(FName AI_ID) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void MarkAIDestroyed(FName AI_ID);
 };

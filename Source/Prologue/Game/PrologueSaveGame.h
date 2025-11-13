@@ -38,6 +38,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
 	int32 ActivatedPowerBankCount = 0;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
+	TArray<FName> DestroyedAI_IDs;
+	
 	/** AttributeSet*/
 	UPROPERTY(BlueprintReadWrite, Category = "PlayerStats")
 	float SavedHealth;

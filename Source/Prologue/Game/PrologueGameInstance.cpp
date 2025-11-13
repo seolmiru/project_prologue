@@ -41,6 +41,7 @@ void UPrologueGameInstance::Init()
 	{
 		PlayedTriggerIDs = TSet<FName>(SaveGameData->PlayedTriggerID);
 		InteractedPowerBankIDs = TSet<FName>(SaveGameData->InteractedPowerBankID);
+		DestroyedAI_IDs = TSet<FName>(SaveGameData->DestroyedAI_IDs);
 	}
 }
 
@@ -132,8 +133,10 @@ void UPrologueGameInstance::StartNewGame(const FString& LevelName)
 
 	PlayedTriggerIDs.Empty();
 	InteractedPowerBankIDs.Empty();
+	DestroyedAI_IDs.Empty();
+	
 	bHasIntroDialoguePlayed = false;
-
+	
 	LevelToLoad = LevelName;
 
 	const FString FirstStageLevelName = TEXT("1Stage_VillageofTimekeepers");
@@ -282,4 +285,22 @@ TSharedPtr<SWidget> UPrologueGameInstance::CreateRandomLoadingWidget()
 	}
 
 	return FLoadingScreenAttributes::NewTestLoadingScreenWidget();
+}
+
+bool UPrologueGameInstance::HasAIDBeenDestroyed(FName AI_ID) const
+{
+	return DestroyedAI_IDs.Contains(AI_ID);
+}
+
+void UPrologueGameInstance::MarkAIDestroyed(FName AI_ID)
+{
+	if (!SaveGameData || HasAIDBeenDestroyed(AI_ID))
+	{
+		return;
+	}
+
+	DestroyedAI_IDs.Add(AI_ID);
+	SaveGameData->DestroyedAI_IDs.Add(AI_ID);
+
+	UGameplayStatics::SaveGameToSlot(SaveGameData, SaveSlotName, UserIndex);
 }
