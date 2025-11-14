@@ -63,6 +63,8 @@ FReply UPrologueIntroWidget::NativeOnKeyDown(const FGeometry& InGeometry, const 
 
 void UPrologueIntroWidget::HandleAnimationFinished()
 {
+	LOG_SCREEN_R("NO PLEASE NO");
+	
 	if (bHasFinished)
 	{
 		return;

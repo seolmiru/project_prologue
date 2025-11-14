@@ -142,7 +142,7 @@ void UPrologueGameInstance::StartNewGame(const FString& LevelName)
 	
 	LevelToLoad = LevelName;
 
-	const FString FirstStageLevelName = TEXT("1Stage_VillageofTimekeepers");
+	const FString FirstStageLevelName = TEXT("1Stage_Main_VillageofTimekeepers1");
 
 	if (!HasSeenInitialIntro() && LevelName.Contains(FirstStageLevelName))
 	{
