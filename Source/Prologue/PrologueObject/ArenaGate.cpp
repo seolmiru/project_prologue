@@ -5,6 +5,7 @@
 
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Components/AudioComponent.h"
 
 AArenaGate::AArenaGate()
 {
@@ -31,6 +32,8 @@ AArenaGate::AArenaGate()
 	TriggerVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
 	TriggerVolume->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Overlap);
 	TriggerVolume->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Overlap);
+
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
 }
 
 void AArenaGate::BeginPlay()
@@ -73,6 +76,8 @@ void AArenaGate::OpenGate()
 				true
 			);
 		}
+
+		AudioComponent->Play();
 		
 		bIsOpen = true;
 		GateMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);

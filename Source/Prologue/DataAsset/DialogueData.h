@@ -15,7 +15,8 @@ UENUM(BlueprintType)
 enum class EDialogueType : uint8
 {
 	Normal = 0,
-	End = 1
+	End = 1,
+	OpenWidget = 2
 };
 
 USTRUCT(BlueprintType)
@@ -51,5 +52,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	float Duration = 0.f;
 
-	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
+	TSoftClassPtr<UUserWidget> WidgetToOpen;	
 };

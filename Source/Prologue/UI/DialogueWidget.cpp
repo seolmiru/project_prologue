@@ -90,6 +90,17 @@ void UDialogueWidget::NextDialogue()
 		return;
 	}
 
+	if (CurrentDialogue->DialogueType == EDialogueType::OpenWidget)
+	{
+		if (!CurrentDialogue->WidgetToOpen.IsNull())
+		{
+			OnRequestOpenWidget.Broadcast(CurrentDialogue->WidgetToOpen);
+		}
+
+		EndDialogue();
+		return;
+	}
+
 	if (!CurrentDialogue->NextDialogueID.IsNone())
 	{
 		CurrentDialogueID = CurrentDialogue->NextDialogueID;

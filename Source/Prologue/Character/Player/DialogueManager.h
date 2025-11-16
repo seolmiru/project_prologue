@@ -59,6 +59,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	bool bDisablePlayerInputDuringDialogue = true;
 
+	UPROPERTY()
+	TObjectPtr<UDialogueWidget> CurrentDialogueWidget;
+
+	UFUNCTION()
+	void HandleOpenWidgetRequest(TSoftClassPtr<UUserWidget> WidgetClass);
+	
 private:
 	UPROPERTY()
 	bool bIsDialogueActive = false;

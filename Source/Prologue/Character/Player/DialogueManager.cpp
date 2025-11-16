@@ -64,6 +64,8 @@ void ADialogueManager::StartDialogue(FName StartDialogueID)
 			PlayerPawn->DisableInput(PlayerController);
 		}
 	}
+
+	DialogueWidget->OnRequestOpenWidget.AddDynamic(this, &ADialogueManager::HandleOpenWidgetRequest);
 	
 	DialogueWidget->StartDialogue(StartDialogueID);
 }
@@ -113,5 +115,25 @@ void ADialogueManager::OnDialogueCompleted()
 {
 	LOG_SCREEN("OnDialogueCompleted Called");
 	EndDialogue();
+}
+
+void ADialogueManager::HandleOpenWidgetRequest(TSoftClassPtr<UUserWidget> WidgetClass)
+{
+	if (WidgetClass.IsNull())
+	{
+		return;
+	}
+
+	UClass* NewWidgetClass = WidgetClass.LoadSynchronous();
+	if (!NewWidgetClass)
+	{
+		return;
+	}
+
+	UUserWidget* NewWidget = CreateWidget<UUserWidget>(GetWorld(), NewWidgetClass);
+	if (NewWidget)
+	{
+		NewWidget->AddToViewport();
+	}
 }
 

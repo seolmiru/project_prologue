@@ -33,6 +33,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Music")
 	void HandlePlayerLeaveBossArea();
 
+	UFUNCTION(BlueprintCallable, Category = "Music")
+	void HandleMusicPause();
+	
 	void HandleBossStartSecondPhase();
 
 	UFUNCTION(BlueprintCallable)

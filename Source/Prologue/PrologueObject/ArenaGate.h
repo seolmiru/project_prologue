@@ -50,6 +50,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Trigger")
 	TObjectPtr<UBoxComponent> TriggerVolume;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Audio")
+	TObjectPtr<UAudioComponent> AudioComponent;
+	
 	UPROPERTY(BlueprintReadWrite, Category = "Arena")
 	bool bIsOpen = true;
 

@@ -15,6 +15,7 @@
 #include "AbilitySystemComponent.h"
 #include "PlayerDashPoint.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/AudioComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Prologue/AbilitySystem/Ability/GA_CommaAttackSword.h"
@@ -100,6 +101,8 @@ AComma::AComma()
 	InteractGuideWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 	InteractGuideWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	InteractGuideWidgetComponent->SetVisibility(false);
+
+	PurchaseAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PurchaseAudioComponent"));
 	
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
@@ -317,16 +320,19 @@ void AComma::BeginPlay()
 	}
 
 	DefaultWalkSpeed = MoveComp->MaxWalkSpeed;
-	
-	FGameplayTag DashCooldownTag = FGameplayTag::RequestGameplayTag(FName("Comma.Cooldown.Dash"));
-	FDelegateHandle DashCoolHandle = ASC->RegisterGameplayTagEvent(DashCooldownTag, EGameplayTagEventType::NewOrRemoved)
-	                                    .AddLambda([this](const FGameplayTag Tag, int32 NewCount)
-	                                    {
-		                                    if (NewCount == 0 && bInputDash)
-		                                    {
-			                                    InputGAS(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")));
-		                                    }
-	                                    });
+
+	if (ASC)
+	{
+		FGameplayTag DashCooldownTag = FGameplayTag::RequestGameplayTag(FName("Comma.Cooldown.Dash"));
+		FDelegateHandle DashCoolHandle = ASC->RegisterGameplayTagEvent(DashCooldownTag, EGameplayTagEventType::NewOrRemoved)
+											.AddLambda([this](const FGameplayTag Tag, int32 NewCount)
+											{
+												if (NewCount == 0 && bInputDash)
+												{
+													InputGAS(FGameplayTag::RequestGameplayTag(FName("Comma.Ability.Dash")));
+												}
+											});
+	}
 
 	if (ACommaController* CommaController = Cast<ACommaController>(GetController()))
 	{
@@ -849,6 +855,7 @@ void AComma::PurchaseHealPotion()
 
 	LOG_SCREEN_R("포션 구매 완료");
 	ShopWidgetComponent->SetVisibility(false);
+	PurchaseAudioComponent->Play();
 
 	bIsPurchaseInProgress = false;
 }
