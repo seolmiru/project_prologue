@@ -159,9 +159,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_RespawnWidget;
-		
+	
 	UPROPERTY()
 	TObjectPtr<UUserWidget> RespawnWidgetInstance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAudioComponent> PurchaseAudioComponent;
 	
 	void Input_Move(const FInputActionValue& InputActionValue);
 

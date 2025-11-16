@@ -57,6 +57,12 @@ void USecondStageMusicSubSystem::HandlePlayerLeaveBossArea()
 	}
 }
 
+void USecondStageMusicSubSystem::HandleMusicPause()
+{
+	BossSecondPhaseMusicComponent->SetPaused(true);
+	StageBackgroundMusicComponent->SetPaused(true);
+}
+
 void USecondStageMusicSubSystem::HandleBossStartSecondPhase()
 {
 	if (bIsBossInSecondPhase) return;
