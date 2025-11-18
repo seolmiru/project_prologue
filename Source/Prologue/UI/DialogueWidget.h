@@ -48,8 +48,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Dialogue")
 	void EndDialogue();
 
-	void SetCurrentDialogue(const FDialogueData& DialogueData);
-
 	UPROPERTY(BlueprintAssignable, Category = "Dialogue")
 	FOnDialogueCompleted OnDialogueCompleted;
 
@@ -74,7 +72,10 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> DialogueCutScene;
-
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> CommaPortrait;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
 	TArray<FSpeakerPortraitSet> SpeakerPortraitSets;
 	
@@ -103,6 +104,7 @@ protected:
 	void CompleteTypewriter();
 
 private:
+	void SetCurrentDialogue(const FDialogueData& DialogueData);
 	void UpdateCharacterIconStates(const FString& SpeakerName, FName EmotionID);
 
 	void StopCurrentSound();

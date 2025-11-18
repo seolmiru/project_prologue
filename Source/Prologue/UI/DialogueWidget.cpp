@@ -161,6 +161,16 @@ void UDialogueWidget::SetCurrentDialogue(const FDialogueData& DialogueData)
 			DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
+
+	if (CommaPortrait)
+	{
+		UTexture2D* PortraitTexture = DialogueData.CommaExpression.LoadSynchronous();
+
+		if (PortraitTexture)
+		{
+			CommaPortrait->SetBrushFromTexture(PortraitTexture);
+		}
+	}
 	
 	if (SpeakerNameText)
 	{

@@ -34,6 +34,7 @@ AArenaGate::AArenaGate()
 	TriggerVolume->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Overlap);
 
 	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->bAutoActivate = false;
 }
 
 void AArenaGate::BeginPlay()

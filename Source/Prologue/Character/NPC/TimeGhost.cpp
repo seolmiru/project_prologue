@@ -3,6 +3,7 @@
 
 #include "TimeGhost.h"
 
+#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
@@ -32,6 +33,9 @@ ATimeGhost::ATimeGhost()
 	GhostChatBoxWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 15.f));
 	GhostChatBoxWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	GhostChatBoxWidgetComponent->SetVisibility(false);
+
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->bAutoActivate = false;
 }
 
 void ATimeGhost::BeginPlay()
@@ -57,6 +61,14 @@ void ATimeGhost::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
 {
 	if (AComma* Comma = Cast<AComma>(OtherActor))
 	{
+		if (!bIsPlayed)
+		{
+			AudioComponent->SetSound(GhostVoice);
+			AudioComponent->Play();
+
+			bIsPlayed = true;
+		}
+		
 		GhostChatBoxWidgetComponent->SetVisibility(true);
 	}
 }

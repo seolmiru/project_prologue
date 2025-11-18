@@ -37,6 +37,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UTimeGhostChat> BP_GhostChatWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UAudioComponent> AudioComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<USoundBase> GhostVoice;	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText InstanceMessage;
@@ -47,4 +53,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+private:
+	bool bIsPlayed = false;
 };

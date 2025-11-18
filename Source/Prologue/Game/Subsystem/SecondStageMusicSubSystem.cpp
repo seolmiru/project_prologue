@@ -60,7 +60,6 @@ void USecondStageMusicSubSystem::HandlePlayerLeaveBossArea()
 void USecondStageMusicSubSystem::HandleMusicPause()
 {
 	BossSecondPhaseMusicComponent->SetPaused(true);
-	StageBackgroundMusicComponent->SetPaused(true);
 }
 
 void USecondStageMusicSubSystem::HandleBossStartSecondPhase()
@@ -123,6 +122,23 @@ void USecondStageMusicSubSystem::InItMusicAssets(USoundBase* InStageMusic, USoun
 		{
 			BossSecondPhaseMusicComponent->Play();
 			BossSecondPhaseMusicComponent->SetPaused(true);
+		}
+	}
+}
+
+void USecondStageMusicSubSystem::HandleCutSceneMusic(USoundBase* InCutSceneMusic)
+{
+	StageBackgroundMusic = InCutSceneMusic;
+	
+	UWorld* World = GetWorld();
+
+	if (StageBackgroundMusic)
+	{
+		StageBackgroundMusicComponent = UGameplayStatics::CreateSound2D(World, StageBackgroundMusic);
+
+		if (StageBackgroundMusicComponent)
+		{
+			StageBackgroundMusicComponent->Play();
 		}
 	}
 }

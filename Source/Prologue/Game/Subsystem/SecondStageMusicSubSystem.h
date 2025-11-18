@@ -40,6 +40,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void InItMusicAssets(USoundBase* InStageMusic, USoundBase* InFirstPhaseMusic, USoundBase* InSecondPhaseMusic, float InFadeDuration = 1.f);
+
+	UFUNCTION(BlueprintCallable)
+	void HandleCutSceneMusic(USoundBase* InCutSceneMusic);
 	
 protected:
 	UPROPERTY(BlueprintReadWrite)

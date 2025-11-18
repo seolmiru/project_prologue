@@ -103,6 +103,7 @@ AComma::AComma()
 	InteractGuideWidgetComponent->SetVisibility(false);
 
 	PurchaseAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PurchaseAudioComponent"));
+	PurchaseAudioComponent->bAutoActivate = false;
 	
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 
