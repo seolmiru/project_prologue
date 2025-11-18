@@ -98,6 +98,8 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_OverClock, "GameplayCue.Effect.OverClock");
 	
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_OverClockSound, "GameplayCue.Effect.OverClockSound");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_ChronosAura, "GameplayCue.Effect.ChronosAura");
 	
 	/** Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AttackHitCheck, "Event.Character.AttackHitCheck");

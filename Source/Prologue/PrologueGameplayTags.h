@@ -98,6 +98,8 @@ namespace PrologueGameplayTags
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_OverClock);
 
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_OverClockSound);
+
+	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Effect_ChronosAura);
 	
 	/** Event Tags */
 	PROLOGUE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Character_AttackHitCheck);

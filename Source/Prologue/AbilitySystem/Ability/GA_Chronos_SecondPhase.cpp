@@ -4,6 +4,7 @@
 #include "GA_Chronos_SecondPhase.h"
 
 #include "AbilitySystemComponent.h"
+#include "Prologue/PrologueGameplayTags.h"
 
 void UGA_Chronos_SecondPhase::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                               const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
@@ -22,4 +23,6 @@ void UGA_Chronos_SecondPhase::ActivateAbility(const FGameplayAbilitySpecHandle H
 	PhaseEffectContextHandle.AddSourceObject(this);
 	FGameplayEffectSpecHandle PhaseEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(PhaseEffect, 0.f, PhaseEffectContextHandle);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*PhaseEffectSpecHandle.Data.Get());
+
+	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(PrologueGameplayTags::GameplayCue_Effect_ChronosAura);
 }
