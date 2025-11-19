@@ -153,6 +153,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_SummonClock, "Chronos.Event.SummonClock");
 	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_AttackHitCheck, "Chronos.Event.AttackHitCheck");
 	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_SpawnSwordAura, "Chronos.Event.SpawnSwordAura");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_Spawnlino, "Chronos.Event.Spawnlino");
 
 	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_HideWeapon, "Chronos.Event.HideWeapon");
 	
