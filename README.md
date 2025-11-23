@@ -5,7 +5,7 @@
 C++ 80% / Blueprint 20% 사용  
 GAS(Gameplay Ability System) 사용  
 
-LETHE 공식 트레일러
+LETHE 공식 트레일러  
 https://youtu.be/68N_WydI3W8?si=0kcfQUju8Fb_Brgx
 
 2025/11/13 기준 빌드 플레이 영상  
