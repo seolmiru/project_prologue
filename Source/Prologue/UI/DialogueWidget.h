@@ -82,6 +82,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	TObjectPtr<UDataTable> DialogueDataTable;
 
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> BackgroundMusicComponent;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FName CurrentDialogueID;
 	
@@ -108,4 +111,7 @@ private:
 	void UpdateCharacterIconStates(const FString& SpeakerName, FName EmotionID);
 
 	void StopCurrentSound();
+
+	void UpdateBackgroundMusic(const TSoftObjectPtr<USoundBase>& NewMusicAsset);
+	void StopBackgroundMusic();
 };

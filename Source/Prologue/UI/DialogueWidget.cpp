@@ -35,6 +35,7 @@ void UDialogueWidget::NativeDestruct()
 {
 	GetWorld()->GetTimerManager().ClearTimer(TypewriterTimerHandle);
 	StopCurrentSound();
+	StopBackgroundMusic();
 
 	Super::NativeDestruct();
 }
@@ -131,6 +132,8 @@ void UDialogueWidget::EndDialogue()
 
 	StopCurrentSound();
 
+	StopBackgroundMusic();
+	
 	if (DialogueCutScene)
 	{
 		DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
@@ -145,6 +148,8 @@ void UDialogueWidget::EndDialogue()
 
 void UDialogueWidget::SetCurrentDialogue(const FDialogueData& DialogueData)
 {
+	UpdateBackgroundMusic(DialogueData.BackgroundMusic);
+	
 	StopCurrentSound();
 
 	if (DialogueCutScene)
@@ -289,4 +294,40 @@ void UDialogueWidget::StopCurrentSound()
 	}
 
 	CurrentSpeakerVoice = nullptr;
+}
+
+void UDialogueWidget::UpdateBackgroundMusic(const TSoftObjectPtr<USoundBase>& NewMusicAsset)
+{
+	if (NewMusicAsset.IsNull())
+	{
+		return;
+	}
+
+	USoundBase* NewMusic = NewMusicAsset.LoadSynchronous();
+	if (!NewMusic)
+	{
+		return;
+	}
+
+	if (BackgroundMusicComponent && BackgroundMusicComponent->IsPlaying())
+	{
+		if (BackgroundMusicComponent->Sound == NewMusic)
+		{
+			return;
+		}
+
+		BackgroundMusicComponent->Stop();
+	}
+
+	BackgroundMusicComponent = UGameplayStatics::SpawnSound2D(GetWorld(), NewMusic);
+}
+
+
+void UDialogueWidget::StopBackgroundMusic()
+{
+	if (BackgroundMusicComponent && BackgroundMusicComponent->IsPlaying())
+	{
+		BackgroundMusicComponent->Stop();
+		BackgroundMusicComponent = nullptr;
+	}
 }

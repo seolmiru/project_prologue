@@ -51,6 +51,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialouge|Image")
 	TSoftObjectPtr<UTexture2D> CommaExpression;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialouge|Music")
+	TSoftObjectPtr<USoundBase> BackgroundMusic;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	float Duration = 0.f;
