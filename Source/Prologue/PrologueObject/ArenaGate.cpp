@@ -4,6 +4,8 @@
 #include "ArenaGate.h"
 
 #include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Components/AudioComponent.h"
 
 AArenaGate::AArenaGate()
 {
@@ -30,6 +32,9 @@ AArenaGate::AArenaGate()
 	TriggerVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
 	TriggerVolume->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Overlap);
 	TriggerVolume->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Overlap);
+
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->bAutoActivate = false;
 }
 
 void AArenaGate::BeginPlay()
@@ -55,8 +60,27 @@ void AArenaGate::OpenGate()
 {
 	if (!bIsOpen)
 	{
+		GateEffect->DestroyComponent();
+
+		const FVector GateEffectLocation = GateEffect->GetComponentLocation();
+
+		// Gate 열릴 때 나오는 Niagara 생성
+		if (GateDestroyEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				GateDestroyEffect,
+				GateEffectLocation,
+				FRotator(0, 0, 0),
+				FVector(1.f, 1.f, 1.f),
+				true,
+				true
+			);
+		}
+
+		AudioComponent->Play();
+		
 		bIsOpen = true;
-		GateMesh->SetVisibility(false);
 		GateMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		OnGateStateChanged.Broadcast(true);
 	}
@@ -67,9 +91,7 @@ void AArenaGate::CloseGate()
 	if (bIsOpen)
 	{
 		bIsOpen = false;
-		GateMesh->SetVisibility(true);
 		GateMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		GateEffect->Deactivate();
 		OnGateStateChanged.Broadcast(false);
 	}
 }

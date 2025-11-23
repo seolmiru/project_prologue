@@ -36,11 +36,17 @@ protected:
 	TSubclassOf<UDialogueWidget> DialogueWidgetClass;
 
 	UPROPERTY()
-	UDialogueWidget* DialogueWidget;
+	TObjectPtr<UDialogueWidget> DialogueWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	UInputAction* DialogueInputAction;
+	TObjectPtr<UInputAction> DialogueInputEAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> DialogueInputSpaceAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> DialogueInputLeftButtonAction;
+	
 	UFUNCTION()
 	void HandleDialogueInput();
 
@@ -53,6 +59,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	bool bDisablePlayerInputDuringDialogue = true;
 
+	UPROPERTY()
+	TObjectPtr<UDialogueWidget> CurrentDialogueWidget;
+
+	UFUNCTION()
+	void HandleOpenWidgetRequest(TSoftClassPtr<UUserWidget> WidgetClass);
+	
 private:
 	UPROPERTY()
 	bool bIsDialogueActive = false;

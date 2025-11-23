@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Prologue/Pool.h"
 #include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Prologue/Character/PrologueCharacter.h"
 #include "Prologue/UI/PrologueUserWidget.h"
+#include "Prologue/Weapon/Projectile/ExplodingMangoProjectile.h"
 #include "PrologueEnemyCharacter.generated.h"
 
 class UEnemyWidgetComponent;
@@ -34,10 +36,13 @@ class PROLOGUE_API APrologueEnemyCharacter : public APrologueCharacter
 
 public:
 	APrologueEnemyCharacter();
+	virtual ~APrologueEnemyCharacter() override;
 
 	UPROPERTY(BlueprintAssignable, Category = "Attributes")
 	FOnHealthChangedDelegate OnHealthChanged;
 
+	Pool<AExplodingMangoProjectile>* ProjectilePool;
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
@@ -63,11 +68,14 @@ protected:
 	TSubclassOf<UUserWidget> BP_EnemyWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UEnemyWidget> MangoHpBarWidget;	
+	TObjectPtr<UEnemyWidget> BossHpBarWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_MangoWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_ChronosWidget;
+	
 protected:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	bool TryActivateAbilityByTag(FGameplayTag AbilityTagToActivate);
@@ -75,7 +83,13 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	bool TryActivateRandomAbilityWithWeights(const TArray<FWeightedAbilityInfo>& WeightedAbilities);
 
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void MarkSelfAsDestroyed();
+	
 	virtual void HealthAttributeChanged(const FOnAttributeChangeData& Data);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TSubclassOf<AExplodingMangoProjectile> MangoProjectileClass;
 	
 private:
 	FDelegateHandle DamageAttributeChangedHandle;

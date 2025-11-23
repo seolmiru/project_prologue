@@ -15,7 +15,8 @@ UENUM(BlueprintType)
 enum class EDialogueType : uint8
 {
 	Normal = 0,
-	End = 1
+	End = 1,
+	OpenWidget = 2
 };
 
 USTRUCT(BlueprintType)
@@ -24,21 +25,39 @@ struct FDialogueData : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	FString SpeakerName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	ESpeakerType SpeakerType;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
+	ESpeakerType SpeakerType = ESpeakerType::NPC;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	FText DialogueText;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	EDialogueType DialogueType;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
+	EDialogueType DialogueType = EDialogueType::Normal;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
 	FName NextDialogueID;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	float Duration;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialouge")
+	FName EmotionID;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialouge|Voice")
+	TSoftObjectPtr<USoundBase> SpeakerVoice;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialouge|Image")
+	TSoftObjectPtr<UTexture2D> CutSceneImage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialouge|Image")
+	TSoftObjectPtr<UTexture2D> CommaExpression;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialouge|Music")
+	TSoftObjectPtr<USoundBase> BackgroundMusic;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
+	float Duration = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue")
+	TSoftClassPtr<UUserWidget> WidgetToOpen;	
 };

@@ -64,6 +64,8 @@ void ADialogueManager::StartDialogue(FName StartDialogueID)
 			PlayerPawn->DisableInput(PlayerController);
 		}
 	}
+
+	DialogueWidget->OnRequestOpenWidget.AddDynamic(this, &ADialogueManager::HandleOpenWidgetRequest);
 	
 	DialogueWidget->StartDialogue(StartDialogueID);
 }
@@ -83,7 +85,7 @@ void ADialogueManager::EndDialogue()
 
 void ADialogueManager::SetupInputComponent()
 {
-	if (!PlayerController || !DialogueInputAction)
+	if (!PlayerController || !DialogueInputEAction || !DialogueInputSpaceAction || !DialogueInputLeftButtonAction)
 	{
 		return;
 	}
@@ -92,7 +94,9 @@ void ADialogueManager::SetupInputComponent()
 	{
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
-			DialogueInputBindingHandle = EnhancedInputComponent->BindAction(DialogueInputAction, ETriggerEvent::Started, this, &ADialogueManager::HandleDialogueInput).GetHandle();
+			DialogueInputBindingHandle = EnhancedInputComponent->BindAction(DialogueInputEAction, ETriggerEvent::Started, this, &ADialogueManager::HandleDialogueInput).GetHandle();
+			DialogueInputBindingHandle = EnhancedInputComponent->BindAction(DialogueInputSpaceAction, ETriggerEvent::Started, this, &ADialogueManager::HandleDialogueInput).GetHandle();
+			DialogueInputBindingHandle = EnhancedInputComponent->BindAction(DialogueInputLeftButtonAction, ETriggerEvent::Started, this, &ADialogueManager::HandleDialogueInput).GetHandle();
 		}
 	}
 }
@@ -111,5 +115,25 @@ void ADialogueManager::OnDialogueCompleted()
 {
 	LOG_SCREEN("OnDialogueCompleted Called");
 	EndDialogue();
+}
+
+void ADialogueManager::HandleOpenWidgetRequest(TSoftClassPtr<UUserWidget> WidgetClass)
+{
+	if (WidgetClass.IsNull())
+	{
+		return;
+	}
+
+	UClass* NewWidgetClass = WidgetClass.LoadSynchronous();
+	if (!NewWidgetClass)
+	{
+		return;
+	}
+
+	UUserWidget* NewWidget = CreateWidget<UUserWidget>(GetWorld(), NewWidgetClass);
+	if (NewWidget)
+	{
+		NewWidget->AddToViewport();
+	}
 }
 

@@ -23,7 +23,7 @@ AH_ThornArea::AH_ThornArea()
 	ThornNiagaraComponent->SetupAttachment(RootComponent);
 }
 
-void AH_ThornArea::SpecifyingThorn(const FVector& InBoxExtent, int32 ThornIndex, const FVector& ThornSize)
+void AH_ThornArea::SpecifyingThorn(const FVector& InBoxExtent, int32 ThornIndex, const FVector& ThornSize, float ThornGap)
 {
 	if (BoxComponent)
 	{
@@ -32,13 +32,19 @@ void AH_ThornArea::SpecifyingThorn(const FVector& InBoxExtent, int32 ThornIndex,
 
 	if (ThornNiagaraComponent)
 	{
-		const float NewSpawnCount = 50.f + (ThornIndex * 25.f);
+		const float Width = InBoxExtent.X * 2.f;
+		const float Depth = InBoxExtent.Y * 2.f;
+		const float AreaSize = Width * Depth;
 
+		const float SafeGap = FMath::Max(ThornGap, 10.f);
+
+		float CalculatedCount = AreaSize / (SafeGap * SafeGap);
+		
 		const FVector NiagaraBoxSize = InBoxExtent * 2.f;
 
 		const FVector NewSize = ThornSize * 2.f;
 		
-		ThornNiagaraComponent->SetFloatParameter(TEXT("Count"), NewSpawnCount);
+		ThornNiagaraComponent->SetFloatParameter(TEXT("Count"), CalculatedCount);
 		
 		ThornNiagaraComponent->SetVectorParameter(TEXT("SpawnThornAreaExtent"), NiagaraBoxSize);
 

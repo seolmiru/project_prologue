@@ -23,7 +23,7 @@ void UAnimNotify_EnableAbilityCancel::Notify(USkeletalMeshComponent* MeshComp, U
 			if (UAbilitySystemComponent* ASC = ASI->GetAbilitySystemComponent())
 			{
 				ASC->RemoveLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelDisabled);
-				ASC->AddLooseGameplayTag(PrologueGameplayTags::Comma_State_CancelEnabled);				
+				ASC->AddLooseGameplayTag(CancelEnableTag);				
 			}
 		}
 	}

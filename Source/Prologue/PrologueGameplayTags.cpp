@@ -10,6 +10,10 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Sword, "InputTag.Attack.Sword");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack_Bow, "InputTag.Attack.Bow");
 
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Interact, "InputTag.Interact");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_InteractStarted, "InputTag.InteractStarted");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_InteractCompleted, "InputTag.InteractCompleted");
+
 	/** Comma Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Sword, "Comma.Weapon.Sword");
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Weapon_Bow, "Comma.Weapon.Bow");
@@ -44,6 +48,14 @@ namespace PrologueGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_State_Skill, "Comma.State.Skill");
 
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_Boost, "Comma.State.Boost");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_LowHealth, "Comma.State.LowHealth");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_CutScene, "Comma.State.CutScene");
+
+	UE_DEFINE_GAMEPLAY_TAG(Comma_State_FirstHit, "Comma.State.FirstHit");
+	
 	/** Comma Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_Sword, "Comma.Event.Sword");
 	
@@ -56,7 +68,7 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_ResetSkillCooldown, "Comma.Event.ResetSkillCooldown");
 
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Event_Immunity, "Comma.Event.Immunity");
-
+	
 	/** Comma Cooldown Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Comma_Cooldown_Skill, "Comma.Cooldown.Skill");
 	
@@ -83,6 +95,14 @@ namespace PrologueGameplayTags
 	
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_Heal, "GameplayCue.Effect.Heal");
 
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_DashTrail, "GameplayCue.Effect.DashTrail");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_OverClock, "GameplayCue.Effect.OverClock");
+	
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_OverClockSound, "GameplayCue.Effect.OverClockSound");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Effect_ChronosAura, "GameplayCue.Effect.ChronosAura");
+	
 	/** Event Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_AttackHitCheck, "Event.Character.AttackHitCheck");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Character_SecondAttackHitCheck, "Event.Character.SecondAttackHitCheck");
@@ -126,6 +146,23 @@ namespace PrologueGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_LaserHitCheck, "Enemy.Event.LaserHitCheck");
 
 	UE_DEFINE_GAMEPLAY_TAG(Enemy_Event_Stun, "Enemy.Event.Stun");
+
+	/** Chronos Tags */
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Ability_SummonClock, "Chronos.Ability.SummonClock");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Ability_Skill3, "Chronos.Ability.Skill3");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Ability_SecondPhase, "Chronos.Ability.SecondPhase");
+	
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_SummonClock, "Chronos.Event.SummonClock");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_AttackHitCheck, "Chronos.Event.AttackHitCheck");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_SpawnSwordAura, "Chronos.Event.SpawnSwordAura");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_Spawnlino, "Chronos.Event.Spawnlino");
+
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_Event_HideWeapon, "Chronos.Event.HideWeapon");
+	
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_State_SecondPhase, "Chronos.State.SecondPhase");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_State_IsInSecondPhase, "Chronos.State.IsInSecondPhase");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_State_Invincible, "Chronos.State.Invincible");
+	UE_DEFINE_GAMEPLAY_TAG(Chronos_State_Boss, "Chronos.State.Boss");
 	
 	/** Shared Tags */
 	UE_DEFINE_GAMEPLAY_TAG(Shared_Ability_Death, "Shared.Ability.Death");

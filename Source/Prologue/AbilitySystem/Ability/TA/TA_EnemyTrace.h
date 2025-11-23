@@ -13,4 +13,7 @@ class PROLOGUE_API ATA_EnemyTrace : public ATA_Trace
 
 protected:
 	virtual FGameplayAbilityTargetDataHandle MakeTargetData() const override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Trace")
+	float TraceStartOffset = 0.f;
 };

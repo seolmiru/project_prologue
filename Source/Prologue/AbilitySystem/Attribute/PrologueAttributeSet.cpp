@@ -9,6 +9,7 @@
 #include "Prologue/Prologue.h"
 #include "Prologue/AbilitySystem/PrologueAbilitySystemComponent.h"
 #include "Prologue/Character/Player/Comma.h"
+#include "Prologue/Game/Subsystem/SecondStageMusicSubSystem.h"
 
 UPrologueAttributeSet::UPrologueAttributeSet()
 {
@@ -39,26 +40,6 @@ bool UPrologueAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCa
 	{
 		return false;
 	}
-
-	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
-	{
-		if (Data.EvaluatedData.Magnitude < 0.f)
-		{
-			if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
-			{
-				return false;
-			}
-		}	
-		/*if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Dashing))
-		{
-			FGameplayEventData PlayData;
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.Target.GetAvatarActor(), PrologueGameplayTags::Comma_Event_JustDash, PlayData);
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.EffectSpec.GetContext().GetEffectCauser(), PrologueGameplayTags::Enemy_Event_Dashed, PlayData);
-			LOG_SCREEN("%s", *Data.EffectSpec.GetContext().GetEffectCauser()->GetName());
-
-			return false;
-		}*/
-	}
 	
 	return true;
 }
@@ -77,6 +58,18 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 	}
 	else if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Comma_State_Invincible))
+		{
+			SetDamage(0.f);
+			return;
+		}
+
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Chronos_State_Invincible))
+		{
+			SetDamage(0.f);
+			return;
+		}
+		
 		const float LocalDamage = GetDamage();
 		
 		LOG_SCREEN("Damage : %f", LocalDamage);
@@ -113,7 +106,54 @@ void UPrologueAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 		OnOutOfBrokenGauge.Broadcast();
 	}
 
+	if (GetCurrentHealth() <= 30.f)
+	{
+		if (AActor* TargetActor = Data.Target.GetAvatarActor())
+		{
+			if (AComma* Comma = Cast<AComma>(TargetActor))
+			{
+				Comma->TriggerLowHealth();
+			}
+		}
+	}
+
+	if (GetCurrentHealth() > 30.f)
+	{
+		if (AActor* TargetActor = Data.Target.GetAvatarActor())
+		{
+			if (AComma* Comma = Cast<AComma>(TargetActor))
+			{
+				Comma->InitDamageEffect();
+			}
+		}
+	}
+
 	bOutOfHealth = (GetCurrentHealth() <= 0.0f);
 
 	bOutOfBrokenGauge = (GetCurrentBrokenGauge() <= 0.0f);
+
+	if (!Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Chronos_State_IsInSecondPhase))
+	{
+		if (Data.Target.HasMatchingGameplayTag(PrologueGameplayTags::Chronos_State_Boss))
+		{
+			if (GetMaxHealth() > 0.f)
+			{
+				const float SecondPhaseThreshold = GetMaxHealth() * 0.5f;
+
+				if (GetCurrentHealth() <= SecondPhaseThreshold)
+				{
+					if (AActor* OwnerActor = Data.Target.GetAvatarActor())
+					{
+						if (UWorld* World = OwnerActor->GetWorld())
+						{
+							if (USecondStageMusicSubSystem* MusicSubSystem = World->GetSubsystem<USecondStageMusicSubSystem>())
+							{
+								MusicSubSystem->HandleBossStartSecondPhase();	
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }

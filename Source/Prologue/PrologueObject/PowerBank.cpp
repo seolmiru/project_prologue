@@ -3,7 +3,9 @@
 
 #include "PowerBank.h"
 
+#include "NiagaraComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/TimelineComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -15,7 +17,7 @@ APowerBank::APowerBank()
 	PrimaryActorTick.bCanEverTick = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	
+
 	TriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerVolume"));
 	TriggerVolume->SetupAttachment(RootComponent);
 
@@ -25,13 +27,27 @@ APowerBank::APowerBank()
 	TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &APowerBank::OnOverlapBegin);
 	TriggerVolume->OnComponentEndOverlap.AddDynamic(this, &APowerBank::OnOverlapEnd);
 
+	ActivateNiagara = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ActivateNiagara"));
+	ActivateNiagara->SetupAttachment(PowerBankMesh);
+	ActivateNiagara->SetAutoActivate(false);
+	
 	MaterialTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("MaterialTimeline"));
+
+	AttachPoint = CreateDefaultSubobject<USceneComponent>(TEXT("AttachPoint"));
+	AttachPoint->SetupAttachment(RootComponent);
+	AttachPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 400.0f));
+	
+	// WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Default Widget Component"));
+	// WidgetComponent->SetupAttachment(AttachPoint);
+	// WidgetComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+	// WidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	// WidgetComponent->SetVisibility(true);
 }
 
 void APowerBank::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	if (PowerBankMesh)
 	{
 		DynamicMaterial = PowerBankMesh->CreateAndSetMaterialInstanceDynamic(0);
@@ -62,39 +78,85 @@ void APowerBank::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
                                 int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AComma* Comma = Cast<AComma>(OtherActor);
+	if (!Comma)
+	{
+		return;
+	}
+
 	if (Comma)
 	{
-		Comma->GetGuideWidget()->SetVisibility(true);
+		bCanInteracted = true;
+		
+		Comma->GetInteractGuideWidget()->SetVisibility(true);
+
+		if (IconWidget && IconWidget->IsInViewport())
+		{
+			IconWidget->RemoveFromParent();
+			IconWidget = nullptr;
+		}
 	}
 }
 
 void APowerBank::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex)
+                              int32 OtherBodyIndex)
 {
 	AComma* Comma = Cast<AComma>(OtherActor);
+	if (!Comma)
+	{
+		return;
+	}
+
 	if (Comma)
 	{
-		Comma->GetGuideWidget()->SetVisibility(false);
+		bCanInteracted = false;
+		Comma->GetInteractGuideWidget()->SetVisibility(false);
+	}
+
+	UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(GetGameInstance());
+	if (GameInstance && !GameInstance->HasPowerBankInteracted(PowerBankID))
+	{
+		if (BP_IconWidget && !IconWidget)
+		{
+			IconWidget = CreateWidget<UPowerBankIconWidget>(GetWorld(), BP_IconWidget);
+			IconWidget->AddToViewport(-1);
+			IconWidget->PowerBank = this;
+		}
 	}
 }
 
 void APowerBank::Interact()
 {
 	AComma* Comma = Cast<AComma>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	
-	UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	if (GameInstance && !GameInstance->HasPowerBankInteracted(PowerBankID))
+
+	if (bCanInteracted)
 	{
-		if (MaterialTimeline)
+		UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		if (GameInstance && !GameInstance->HasPowerBankInteracted(PowerBankID))
 		{
-			MaterialTimeline->PlayFromStart();
+			ActivateNiagara->Activate();
+			
+			if (MaterialTimeline)
+			{
+				MaterialTimeline->PlayFromStart();
+			}
+
+			GameInstance->OnPowerBankActivated(PowerBankID);
+
+			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+			if (ActivateSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(
+					GetWorld(),
+					ActivateSound,
+					GetActorLocation(),
+					1.f,
+					1.f
+				);
+			}
+			
+			Comma->GetGuideWidget()->SetVisibility(false);
 		}
-
-		GameInstance->OnPowerBankActivated(PowerBankID);
-		
-		TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		Comma->GetGuideWidget()->SetVisibility(false);
 	}
 }
 
@@ -112,3 +174,16 @@ void APowerBank::TimelineProgress(float Value)
 	}
 }
 
+void APowerBank::AttachWidget()
+{
+	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	FVector ShowLocation = AttachPoint->GetComponentLocation();
+	FVector2D ScreenLocation;
+	PlayerController->ProjectWorldLocationToScreen(ShowLocation, ScreenLocation);
+
+	if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(IconWidget->Slot))
+	{
+		CanvasSlot->SetPosition(ScreenLocation);
+		CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+	}
+}

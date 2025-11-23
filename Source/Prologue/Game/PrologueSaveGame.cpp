@@ -6,3 +6,18 @@
 UPrologueSaveGame::UPrologueSaveGame()
 {
 }
+
+void UPrologueSaveGame::ResetToDefault()
+{
+	bHasIntroDialoguePlayed = false;
+	bHasGameProgress = false;
+	SavedLevelName = "";
+	PlayedTriggerID.Empty();
+	InteractedPowerBankID.Empty();
+	ActivatedPowerBankCount = 0;
+
+	DestroyedAI_IDs.Empty();
+
+	SavedHealth = 100.f;
+	SavedCurrency = 0.f;
+}

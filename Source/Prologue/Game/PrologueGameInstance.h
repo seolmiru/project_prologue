@@ -8,6 +8,7 @@
 #include "MoviePlayer.h"
 #include "PrologueGameInstance.generated.h"
 
+class UPrologueIntroWidget;
 class ACenterHub;
 class UPrologueSaveGame;
 class AComma;
@@ -53,11 +54,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Save System")
 	FString GetSavedLevelName() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void StartNewGame(const FString& LevelName);
+	
 	UFUNCTION(BlueprintCallable, Category = "PowerBank")
 	void OnPowerBankActivated(FName PowerBankID);
 
 	UFUNCTION(BlueprintCallable, Category = "PowerBank")
 	void RegisterCenterHub(ACenterHub* Hub);
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	bool HasSeenInitialIntro() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void MarkInitialIntroSeen();
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void TriggerDialogueCutScene(FName TriggerID, FName DialogueID);	
 	
 protected:
 	void OnPreLoadMap(const FString& MapName);
@@ -69,6 +82,17 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UPrologueSaveGame> SaveGameData;
 
+	UPROPERTY()
+	bool bIsInitialLoadComplete = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Loading Screen")
+	TSoftClassPtr<UPrologueIntroWidget> IntroAnimationWidgetClass;
+
+	void OpenStage();
+
+	UFUNCTION()
+	void OnIntroAnimationFinished();
+	
 private:
 	TSharedPtr<SWidget> CreateRandomLoadingWidget();
 	
@@ -81,4 +105,15 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<ACenterHub> WorldCenterHub;
+
+	FString LevelToLoad;
+
+	TSet<FName> DestroyedAI_IDs;
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	bool HasAIDBeenDestroyed(FName AI_ID) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	void MarkAIDestroyed(FName AI_ID);
 };

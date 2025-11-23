@@ -5,8 +5,12 @@
 #include "CoreMinimal.h"
 #include "Prologue/Character/PrologueCharacter.h"
 #include "GameplayTagContainer.h"
+#include "PlayerDashPoint.h"
+#include "Prologue/Pool.h"
+#include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Comma.generated.h"
 
+class AShopKeeper;
 class UNiagaraComponent;
 class UWidgetComponent;
 class UPostProcessComponent;
@@ -21,6 +25,8 @@ class UDataAsset_InputConfig;
 class UFallPreventionComponent;
 struct FInputActionValue;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCanBuyPotionChanged, bool, bCanBuyPotionState);
+
 UCLASS()
 class PROLOGUE_API AComma : public APrologueCharacter
 {
@@ -34,6 +40,10 @@ public:
 	virtual void NotifyControllerChanged() override;
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	virtual void FellOutOfWorld(const class UDamageType& dmgType) override;
+
+	virtual void DisableInput(class APlayerController* PlayerController) override;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Combo")
 	int32 CurrentSwordCombo = 0;
@@ -56,16 +66,19 @@ protected:
 private:
 	/** Components */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
+	TObjectPtr<USpringArmComponent> CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
+	TObjectPtr<UCameraComponent> FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCapsuleComponent> DashCollision;
 
 	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UNiagaraComponent> SwordAuraEffect;*/
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Dash, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<APlayerDashPoint> DashPointClass;	
 	
 	/** Data */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
@@ -79,10 +92,10 @@ private:
 	
 	/** Inputs */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* DefaultMappingContext;
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
+	TObjectPtr<UInputAction> MoveAction = nullptr;
 
 	/** GAS */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StartUpData", meta = (AllowPrivateAccess = "true"))
@@ -102,51 +115,94 @@ private:
 	//TObjectPtr<UStaticMeshComponent> BowWeaponMesh;
 
 	/** UI */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_CommaWidget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCommaWidget> CommaWidget;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USceneComponent> UIAnchorComponent;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UWidgetComponent> SwitchAttackWidgetComponent;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> SmashAttackWidgetComponent;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> BP_SwitchAttackWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_SmashAttackWidget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> OverClockWidget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWidgetComponent> CooldownWidgetComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_CooldownWidget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWidgetComponent> GuideWidgetComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> BP_GuideWidget;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> ShopWidgetComponent;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_ShopWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_CantShopWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> InteractGuideWidgetComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> BP_RespawnWidget;
+	
+	UPROPERTY()
+	TObjectPtr<UUserWidget> RespawnWidgetInstance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAudioComponent> PurchaseAudioComponent;
+	
 	void Input_Move(const FInputActionValue& InputActionValue);
 
+	/** Camera Settings Function */
+protected:
+	UFUNCTION(BlueprintCallable, Category = "Camera|Rotate")
+	void ActivateRotateCamera(FRotator NewTargetRotation);
+
+	UFUNCTION(BlueprintCallable, Category = "Camera|Rotate")
+	void DeactivateRotateCamera();
+
+	UFUNCTION(BlueprintCallable, Category = "Camera|Length")
+	void ActivateAdjustCamera(float NewTargetArmLength);
+
+	UFUNCTION(BlueprintCallable, Category = "Camera|Length")
+	void DeactivateAdjustCamera();
+	
+	/** Camera Settings Variables */
 private:
-	/** Camera Settings */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float DefaultZoomDist = 1200.f;
+	FRotator DefaultCameraRelativeRotation = FRotator(0.f, 0.f, 0.f);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float IntroZoomDist = 600.f;
+	FRotator TargetCameraRelativeRotation = FRotator(0.f, 0.f, 0.f);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float ZoomOutInterpSpeed = 4.f;
+	float CameraRotationInterpolationSpeed = 3.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float DefaultCameraArmLength = 1600.f;
 	
-	float TargetZoomDist = 1200.f;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float TargetCameraArmLength = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float CameraArmLengthInterpolationSpeed = 2.f;
+
+	/** Effect Material Settings */
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UMaterial> DamagePostProcessMaterial;
@@ -165,6 +221,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 	float DamageEffectIntensity = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
+	float LowHealthEffectIntensity = 0.5f;
 	
 public:
 	FORCEINLINE FVector2D GetDirection() const { return Direction; }
@@ -175,7 +234,7 @@ public:
 	FORCEINLINE UAnimMontage* GetSwordComboMontage() const { return SwordComboMontage; }
 	//FORCEINLINE UAnimMontage* GetBowComboMontage() const { return BowComboMontage; }
 
-	FORCEINLINE UAnimMontage* GetSwordSwitchAttackMontage() const { return SwordSwitchAttackMontage; }
+	FORCEINLINE UAnimMontage* GetSwordSmashAttackMontage() const { return SwordSmashAttackMontage; }
 	//FORCEINLINE UAnimMontage* GetBowSwitchAttackMontage() const { return BowSwitchAttackMontage; }
 
 	FVector2D GetCachedMovementInput() const { return CachedMovementInput; }
@@ -189,6 +248,8 @@ public:
 	FORCEINLINE UCapsuleComponent* GetDashCollision() const { return DashCollision; }
 
 	FORCEINLINE UWidgetComponent* GetGuideWidget() const { return GuideWidgetComponent; }
+
+	FORCEINLINE UWidgetComponent* GetInteractGuideWidget() const { return InteractGuideWidgetComponent; }
 
 	void SetUIVisibility(bool bVisible);
 
@@ -209,16 +270,76 @@ public:
 
 	void OnAttackEnded();
 
-	void OnSwitchAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;
+	void OnSmashAttackUI(const FGameplayTag CallbackTag, int32 NewCount) const;
 
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void TriggerDamageEffect(float DamageAmount = 1.f);
+	
+	void TriggerLowHealth();
 
-	void ZoomIn(float ZoomDist = 600.f);
+	void InitDamageEffect();
 
-	void ZoomOut();
+	/** Speed Boost */
+protected:
+	UFUNCTION()
+	void OnDashSpeedBoost(const FGameplayTag CallbackTag, int32 NewCount);
 
-	void ResetZoom();
+	float DefaultWalkSpeed;
+
+	FGameplayTag IsMovingTag;
+	FGameplayTag SpeedBoostTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Speed Boost")
+	float SpeedBoost = 1.5f;
+
+	/** Shop Start*/
+	
+public:
+	void StartShopInteraction();
+	
+	void CancelShopInteraction();
+	
+	void PurchaseHealPotion();
+
+	FTimerHandle PurchaseTimerHandle;
+
+	UPROPERTY()
+	TObjectPtr<AShopKeeper> ShopKeeperInRange;
+
+	UPROPERTY(BlueprintAssignable, Category = "Shop")
+	FOnCanBuyPotionChanged OnCanBuyPotionChanged;
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Shop")
+	bool bCanBuyPotion = false;
+
+	UFUNCTION()
+	void OnChangedPotionState();
+
+	void UpdateCanBuyPotionState();
+
+	void OnPotionAttributeChanged(const FOnAttributeChangeData& Data);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Shop")
+	float PurchaseTime = 3.f;
+
+	float PurchaseStartTime = 0.f;
+
+	void UpdateShopUIProgress(float Progress);
+	
+public:
+	void SetShopKeeper(AShopKeeper* ShopKeeper);
+
+	UFUNCTION(BlueprintCallable, Category = "Shop")
+	void SetCanBuyPotion(bool bCanBuyPotionState);
+
+	UFUNCTION(BlueprintCallable, Category = "Shop")
+	bool GetCanBuyPotion() const { return bCanBuyPotion; }
+
+private:
+	bool bIsPurchaseInProgress = false;
+	
+	/** Shop End*/
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -228,13 +349,13 @@ protected:
 	//TObjectPtr<class UAnimMontage> BowComboMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TObjectPtr<class UAnimMontage> SwordSwitchAttackMontage;
+	TObjectPtr<class UAnimMontage> SwordSmashAttackMontage;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	//TObjectPtr<class UAnimMontage> BowSwitchAttackMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FGameplayTag SwitchAttackSwordTag;
+	FGameplayTag SmashAttackSwordTag;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	//FGameplayTag SwitchAttackBowTag;
@@ -247,18 +368,35 @@ private:
 	bool bCommaWidgetVisibility = true;
 	bool bCooldownWidgetVisibility = true;
 
+	bool bUseCameraRelativeMovement = false;
+	
 	void UpdateDamageEffect();
 
+private:
+	FTimerHandle SafeLocationUpdateTimerHandle;
+
+	FVector LastSafeGroundLocation;
+
+	void UpdateLastSafeGroundLocation();
+
+	void FinalizeRespawn();
+	
 	/** Sejin */
 public:
 	class APlayerDashPoint* GetDashPoint() const;
 
+	AActor* GetGround() const;
+	
 	void InputDash(bool bInput);
 
-	bool GetInputDashState() const;	
+	bool GetInputDashState() const;
+	
 private:
+	UPROPERTY()
 	TObjectPtr<class APlayerDashPoint> DashPoint;
 
 	UPROPERTY(VisibleAnywhere, Category="Input")
 	bool bInputDash;
+
+	// class Pool<class APlayerDashPoint> TestPool;
 };

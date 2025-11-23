@@ -10,10 +10,12 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Prologue/PrologueGameplayTags.h"
 #include "Prologue/AbilitySystem/Attribute/PrologueAttributeSet.h"
 #include "Prologue/Component/EnemyWidgetComponent.h"
 #include "Prologue/Controller/PrologueAIController.h"
+#include "Prologue/Game/PrologueGameInstance.h"
 #include "Prologue/UI/Enemy/EnemyWidget.h"
 
 APrologueEnemyCharacter::APrologueEnemyCharacter()
@@ -37,10 +39,46 @@ APrologueEnemyCharacter::APrologueEnemyCharacter()
 	HpBar->SetRelativeLocation(FVector(0.f, 0.f, 180.f));
 	HpBar->SetWidgetSpace(EWidgetSpace::Screen);
 	HpBar->SetWidgetClass(BP_EnemyWidget);
+
+	ProjectilePool = nullptr;
+}
+
+APrologueEnemyCharacter::~APrologueEnemyCharacter()
+{
+	if (ProjectilePool)
+	{
+		delete ProjectilePool;
+		ProjectilePool = nullptr;
+	}
 }
 
 void APrologueEnemyCharacter::BeginPlay()
 {
+	UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	if (GameInstance)
+	{
+		const FName MyID = GetFName();
+
+		if (GameInstance->HasAIDBeenDestroyed(MyID))
+		{
+			if (AController* C = GetController())
+			{
+				C->UnPossess();
+				C->Destroy();
+			}
+
+			SetActorHiddenInGame(true);
+
+			SetActorEnableCollision(false);
+
+			SetActorTickEnabled(false);
+				
+			Destroy();
+			return;
+		}
+	}
+	
 	Super::BeginPlay();
 
 	// 전투 시작 전에는 체력바를 안 보이게 설정
@@ -49,15 +87,17 @@ void APrologueEnemyCharacter::BeginPlay()
 		HpBar->SetVisibility(false);
 	}
 	
-	if (MangoHpBarWidget)
+	if (BossHpBarWidget)
 	{
-		MangoHpBarWidget->SetVisibility(ESlateVisibility::Hidden);
+		BossHpBarWidget->SetVisibility(ESlateVisibility::Hidden);
 	}
 	
 	if (ASC && Attributes)
 	{
 		DamageAttributeChangedHandle = ASC->GetGameplayAttributeValueChangeDelegate(Attributes->GetCurrentHealthAttribute()).AddUObject(this, &APrologueEnemyCharacter::OnDamageAttributeChanged);
 	}
+
+	ProjectilePool = new Pool<AExplodingMangoProjectile>(GetWorld(), MangoProjectileClass, 0);
 }
 
 void APrologueEnemyCharacter::OnDamageAttributeChanged(const FOnAttributeChangeData& Data)
@@ -132,9 +172,16 @@ void APrologueEnemyCharacter::PossessedBy(AController* NewController)
 	
 	if (BP_MangoWidget)
 	{
-		MangoHpBarWidget = CreateWidget<UEnemyWidget>(GetWorld(), BP_MangoWidget);
-		MangoHpBarWidget->SetAbilitySystemComponent(this);
-		MangoHpBarWidget->AddToViewport();
+		BossHpBarWidget = CreateWidget<UEnemyWidget>(GetWorld(), BP_MangoWidget);
+		BossHpBarWidget->SetAbilitySystemComponent(this);
+		BossHpBarWidget->AddToViewport();
+	}
+
+	if (BP_ChronosWidget)
+	{
+		BossHpBarWidget = CreateWidget<UEnemyWidget>(GetWorld(), BP_ChronosWidget);\
+		BossHpBarWidget->SetAbilitySystemComponent(this);
+		BossHpBarWidget->AddToViewport();
 	}
 }
 
@@ -207,6 +254,18 @@ bool APrologueEnemyCharacter::TryActivateRandomAbilityWithWeights(const TArray<F
 	}
 
 	return false;
+}
+
+void APrologueEnemyCharacter::MarkSelfAsDestroyed()
+{
+	UPrologueGameInstance* GameInstance = Cast<UPrologueGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	if (GameInstance)
+	{
+		const FName MyID = GetFName();
+
+		GameInstance->MarkAIDestroyed(MyID);
+	}
 }
 
 void APrologueEnemyCharacter::HealthAttributeChanged(const FOnAttributeChangeData& Data)

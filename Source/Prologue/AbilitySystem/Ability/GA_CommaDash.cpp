@@ -84,7 +84,18 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
                                bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+	
+	// 이동 속도 증가 이펙트 적용
+	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(this);
+	FGameplayEffectSpecHandle EffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(SpeedBoostEffect, 0.f, EffectContextHandle);
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+	
+	LOG_SCREEN_R("Dash Speed Boost");
 
+	// Dash Trail 생성
+	GetAbilitySystemComponentFromActorInfo()->AddGameplayCue(PrologueGameplayTags::GameplayCue_Effect_DashTrail);
+	
 	/* Sejin */
 	// 주변 가까운 땅 대시 위치 검사 (대시 보정 알고리즘)
 	AComma* Comma = CastChecked<AComma>(GetAvatarActorFromActorInfo());
@@ -94,6 +105,12 @@ void UGA_CommaDash::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	{
 		Comma->InputGAS(FGameplayTag::RequestGameplayTag("Comma.Ability.Dash"));
 	}
+}
+
+void UGA_CommaDash::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
+{
+	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
 UGameplayEffect* UGA_CommaDash::GetCooldownGameplayEffect() const
@@ -119,7 +136,7 @@ void UGA_CommaDash::OnCurveTick(float Alpha)
 		if (AvatarActor)
 		{
 			FVector InterpolatedLocation = FMath::Lerp(BasePos, TargetPos, Alpha);
-			AvatarActor->SetActorLocation(InterpolatedLocation);
+			AvatarActor->SetActorLocation(InterpolatedLocation, false);
 		}
 	}
 }

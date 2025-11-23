@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "ArenaGate.generated.h"
 
+class UNiagaraSystem;
 class UNiagaraComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGateStateChanged, bool, bIsOpen);
 
@@ -17,30 +18,6 @@ class PROLOGUE_API AArenaGate : public AActor
 
 public:
 	AArenaGate();
-
-protected:
-	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate")
-	TObjectPtr<UNiagaraComponent> GateEffect;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Mesh")
-	TObjectPtr<UStaticMeshComponent> GateMesh;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Trigger")
-	TObjectPtr<UBoxComponent> TriggerVolume;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Arena")
-	bool bIsOpen = true;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Arena")
-	int32 EnemyCount = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arena")
-	bool bAutoActivate = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arena")
-	FName EnemyTag = "Enemy";
 
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Arena")
@@ -57,6 +34,36 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Arena")
 	void CheckEnemies();
+	
+protected:
+	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Effect")
+	TObjectPtr<UNiagaraComponent> GateEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Effect")
+	TObjectPtr<UNiagaraSystem> GateDestroyEffect;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Mesh")
+	TObjectPtr<UStaticMeshComponent> GateMesh;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Trigger")
+	TObjectPtr<UBoxComponent> TriggerVolume;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate|Audio")
+	TObjectPtr<UAudioComponent> AudioComponent;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Arena")
+	bool bIsOpen = true;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Arena")
+	int32 EnemyCount = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arena")
+	bool bAutoActivate = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arena")
+	FName EnemyTag = "Enemy";
 
 protected:
 	UFUNCTION()

@@ -17,6 +17,9 @@ class PROLOGUE_API UPrologueSaveGame : public USaveGame
 public:
 	UPrologueSaveGame();
 
+	UFUNCTION(BlueprintCallable, Category = "Save Data")
+	void ResetToDefault();
+
 	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
 	bool bHasIntroDialoguePlayed = false;
 
@@ -34,4 +37,17 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
 	int32 ActivatedPowerBankCount = 0;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
+	TArray<FName> DestroyedAI_IDs;
+	
+	/** AttributeSet*/
+	UPROPERTY(BlueprintReadWrite, Category = "PlayerStats")
+	float SavedHealth;
+
+	UPROPERTY(BlueprintReadWrite, Category = "PlayerStats")
+	float SavedCurrency;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Save Data")
+	bool bHasSeenInitialIntro = false;
 };

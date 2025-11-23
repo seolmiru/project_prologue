@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
+#include "Prologue/Pool.h"
 #include "GA_SpawnSkyProjectile.generated.h"
 
 class AExplodingMangoProjectile;
@@ -18,8 +19,14 @@ class PROLOGUE_API UGA_SpawnSkyProjectile : public UGameplayAbility
 
 public:
 	UGA_SpawnSkyProjectile();
+	// virtual ~UGA_SpawnSkyProjectile() override;
 
+	// virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+
+protected:
+	UFUNCTION(BlueprintCallable)
+	void SpawnSkyProjectile();
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
@@ -32,5 +39,8 @@ protected:
 	int32 SpawnProjectiles = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile|Spawn")
-	float RandomSpawnRadius = 300.f;	
+	float RandomSpawnRadius = 300.f;
+
+	// Sejin Section
+	// Pool<AExplodingMangoProjectile>* ProjectilePool;
 };

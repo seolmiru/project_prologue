@@ -12,7 +12,8 @@
 				"GameplayAbilities",
 				"EnhancedInput",
 				"AIModule",
-				"Engine"
+				"Engine",
+				"UMG"
 			]
 		}
 	],
@@ -47,6 +48,14 @@
 		},
 		{
 			"Name": "MovieRenderPipeline",
+			"Enabled": true
+		},
+		{
+			"Name": "ActorPalette",
+			"Enabled": true
+		},
+		{
+			"Name": "GameFeatures",
 			"Enabled": true
 		}
 	]

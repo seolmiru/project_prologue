@@ -1,0 +1,15 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "GA_Chronos_Summon_ClockHand.h"
+
+#include "AbilitySystemComponent.h"
+#include "Prologue/PrologueObject/BossClock.h"
+
+void UGA_Chronos_Summon_ClockHand::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+                                                   const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                                                   const FGameplayEventData* TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+}

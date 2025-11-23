@@ -3,27 +3,29 @@
 
 #include "DialogueWidget.h"
 
+#include "Components/AudioComponent.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
 #include "Prologue/Prologue.h"
 
 void UDialogueWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if (ContinueText)
-	{
-		ContinueText->SetText(FText::FromString(TEXT("Press E")));
-	}
-
 	if (HourHand)
 	{
-		HourHand->SetColorAndOpacity(InactiveColor);
+		HourHand->SetVisibility(ESlateVisibility::Hidden);
 	}
 
 	if (MinuteHand)
 	{
-		MinuteHand->SetColorAndOpacity(InactiveColor);
+		MinuteHand->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	if (DialogueCutScene)
+	{
+		DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
 	}
 	
 	SetVisibility(ESlateVisibility::Collapsed);
@@ -32,6 +34,8 @@ void UDialogueWidget::NativeConstruct()
 void UDialogueWidget::NativeDestruct()
 {
 	GetWorld()->GetTimerManager().ClearTimer(TypewriterTimerHandle);
+	StopCurrentSound();
+	StopBackgroundMusic();
 
 	Super::NativeDestruct();
 }
@@ -87,6 +91,17 @@ void UDialogueWidget::NextDialogue()
 		return;
 	}
 
+	if (CurrentDialogue->DialogueType == EDialogueType::OpenWidget)
+	{
+		if (!CurrentDialogue->WidgetToOpen.IsNull())
+		{
+			OnRequestOpenWidget.Broadcast(CurrentDialogue->WidgetToOpen);
+		}
+
+		EndDialogue();
+		return;
+	}
+
 	if (!CurrentDialogue->NextDialogueID.IsNone())
 	{
 		CurrentDialogueID = CurrentDialogue->NextDialogueID;
@@ -115,6 +130,15 @@ void UDialogueWidget::EndDialogue()
 
 	GetWorld()->GetTimerManager().ClearTimer(TypewriterTimerHandle);
 
+	StopCurrentSound();
+
+	StopBackgroundMusic();
+	
+	if (DialogueCutScene)
+	{
+		DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
+	}
+	
 	SetVisibility(ESlateVisibility::Collapsed);
 
 	OnDialogueCompleted.Broadcast();
@@ -124,11 +148,40 @@ void UDialogueWidget::EndDialogue()
 
 void UDialogueWidget::SetCurrentDialogue(const FDialogueData& DialogueData)
 {
+	UpdateBackgroundMusic(DialogueData.BackgroundMusic);
+	
+	StopCurrentSound();
+
+	if (DialogueCutScene)
+	{
+		UTexture2D* ImageToDisplay = DialogueData.CutSceneImage.LoadSynchronous();
+
+		if (ImageToDisplay)
+		{
+			DialogueCutScene->SetBrushFromTexture(ImageToDisplay);
+			DialogueCutScene->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			DialogueCutScene->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
+	if (CommaPortrait)
+	{
+		UTexture2D* PortraitTexture = DialogueData.CommaExpression.LoadSynchronous();
+
+		if (PortraitTexture)
+		{
+			CommaPortrait->SetBrushFromTexture(PortraitTexture);
+		}
+	}
+	
 	if (SpeakerNameText)
 	{
 		SpeakerNameText->SetText(FText::FromString(DialogueData.SpeakerName));
 
-		UpdateCharacterIconStates(DialogueData.SpeakerName);
+		UpdateCharacterIconStates(DialogueData.SpeakerName, DialogueData.EmotionID);
 		
 		FullDialogueText = DialogueData.DialogueText.ToString();
 
@@ -142,6 +195,16 @@ void UDialogueWidget::SetCurrentDialogue(const FDialogueData& DialogueData)
 		}
 
 		GetWorld()->GetTimerManager().SetTimer(TypewriterTimerHandle, this, &UDialogueWidget::TypewriterEffect, TypewriterSpeed, true);
+
+		USoundBase* SoundToPlay = DialogueData.SpeakerVoice.LoadSynchronous();
+
+		if (SoundToPlay)
+		{
+			CurrentSpeakerVoice = UGameplayStatics::SpawnSound2D(
+				GetWorld(),
+				SoundToPlay
+			);
+		}
 	}
 }
 
@@ -175,18 +238,96 @@ void UDialogueWidget::CompleteTypewriter()
 	CurrentCharIndex = FullDialogueText.Len();
 }
 
-void UDialogueWidget::UpdateCharacterIconStates(const FString& SpeakerName)
+void UDialogueWidget::UpdateCharacterIconStates(const FString& SpeakerName, FName EmotionID)
 {
+	const FSpeakerPortraitSet* FoundSet = SpeakerPortraitSets.FindByPredicate(
+		[&SpeakerName](const FSpeakerPortraitSet& Set)
+	{
+		return Set.SpeakerName == SpeakerName;	
+	});
+
+	UTexture2D* PortraitToDisplay = nullptr;
+
+	if (FoundSet)
+	{
+		const TSoftObjectPtr<UTexture2D>* FoundEmotionTexture = FoundSet->EmotionPortraits.Find(EmotionID);
+
+		if (FoundEmotionTexture && !FoundEmotionTexture->IsNull())
+		{
+			PortraitToDisplay = FoundEmotionTexture->LoadSynchronous();
+		}
+
+		if (!PortraitToDisplay && !FoundSet->DefaultPortrait.IsNull())
+		{
+			PortraitToDisplay = FoundSet->DefaultPortrait.LoadSynchronous();
+		}
+	}
+	
 	bool bIsLeftSpeaker = SpeakerName.Contains(TEXT("분침"));
 
-	if (bIsLeftSpeaker)
+	UImage* TargetImageWidget = bIsLeftSpeaker ? MinuteHand : HourHand;
+	UImage* OtherImageWidget = bIsLeftSpeaker ? HourHand : MinuteHand;
+
+	if (TargetImageWidget && OtherImageWidget)
 	{
-		MinuteHand->SetColorAndOpacity(ActiveColor);
-		HourHand->SetColorAndOpacity(InactiveColor);
+		if (PortraitToDisplay)
+		{
+			TargetImageWidget->SetBrushFromTexture(PortraitToDisplay);
+			TargetImageWidget->SetVisibility(ESlateVisibility::Visible);
+			OtherImageWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+		else
+		{
+			TargetImageWidget->SetVisibility(ESlateVisibility::Hidden);
+			OtherImageWidget->SetVisibility(ESlateVisibility::Hidden);
+
+			LOG_SCREEN_R("Portrait not found");
+		}
 	}
-	else
+}
+
+void UDialogueWidget::StopCurrentSound()
+{
+	if (CurrentSpeakerVoice && CurrentSpeakerVoice->IsPlaying())
 	{
-		MinuteHand->SetColorAndOpacity(InactiveColor);
-		HourHand->SetColorAndOpacity(ActiveColor);
+		CurrentSpeakerVoice->Stop();
+	}
+
+	CurrentSpeakerVoice = nullptr;
+}
+
+void UDialogueWidget::UpdateBackgroundMusic(const TSoftObjectPtr<USoundBase>& NewMusicAsset)
+{
+	if (NewMusicAsset.IsNull())
+	{
+		return;
+	}
+
+	USoundBase* NewMusic = NewMusicAsset.LoadSynchronous();
+	if (!NewMusic)
+	{
+		return;
+	}
+
+	if (BackgroundMusicComponent && BackgroundMusicComponent->IsPlaying())
+	{
+		if (BackgroundMusicComponent->Sound == NewMusic)
+		{
+			return;
+		}
+
+		BackgroundMusicComponent->Stop();
+	}
+
+	BackgroundMusicComponent = UGameplayStatics::SpawnSound2D(GetWorld(), NewMusic);
+}
+
+
+void UDialogueWidget::StopBackgroundMusic()
+{
+	if (BackgroundMusicComponent && BackgroundMusicComponent->IsPlaying())
+	{
+		BackgroundMusicComponent->Stop();
+		BackgroundMusicComponent = nullptr;
 	}
 }

@@ -6,7 +6,7 @@
 #include "Abilities/GameplayAbility.h"
 #include "GA_SpawnProjectile.generated.h"
 
-class APrologueProjectileBase;
+class AEggBallProjectile;
 /**
  * 
  */
@@ -22,7 +22,7 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
-	TSubclassOf<APrologueProjectileBase> ProjectileClass;
+	TSubclassOf<AEggBallProjectile> ProjectileClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 	FName SpawnSocketName;

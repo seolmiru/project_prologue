@@ -3,8 +3,7 @@
 #include "PrologueGameMode.h"
 #include "Prologue/Character/PrologueCharacter.h"
 #include "Prologue/Controller/CommaController.h"
-#include "Prologue/Player/ProloguePlayerState.h"
-#include "Prologue/UI/TutorialGuide.h"
+#include "Prologue/PlayerState/ProloguePlayerState.h"
 #include "UObject/ConstructorHelpers.h"
 
 APrologueGameMode::APrologueGameMode()
@@ -20,20 +19,7 @@ APrologueGameMode::APrologueGameMode()
 	PlayerControllerClass = ACommaController::StaticClass();
 }
 
-void APrologueGameMode::SpawnGuide()
-{
-	if (TutorialGuideClass && !TutorialGuideActor)
-	{
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		TutorialGuideActor = GetWorld()->SpawnActor<ATutorialGuide>(TutorialGuideClass, GuideSpawnLocation, FRotator::ZeroRotator, SpawnParams);
-	}
-}
-
 void APrologueGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
-	SpawnGuide();
 }

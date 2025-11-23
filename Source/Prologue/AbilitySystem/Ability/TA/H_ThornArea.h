@@ -20,7 +20,7 @@ public:
 	AH_ThornArea();
 
 	UFUNCTION(BlueprintCallable, Category = "ThornArea")
-	void SpecifyingThorn(const FVector& InBoxExtent, int32 ThornIndex, const FVector& ThornSize);
+	void SpecifyingThorn(const FVector& InBoxExtent, int32 ThornIndex, const FVector& ThornSize, float ThronGap);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
 	bool bShowDebug = true;

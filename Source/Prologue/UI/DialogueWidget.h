@@ -10,6 +10,22 @@
 class UImage;
 class UTextBlock;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueCompleted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRequestOpenWidget, TSoftClassPtr<UUserWidget>, WidgetClass);
+
+USTRUCT(BlueprintType)
+struct FSpeakerPortraitSet
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	FString SpeakerName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	TMap<FName, TSoftObjectPtr<UTexture2D>> EmotionPortraits;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	TSoftObjectPtr<UTexture2D> DefaultPortrait;
+};
 
 /**
  * 
@@ -32,47 +48,54 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Dialogue")
 	void EndDialogue();
 
-	void SetCurrentDialogue(const FDialogueData& DialogueData);
-
 	UPROPERTY(BlueprintAssignable, Category = "Dialogue")
 	FOnDialogueCompleted OnDialogueCompleted;
 
+	UPROPERTY(BlueprintAssignable, Category = "Dialogue")
+	FOnRequestOpenWidget OnRequestOpenWidget;	
+
 protected:
 	UPROPERTY(meta = (BindWidget))
-	UImage* HourHand;
+	TObjectPtr<UImage> HourHand;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* MinuteHand;
+	TObjectPtr<UImage> MinuteHand;
 	
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* SpeakerNameText;
+	TObjectPtr<UTextBlock> SpeakerNameText;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* DialogueText;
+	TObjectPtr<UTextBlock> DialogueText;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* DialogueBackground;
+	TObjectPtr<UImage> DialogueBackground;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* ContinueText;
-
+	TObjectPtr<UImage> DialogueCutScene;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> CommaPortrait;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Dialogue|Portrait")
+	TArray<FSpeakerPortraitSet> SpeakerPortraitSets;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	UDataTable* DialogueDataTable;
+	TObjectPtr<UDataTable> DialogueDataTable;
+
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> BackgroundMusicComponent;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FName CurrentDialogueID;
-
+	
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> CurrentSpeakerVoice;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	bool bIsDialogueActive;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	float TypewriterSpeed = 0.05f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	FLinearColor ActiveColor = FLinearColor(1.f, 1.f, 1.f, 1.f);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
-	FLinearColor InactiveColor = FLinearColor(0.1f, 0.1f, 0.1f, 1.f);
 	
 	FTimerHandle TypewriterTimerHandle;
 	FString FullDialogueText;
@@ -84,5 +107,11 @@ protected:
 	void CompleteTypewriter();
 
 private:
-	void UpdateCharacterIconStates(const FString& SpeakerName);
+	void SetCurrentDialogue(const FDialogueData& DialogueData);
+	void UpdateCharacterIconStates(const FString& SpeakerName, FName EmotionID);
+
+	void StopCurrentSound();
+
+	void UpdateBackgroundMusic(const TSoftObjectPtr<USoundBase>& NewMusicAsset);
+	void StopBackgroundMusic();
 };
