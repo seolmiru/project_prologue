@@ -1,4 +1,4 @@
-2025년도 청강문화산업대학교 게임전공 졸업작품 팀 Prologue - LETHE  
+Team Prologue : LETHE  
 
 사용 엔진 - Unreal 5.5  
 
